@@ -1,0 +1,49 @@
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | __pycache__
+  | infrastructure/database/migrations
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "e2e: end-to-end tests that require a running server (auto-skipped when unreachable)",
+    "integration: tests that touch the database",
+    "unit: pure unit tests with no external dependencies",
+]
+
+[tool.coverage.run]
+relative_files = true
+source = ["modules", "infrastructure", "core"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.",
+    "if TYPE_CHECKING:",
+    "def __repr__",
+    "raise NotImplementedError",
+]

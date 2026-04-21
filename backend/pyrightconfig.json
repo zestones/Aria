@@ -1,0 +1,19 @@
+{
+    "include": ["."],
+    "exclude": [
+        "venv",
+        ".venv",
+        "**/node_modules",
+        "**/__pycache__",
+        "**/.*",
+        "infrastructure/database/migrations"
+    ],
+    "venvPath": ".",
+    "venv": ".venv",
+    "typeCheckingMode": "basic",
+    "pythonVersion": "3.12",
+    "reportMissingImports": "warning",
+    "reportMissingTypeStubs": "none",
+    "reportUnusedImport": "warning",
+    "reportUnusedVariable": "warning"
+}
