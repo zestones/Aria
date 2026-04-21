@@ -1,0 +1,79 @@
+{
+    // ─── Editor ─────────────────────────────────────────────
+    "editor.formatOnSave": true,
+    "editor.rulers": [100],
+    "editor.tabSize": 4,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.eol": "\n",
+
+    // ─── Python (backend) ───────────────────────────────────
+    "python.defaultInterpreterPath": "./backend/.venv/bin/python",
+    "python.analysis.extraPaths": ["./backend"],
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["backend/tests", "--rootdir=backend"],
+    "python.testing.cwd": "${workspaceFolder}",
+    "python.envFile": "${workspaceFolder}/.env",
+
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "black-formatter.args": ["--config", "${workspaceFolder}/backend/pyproject.toml"],
+    "flake8.args": ["--config=${workspaceFolder}/backend/.flake8"],
+    "flake8.cwd": "${workspaceFolder}/backend",
+
+    // ─── TypeScript / React (frontend) — Biome ──────────────
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.biome": "explicit",
+            "quickfix.biome": "explicit"
+        }
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.biome": "explicit",
+            "quickfix.biome": "explicit"
+        }
+    },
+    "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
+    "[javascriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+    "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+    "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+
+    "biome.lsp.bin": "./frontend/node_modules/.bin/biome",
+    "biome.configurationPath": "./frontend/biome.json",
+
+    // ─── CSS / Tailwind 4 ───────────────────────────────────
+    "[css]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
+    },
+    "tailwindCSS.experimental.configFile": "./frontend/src/styles/base.css",
+    "css.lint.unknownAtRules": "ignore",
+
+    // ─── Files / search exclusions ─────────────────────────
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/*.pyc": true,
+        "**/node_modules": true,
+        "**/.venv": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/.venv": true,
+        "**/coverage": true,
+        "**/htmlcov": true,
+        "**/dist": true,
+        "**/build": true
+    }
+}

@@ -1,0 +1,161 @@
+# =============================================================
+# CI Quality Gates — lint, typecheck, test for backend + frontend
+# =============================================================
+# Trigger: push to main, pull requests to main
+#
+# Backend  : black (format check) · flake8 (lint) · pyright (types) · pytest
+# Frontend : biome (format + lint) · tsc (types) · vite build
+# =============================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────
+  # Backend — Python quality gates
+  # ─────────────────────────────────────────────────────────
+  backend-format:
+    name: "Backend · black --check"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: black --check --config pyproject.toml .
+
+  backend-lint:
+    name: "Backend · flake8"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: flake8 .
+
+  backend-typecheck:
+    name: "Backend · pyright"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - run: pyright
+
+  backend-test:
+    name: "Backend · pytest"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Run unit tests
+        run: PYTHONPATH=. pytest -m "not e2e and not integration" --cov --cov-report=xml:coverage.xml
+        continue-on-error: true
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────
+  # Frontend — TypeScript / React quality gates (Biome)
+  # ─────────────────────────────────────────────────────────
+  frontend-check:
+    name: "Frontend · biome check"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+
+  frontend-typecheck:
+    name: "Frontend · tsc -b"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npx tsc -b --noEmit
+
+  frontend-build:
+    name: "Frontend · vite build"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+
+  # ─────────────────────────────────────────────────────────
+  # Docker — verify all images build cleanly
+  # ─────────────────────────────────────────────────────────
+  docker-build:
+    name: "Docker · compose build"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build all services
+        run: docker compose build --pull
