@@ -1,0 +1,71 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   ARIA Light — Light Theme
+   Cool industrial aesthetic with electric cyan accent.
+   Slate-based neutrals on a near-white surface.
+   Brand: #06b6d4 (Cyan-500) / #f8fafc (Slate-50) / Slate scale
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* ─── Surface Hierarchy ─── */
+    --background: oklch(0.985 0.003 240); /* #f8fafc Slate-50 */
+    --foreground: oklch(0.21 0.012 250); /* #0f172a Slate-900 */
+
+    --card: oklch(1 0 0); /* White */
+    --card-foreground: oklch(0.21 0.012 250);
+
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.21 0.012 250);
+
+    /* ─── Brand Colors — Electric Cyan ─── */
+    --primary: oklch(0.59 0.13 215); /* Cyan-600 deeper for light bg */
+    --primary-foreground: oklch(0.99 0 0); /* White text on cyan */
+
+    --secondary: oklch(0.961 0.005 240); /* Slate-100 */
+    --secondary-foreground: oklch(0.21 0.012 250);
+
+    /* ─── Neutral Tones ─── */
+    --muted: oklch(0.961 0.005 240); /* Slate-100 */
+    --muted-foreground: oklch(0.55 0.014 250); /* #64748b Slate-500 */
+
+    --accent: oklch(0.961 0.005 240); /* Slate-100 */
+    --accent-foreground: oklch(0.21 0.012 250);
+
+    /* ─── Semantic Colors ─── */
+    --destructive: oklch(0.577 0.2 27); /* Red-500 */
+
+    /* ─── Borders & Inputs ─── */
+    --border: oklch(0.922 0.007 245); /* Slate-200 */
+    --input: oklch(0.922 0.007 245);
+    --ring: oklch(0.59 0.13 215); /* Electric Cyan */
+
+    /* ─── Data Visualization — Industrial / Data Palette ─── */
+    --chart-1: oklch(0.59 0.13 215); /* Electric Cyan */
+    --chart-2: oklch(0.62 0.16 280); /* Indigo */
+    --chart-3: oklch(0.66 0.15 165); /* Emerald-Teal */
+    --chart-4: oklch(0.7 0.15 75); /* Amber */
+    --chart-5: oklch(0.55 0.014 250); /* Slate-500 */
+
+    /* ─── Sidebar ─── */
+    --sidebar: oklch(0.985 0.003 240); /* Slate-50 */
+    --sidebar-foreground: oklch(0.21 0.012 250);
+    --sidebar-muted-foreground: oklch(0.55 0.014 250);
+    --sidebar-primary: oklch(0.59 0.13 215);
+    --sidebar-primary-foreground: oklch(0.99 0 0);
+    --sidebar-accent: oklch(0.961 0.005 240);
+    --sidebar-accent-foreground: oklch(0.21 0.012 250);
+    --sidebar-border: oklch(0.922 0.007 245);
+    --sidebar-ring: oklch(0.59 0.13 215);
+
+    /* ─── Extended Surface & Text ─── */
+    --surface-elevated: #f1f5f9; /* Slate-100 */
+    --primary-hover: #0e7490; /* Cyan-700 */
+    --text-primary: #0f172a; /* Slate-900 */
+    --text-secondary: #475569; /* Slate-600 */
+    --text-tertiary: #64748b; /* Slate-500 */
+    --text-muted: #94a3b8; /* Slate-400 */
+    --destructive-foreground: #dc2626; /* Red-600 */
+    --status-online: #16a34a; /* Green-600 */
+    --border-muted: #cbd5e1; /* Slate-300 */
+  }
+}

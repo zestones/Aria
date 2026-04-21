@@ -1,0 +1,71 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   ARIA Dark — Dark Theme
+   Deep slate industrial aesthetic. High-contrast electric cyan on near-black.
+   Brand: #06b6d4 (Electric Cyan) / #020617 (Base) / #0f172a (Surface)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  .dark {
+    /* ─── Surface Hierarchy ─── */
+    --background: #020617; /* Slate-950 — deepest base */
+    --foreground: #e2e8f0; /* Slate-200 — primary text */
+
+    --card: #0f172a; /* Slate-900 — card surface */
+    --card-foreground: #e2e8f0;
+
+    --popover: #0f172a; /* Slate-900 */
+    --popover-foreground: #e2e8f0;
+
+    --surface-elevated: #0b1220; /* Hero / elevated panel bg */
+
+    /* ─── Brand Colors — Electric Cyan ─── */
+    --primary: #06b6d4; /* Cyan-500 */
+    --primary-foreground: #ffffff;
+    --primary-hover: #0891b2; /* Cyan-600 */
+
+    --secondary: #1e293b; /* Slate-800 */
+    --secondary-foreground: #e2e8f0;
+
+    /* ─── Neutral Tones ─── */
+    --muted: #1e293b; /* Slate-800 */
+    --muted-foreground: #64748b; /* Slate-500 */
+
+    --accent: #1e293b; /* Slate-800 */
+    --accent-foreground: #e2e8f0;
+
+    /* ─── Text Hierarchy (slate scale) ─── */
+    --text-primary: #ffffff; /* Pure white — headings */
+    --text-secondary: #94a3b8; /* Slate-400 — labels, descriptions */
+    --text-tertiary: #64748b; /* Slate-500 — mono text, subtle */
+    --text-muted: #475569; /* Slate-600 — status bar, icon default */
+
+    /* ─── Semantic Colors ─── */
+    --destructive: #ef4444; /* Red-500 — error bg/border */
+    --destructive-foreground: #f87171; /* Red-400 — error text */
+    --status-online: #22c55e; /* Green-500 — online indicator */
+
+    /* ─── Borders & Inputs ─── */
+    --border: #1e293b; /* Slate-800 — primary borders */
+    --border-muted: #334155; /* Slate-700 — subtle lines */
+    --input: #0b1120; /* Input field backgrounds */
+    --ring: #06b6d4; /* Electric Cyan focus ring */
+
+    /* ─── Data Visualization — Industrial / Data Palette ─── */
+    --chart-1: #06b6d4; /* Electric Cyan */
+    --chart-2: #818cf8; /* Indigo-400 */
+    --chart-3: #2dd4bf; /* Teal-400 */
+    --chart-4: #fbbf24; /* Amber-400 */
+    --chart-5: #64748b; /* Slate-500 */
+
+    /* ─── Sidebar ─── */
+    --sidebar: #0a0f1c; /* Slate near-black */
+    --sidebar-foreground: #e2e8f0;
+    --sidebar-muted-foreground: #64748b;
+    --sidebar-primary: #06b6d4;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #1e293b;
+    --sidebar-accent-foreground: #e2e8f0;
+    --sidebar-border: #1e293b;
+    --sidebar-ring: #06b6d4;
+  }
+}

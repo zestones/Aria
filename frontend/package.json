@@ -1,0 +1,35 @@
+{
+    "name": "aria-frontend",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite --host 0.0.0.0 --port 5173",
+        "build": "tsc -b && vite build",
+        "preview": "vite preview --host 0.0.0.0 --port 5173",
+        "lint": "biome lint ./src",
+        "lint:fix": "biome lint --write ./src",
+        "format": "biome format --write ./src",
+        "format:check": "biome format ./src",
+        "check": "biome check ./src",
+        "check:fix": "biome check --write ./src",
+        "typecheck": "tsc -b --noEmit"
+    },
+    "dependencies": {
+        "@tailwindcss/vite": "^4.1.18",
+        "@tanstack/react-query": "^5.90.21",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "react-router-dom": "^7.13.0",
+        "tailwindcss": "^4.1.18"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.3.4",
+        "@types/node": "^22.10.5",
+        "@types/react": "^19.2.5",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.1",
+        "typescript": "~5.9.3",
+        "vite": "^7.2.4"
+    }
+}
