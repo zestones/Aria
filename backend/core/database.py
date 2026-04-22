@@ -6,9 +6,8 @@ import logging
 from typing import AsyncIterator
 
 import asyncpg
-from fastapi import Request
-
 from core.config import get_settings
+from fastapi import Request
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +35,7 @@ class Database:
             password=s.postgres_password,
             database=s.postgres_db,
             min_size=2,
-            max_size=10,
+            max_size=20,
             command_timeout=30,
         )
 
