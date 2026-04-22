@@ -200,3 +200,6 @@ sketch
 
 # ARIA — frontend node_modules cache mount
 frontend/node_modules/
+
+# ARIA — TypeScript incremental build cache (machine-local, never commit)
+*.tsbuildinfo

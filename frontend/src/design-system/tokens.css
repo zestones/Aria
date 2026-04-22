@@ -1,0 +1,87 @@
+/* ARIA Design System — Industrial control-room tokens (dark only, v1) */
+
+:root {
+  /* Surface hierarchy — widened steps so elevation reads clearly */
+  --ds-bg-base: #0a0e14;
+  --ds-bg-surface: #0d131d;
+  --ds-bg-elevated: #1a2435;
+  --ds-border: #232d3f;
+  --ds-border-strong: #334155;
+
+  /* Text */
+  --ds-fg-primary: #e4e9f2;
+  --ds-fg-muted: #8491a8;
+  --ds-fg-subtle: #52627a;
+
+  /* Brand accent — desaturated cyan, industrial SCADA feel (no neon) */
+  --ds-accent: #3ab5c9;
+  --ds-accent-hover: #5fd0e3;
+  --ds-accent-glow: rgb(58 181 201 / 0.25);
+  --ds-accent-fg: #04131a;
+
+  /* Equipment status — brick red for critical, readable rest */
+  --ds-status-nominal: #2fa67c;
+  --ds-status-warning: #d9922b;
+  --ds-status-critical: #d84545;
+
+  /* Agent identities — deeper washed tones (whisper, not shout) */
+  --ds-agent-sentinel: #5a7fb5;
+  --ds-agent-investigator: #8b6fd9;
+  --ds-agent-kb-builder: #2fa67c;
+  --ds-agent-work-order: #c89635;
+  --ds-agent-qa: #c76ca3;
+
+  /* Radii — tightened for more technical feel */
+  --ds-radius-xs: 3px;
+  --ds-radius-sm: 5px;
+  --ds-radius-md: 7px;
+  --ds-radius-lg: 10px;
+  --ds-radius-xl: 14px;
+
+  /* Typography */
+  --ds-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --ds-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Type scale */
+  --ds-text-xs: 11px;
+  --ds-text-sm: 13px;
+  --ds-text-base: 14px;
+  --ds-text-md: 16px;
+  --ds-text-lg: 20px;
+  --ds-text-xl: 26px;
+  --ds-text-2xl: 34px;
+
+  /* Motion */
+  --ds-motion-fast: 120ms;
+  --ds-motion-base: 220ms;
+  --ds-motion-slow: 420ms;
+  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ds-motion-fast: 0ms;
+    --ds-motion-base: 0ms;
+    --ds-motion-slow: 0ms;
+  }
+}
+
+/* Industrial grain — subtle fractal noise overlay (~3% opacity, overlay
+   blend) that sits above surfaces but below interactive content so the
+   dark panels feel like matter instead of flat CSS rectangles. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    display: none;
+  }
+}
