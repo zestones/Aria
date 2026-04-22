@@ -8,7 +8,7 @@ import asyncpg
 from core.db_helpers import must
 from core.json_fields import encode_fields
 
-JSON_FIELDS = ("required_parts", "required_skills")
+JSON_FIELDS = ("required_parts", "required_skills", "recommended_actions")
 
 
 class WorkOrderRepository:
