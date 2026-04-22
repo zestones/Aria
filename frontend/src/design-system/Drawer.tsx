@@ -52,6 +52,14 @@ export function Drawer({
 
     const sizeStyle = side === "bottom" ? { height } : { width };
 
+    // Round the top edges when the drawer sits flush against a viewport edge.
+    const radiusClass =
+        side === "bottom"
+            ? "rounded-t-[var(--ds-radius-md)]"
+            : side === "left"
+              ? "rounded-r-[var(--ds-radius-md)]"
+              : "rounded-l-[var(--ds-radius-md)]";
+
     return (
         <AnimatePresence>
             {open && (
@@ -68,19 +76,22 @@ export function Drawer({
                         />
                     )}
                     <motion.aside
-                        className={`fixed ${position} z-50 bg-[var(--ds-bg-surface)] border-[var(--ds-border)] shadow-2xl ${
+                        className={`fixed ${position} z-50 bg-[var(--ds-bg-surface)] border-[var(--ds-border)] ${radiusClass} ${
                             side === "right"
                                 ? "border-l"
                                 : side === "left"
                                   ? "border-r"
                                   : "border-t"
                         } ${className}`}
-                        style={sizeStyle}
+                        style={{
+                            ...sizeStyle,
+                            boxShadow: "var(--ds-shadow-overlay)",
+                        }}
                         variants={slideDir}
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                         role="dialog"
                         aria-modal={showOverlay ? true : undefined}
                     >

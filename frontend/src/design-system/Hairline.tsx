@@ -1,18 +1,15 @@
 import type { HTMLAttributes } from "react";
 
 export interface HairlineProps extends HTMLAttributes<HTMLDivElement> {
-    /** Optional label dropped inline inside the rule (`── label ──`). */
+    /** Optional inline label (`── label ──`). Sentence-case sans muted. */
     label?: string;
     /** Thickness in px (1 or 2). Default 1. */
     weight?: 1 | 2;
 }
 
 /**
- * 1px compartment divider — see DESIGN_PLAN §5.3.
- * With a label, becomes an editorial inline-rule ("─── control room ───").
- *
- * Uses plain `<div aria-hidden>` for the visual rule — the element is
- * decorative, not semantic. Adjacent headings carry the section meaning.
+ * 1px compartment divider — see DESIGN_PLAN_v2 §4.4. With a label, becomes an
+ * inline section rule ("─── Control room ───") in sentence-case sans muted.
  */
 export function Hairline({ label, weight = 1, className = "", ...rest }: HairlineProps) {
     const color = weight === 2 ? "var(--ds-border-strong)" : "var(--ds-border)";
@@ -32,8 +29,8 @@ export function Hairline({ label, weight = 1, className = "", ...rest }: Hairlin
         <div aria-hidden className={`flex items-center gap-3 ${className}`} {...rest}>
             <div className="flex-1" style={{ height: `${weight}px`, backgroundColor: color }} />
             <span
-                className="font-mono text-[11px] tracking-[0.08em] uppercase whitespace-nowrap"
-                style={{ color: "var(--ds-fg-subtle)" }}
+                className="text-[var(--ds-text-sm)] font-medium whitespace-nowrap"
+                style={{ color: "var(--ds-fg-muted)" }}
             >
                 {label}
             </span>

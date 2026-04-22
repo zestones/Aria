@@ -1,16 +1,34 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <title>ARIA — Adaptive Runtime Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet" />
+    <script>
+        // Pre-mount theme bootstrap — reads user preference, falls back to system.
+        // Keep in sync with ThemeProvider.ts.
+        (function () {
+            try {
+                var stored = localStorage.getItem("aria.theme");
+                var mode = stored === "light" || stored === "dark" || stored === "system"
+                    ? stored
+                    : "system";
+                var resolved = mode === "system"
+                    ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+                    : mode;
+                document.documentElement.setAttribute("data-theme", resolved);
+            } catch (e) {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        })();
+    </script>
 </head>
 
 <body>

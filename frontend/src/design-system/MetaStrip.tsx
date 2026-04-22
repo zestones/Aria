@@ -1,7 +1,8 @@
 import type { HTMLAttributes } from "react";
 
 export interface MetaItem {
-    label: string;
+    /** Sentence-case label, e.g. "Unit", "Cell". Omit for value-only segments. */
+    label?: string;
     value: string;
 }
 
@@ -10,29 +11,29 @@ export interface MetaStripProps extends HTMLAttributes<HTMLDListElement> {
 }
 
 /**
- * Right-aligned metadata strip for panel headers — see DESIGN_PLAN §5.2.
- * Renders as `LABEL / value  ·  LABEL / value`, mono uppercase, subtle.
- * Purely structural: registration-mark-flavored, never legal text.
+ * Inline metadata strip — `Unit D-02 · Cell 02.01 · Updated Apr 22`.
+ * Sentence-case sans muted, `·` separators only. No mono, no uppercase, no
+ * slashes-as-decoration. See DESIGN_PLAN_v2 §5.3.
  */
 export function MetaStrip({ items, className = "", ...rest }: MetaStripProps) {
     return (
         <dl
-            className={`flex items-baseline gap-3 font-mono text-[11px] tracking-[0.08em] uppercase ${className}`}
-            style={{ color: "var(--ds-fg-subtle)" }}
+            className={`flex items-baseline gap-2 text-[var(--ds-text-sm)] ${className}`}
+            style={{ color: "var(--ds-fg-muted)" }}
             {...rest}
         >
             {items.map((item, idx) => (
-                <span key={item.label} className="flex items-baseline gap-1.5">
+                <span
+                    key={`${item.label ?? ""}-${item.value}`}
+                    className="flex items-baseline gap-1.5"
+                >
                     {idx > 0 && (
-                        <span aria-hidden style={{ color: "var(--ds-border-strong)" }}>
+                        <span aria-hidden style={{ color: "var(--ds-fg-subtle)" }}>
                             ·
                         </span>
                     )}
-                    <dt className="opacity-70" style={{ color: "var(--ds-fg-subtle)" }}>
-                        {item.label}
-                    </dt>
-                    <span style={{ color: "var(--ds-border-strong)" }}>/</span>
-                    <dd style={{ color: "var(--ds-fg-muted)" }}>{item.value}</dd>
+                    {item.label && <dt style={{ color: "var(--ds-fg-muted)" }}>{item.label}</dt>}
+                    <dd style={{ color: "var(--ds-fg-primary)" }}>{item.value}</dd>
                 </span>
             ))}
         </dl>
