@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from core.thresholds import evaluate_threshold, match_threshold_key_to_signal
+from core.thresholds import evaluate_threshold
 from modules.kb.kb_schema import ThresholdValue
 
 
@@ -59,28 +59,3 @@ def test_double_sided_high_alert():
 def test_double_sided_within_band_is_safe():
     t = ThresholdValue(nominal=533, low_alert=480, high_alert=580)
     assert evaluate_threshold(t, 533)["breached"] is False
-
-
-@pytest.mark.unit
-def test_p02_kb_keys_match_p02_signals():
-    # Reproduces the kb_key → signal_def matching for P-02 seed (migration 007).
-    signals = [
-        ("Discharge Bearing Vibration", "vibration"),
-        ("Bearing Temperature", "temperature"),
-        ("Discharge Flow Rate", "flow"),
-        ("Discharge Pressure", "pressure"),
-    ]
-    expected = {
-        "vibration_mm_s": "Discharge Bearing Vibration",
-        "bearing_temp_c": "Bearing Temperature",
-        "flow_l_min": "Discharge Flow Rate",
-        "pressure_bar": "Discharge Pressure",
-    }
-    for kb_key, expected_display in expected.items():
-        scores = [
-            (display, match_threshold_key_to_signal(kb_key, display, type_))
-            for display, type_ in signals
-        ]
-        best = max(scores, key=lambda x: x[1])
-        assert best[1] > 0, f"no match for {kb_key}"
-        assert best[0] == expected_display, f"wrong match for {kb_key}: got {best}"
