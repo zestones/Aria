@@ -170,8 +170,65 @@ un agent loop est un cauchemar.
 
 ---
 
+## Issue M2.9 🔴 — UI tools generative (`render_*`)
+
+**Scope.** Déclarer 9 tools "generative UI" que les agents invoquent pour émettre
+des events `ui_render` rendus inline dans le chat / le dashboard. C'est ce qui
+transforme ARIA d'un chatbot markdown en interface agentique visuelle (cf.
+Claude artifacts). Sans ces tools, Q&A et Investigator n'ont que du texte à
+offrir.
+
+**Pas d'implémentation Python.** Ces tools n'ont pas de code backend — ce sont
+des **schémas** passés au LLM. Le handler de `tool_use` dans chaque agent loop
+doit détecter `tool_name.startswith("render_")` et :
+1. `ws_manager.broadcast("ui_render", {agent, component, props, turn_id})`
+2. Retourner immédiatement `tool_result={"content": "rendered"}` — pas d'effet
+   de bord, pas d'attente
+
+**Fichier.** `backend/agents/ui_tools.py` — expose une liste `UI_TOOLS: list[dict]`
+et une const `UI_TOOL_NAMES: set[str]` pour le dispatch.
+
+**Les 9 tools.**
+
+| Tool name                   | Used by              | Props schema (résumé)                                                        |
+|-----------------------------|----------------------|------------------------------------------------------------------------------|
+| `render_signal_chart`       | Investigator, Q&A    | `{signal_def_id, window_hours, mark_anomaly_at?, threshold?}`                |
+| `render_equipment_kb_card`  | KB Builder, Q&A      | `{cell_id, highlight_fields?}`                                               |
+| `render_work_order_card`    | Work Order Gen       | `{work_order_id, printable: true}`                                           |
+| `render_diagnostic_card`    | Investigator         | `{title, confidence, root_cause, contributing_factors[], pattern_match_id?}` |
+| `render_correlation_matrix` | Investigator         | `{sources[], impact_matrix[][]}`                                             |
+| `render_pattern_match`      | Investigator         | `{current_event, past_event_ref, similarity}`                                |
+| `render_bar_chart`          | Q&A                  | `{title, x_label, y_label, bars[]}`                                          |
+| `render_alert_banner`       | Sentinel (auto-emit) | `{severity, cell_id, message, anomaly_id}`                                   |
+| `render_kb_progress`        | KB Builder           | `{steps[{label, status}]}`                                                   |
+
+**Intégration agent.** Dans chaque agent loop :
+```python
+tools = await mcp_client.get_tools_schema() + UI_TOOLS + [SUBMIT_TOOL]
+```
+
+**Pattern dans le system prompt de chaque agent qui les utilise :**
+```
+Pour rendre tes résultats visuels, tu peux appeler :
+- render_signal_chart(...) pour afficher une courbe
+- render_diagnostic_card(...) pour afficher ton diagnostic final
+- ...
+Appelle-les quand c'est plus parlant qu'une réponse texte.
+```
+
+**Acceptance.**
+- [ ] `UI_TOOLS` importé et concaténé dans Investigator + Q&A + WO Gen + KB Builder
+- [ ] Investigator émet `ui_render` pour `render_diagnostic_card` à la fin du RCA
+- [ ] Q&A émet `ui_render` pour `render_signal_chart` si la question porte sur un signal
+- [ ] Aucun `tool_call` `render_*` ne génère d'appel DB ou d'attente > 5ms
+
+**Bloque.** Frontend M7.5 (artifact registry), M8.1–M8.3 (artifacts individuels).
+
+---
+
 ## Bloque
 
 - M3 (KB Builder utilise `update_equipment_kb` indirectement)
 - M4 (Sentinel lit signaux + KB ; Investigator a besoin des 14 tools)
 - M5 (Q&A consomme les 14 tools)
+- M7.5, M8.1–M8.3 (artifact registry et composants — via M2.9)
