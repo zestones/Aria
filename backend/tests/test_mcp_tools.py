@@ -166,3 +166,29 @@ async def test_get_failure_history_has_limit_param():
     schema = next(t for t in tools if t.name == "get_failure_history").parameters
     props = schema.get("properties", {})
     assert {"cell_id", "limit"} <= set(props)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_production_tools_registered():
+    """M2.6 (issue #13) — 2 production tools wired on the MCP instance."""
+    from aria_mcp.server import mcp
+
+    tools = await mcp.list_tools()
+    names = {t.name for t in tools}
+    assert {"get_quality_metrics", "get_production_stats"} <= names
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_production_tools_have_required_params():
+    """Audit M2.6: both tools share the same cell_ids + window signature."""
+    from aria_mcp.server import mcp
+
+    tools = await mcp.list_tools()
+    for name in ("get_quality_metrics", "get_production_stats"):
+        schema = next(t for t in tools if t.name == name).parameters
+        props = schema.get("properties", {})
+        assert {"cell_ids", "window_start", "window_end"} <= set(
+            props
+        ), f"{name} is missing required params"

@@ -1,4 +1,9 @@
-"""KPI tools (M2.2) — OEE, MTBF, MTTR, downtime breakdown."""
+"""KPI tools (M2.2) — OEE, MTBF, MTTR, downtime breakdown.
+
+M2.6 adds get_quality_metrics and get_production_stats — thin wrappers over
+the already-implemented KpiRepository.quality_by_cell and
+KpiRepository.production_stats methods.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +13,7 @@ from aria_mcp._common import with_conn
 from aria_mcp.server import mcp
 from core.datetime_helpers import parse_tz_aware
 from modules.kpi.repository import KpiRepository
-from modules.kpi.schemas import MaintenanceKpiDTO, OeeBucketDTO, OeeDTO
+from modules.kpi.schemas import MaintenanceKpiDTO, OeeBucketDTO, OeeDTO, QualityByCellDTO
 
 
 @mcp.tool()
@@ -131,3 +136,84 @@ async def get_downtime_events(
         }
         for r in rows
     ]
+
+
+@mcp.tool()
+async def get_quality_metrics(
+    cell_ids: list[int],
+    window_start: str,
+    window_end: str,
+) -> list[dict]:
+    """Per-cell quality breakdown for a time window (M2.6).
+
+    Used by the Q&A agent to answer questions like *"how many off-spec pieces
+    today?"* without requiring the Investigator's full RCA flow.
+
+    Args:
+        cell_ids: List of cell ids to aggregate over (must be non-empty).
+        window_start: ISO-8601 timestamp with TZ offset (inclusive).
+        window_end: ISO-8601 timestamp with TZ offset (exclusive).
+
+    Returns:
+        List of ``{cell_id, cell_name, line_name, total_pieces, good_pieces,
+        bad_pieces, quality_rate}`` — one entry per cell, ordered by
+        ``cell_id``. ``quality_rate`` is ``good_pieces / total_pieces`` in
+        [0, 1], or ``null`` when no production events exist in the window.
+    """
+    ws = parse_tz_aware(window_start)
+    we = parse_tz_aware(window_end)
+    async with with_conn() as conn:
+        rows = await KpiRepository(conn).quality_by_cell(cell_ids, ws, we)
+    out: list[dict] = []
+    for r in rows:
+        total = int(r["total_pieces"] or 0)
+        good = int(r["good_pieces"] or 0)
+        bad = int(r["bad_pieces"] or 0)
+        dto = QualityByCellDTO(
+            cell_id=r["cell_id"],
+            cell_name=r["cell_name"],
+            line_name=r["line_name"],
+            total_pieces=total,
+            good_pieces=good,
+            bad_pieces=bad,
+            quality_rate=round(good / total, 4) if total > 0 else None,
+        )
+        out.append(dto.model_dump(mode="json"))
+    return out
+
+
+@mcp.tool()
+async def get_production_stats(
+    cell_ids: list[int],
+    window_start: str,
+    window_end: str,
+) -> dict:
+    """Aggregate production and availability statistics for a time window (M2.6).
+
+    Used by the Q&A agent to answer questions like *"what was our production
+    last week?"*. Wraps ``KpiRepository.production_stats`` which already
+    aggregates machine-status durations + production event counts.
+
+    Args:
+        cell_ids: List of cell ids to aggregate over (must be non-empty).
+        window_start: ISO-8601 timestamp with TZ offset (inclusive).
+        window_end: ISO-8601 timestamp with TZ offset (exclusive).
+
+    Returns:
+        ``{productive_seconds, unplanned_stop_seconds, planned_stop_seconds,
+        total_pieces, good_pieces, bad_pieces}`` — aggregated across all
+        requested cells.
+    """
+    ws = parse_tz_aware(window_start)
+    we = parse_tz_aware(window_end)
+    async with with_conn() as conn:
+        stats = await KpiRepository(conn).production_stats(cell_ids, ws, we)
+    bad_pieces = stats["total_pieces"] - stats["good_pieces"]
+    return {
+        "productive_seconds": stats["productive_seconds"],
+        "unplanned_stop_seconds": stats["unplanned_stop_seconds"],
+        "planned_stop_seconds": stats["planned_stop_seconds"],
+        "total_pieces": stats["total_pieces"],
+        "good_pieces": stats["good_pieces"],
+        "bad_pieces": bad_pieces,
+    }
