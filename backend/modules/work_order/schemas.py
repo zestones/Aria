@@ -7,9 +7,8 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 Priority = Literal["low", "medium", "high", "critical"]
-Status = Literal["open", "in_progress", "completed", "cancelled"]
+Status = Literal["detected", "analyzed", "open", "in_progress", "completed", "cancelled"]
 
 
 class WorkOrderOut(BaseModel):
@@ -31,6 +30,10 @@ class WorkOrderOut(BaseModel):
     assigned_to_username: Optional[str] = None
     triggered_by_signal_def_id: Optional[int] = None
     triggered_by_alert: Optional[str] = None
+    rca_summary: Optional[str] = None
+    recommended_actions: Optional[Any] = None
+    generated_by_agent: bool = False
+    trigger_anomaly_time: Optional[datetime] = None
     created_at: datetime
     completed_at: Optional[datetime] = None
 
@@ -50,6 +53,10 @@ class WorkOrderCreate(BaseModel):
     assigned_to: Optional[int] = None
     triggered_by_signal_def_id: Optional[int] = None
     triggered_by_alert: Optional[str] = None
+    rca_summary: Optional[str] = None
+    recommended_actions: Optional[Any] = None
+    generated_by_agent: bool = False
+    trigger_anomaly_time: Optional[datetime] = None
 
 
 class WorkOrderUpdate(BaseModel):
@@ -64,3 +71,6 @@ class WorkOrderUpdate(BaseModel):
     suggested_window_end: Optional[datetime] = None
     assigned_to: Optional[int] = None
     completed_at: Optional[datetime] = None
+    rca_summary: Optional[str] = None
+    recommended_actions: Optional[Any] = None
+    trigger_anomaly_time: Optional[datetime] = None
