@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
+from aria_mcp.server import http_app as mcp_http_app
 from core.config import get_settings
 from core.database import db
 from core.exceptions import register_exception_handlers
@@ -34,10 +35,12 @@ async def lifespan(app: FastAPI):
     await db.connect()
     app.state.db = db
     log.info("ARIA backend ready")
-    try:
-        yield
-    finally:
-        await db.disconnect()
+    async with mcp_http_app.lifespan(mcp_http_app):
+        log.info("MCP server ready at /mcp")
+        try:
+            yield
+        finally:
+            await db.disconnect()
 
 
 def create_app() -> FastAPI:
@@ -73,6 +76,8 @@ def create_app() -> FastAPI:
     app.include_router(shift_router)
     app.include_router(work_order_router)
     app.include_router(kb_router)
+
+    app.mount("/mcp", mcp_http_app)
 
     return app
 
