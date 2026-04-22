@@ -1,15 +1,21 @@
 -- ============================================
--- ARIA — KB + Work Order extension (M1.1)
+-- ARIA — KB + Work Order extension (M1.1 + M1.2)
 --
--- Brings equipment_kb in line with the agent + frontend contract decided in
--- technical.md §2.4 : structured_data is the single source of truth for KB
--- content (Pydantic EquipmentKB blob). The 3 legacy jsonb columns are
--- superseded and dropped.
+-- Brings equipment_kb + work_order in line with the agent + frontend contract
+-- decided in technical.md §2.4.
+--   - equipment_kb: structured_data is the single source of truth for KB
+--     content (Pydantic EquipmentKB blob). The 3 legacy jsonb columns are
+--     superseded and dropped.
+--   - work_order: carry agent outputs (RCA summary from Investigator,
+--     structured recommendations from Work Order Generator, provenance flag,
+--     anomaly timestamp). The status CHECK is widened to cover the
+--     detected → analyzed → open → in_progress → completed flow.
 --
 -- Scope of this file:
 --   - equipment_kb: drop 3 legacy columns, add 5 new columns
 --   - re-seed P-02 Grundfos CR 32-2 with a valid structured_data blob
 --     (seed lives here because it depends on columns added above)
+--   - work_order: add 4 new columns + widen status CHECK
 -- ============================================
 -- ============================================
 -- equipment_kb — drop legacy jsonb columns (replaced by structured_data)
@@ -56,4 +62,27 @@ WHERE
     c.name = 'P-02'
 ON CONFLICT (cell_id)
     DO NOTHING;
+
+-- ============================================
+-- work_order — new columns for agent outputs
+-- ============================================
+ALTER TABLE work_order
+    ADD COLUMN rca_summary text,
+    ADD COLUMN recommended_actions jsonb,
+    ADD COLUMN generated_by_agent boolean NOT NULL DEFAULT FALSE,
+    ADD COLUMN trigger_anomaly_time timestamptz;
+
+-- ============================================
+-- work_order — widen status CHECK to cover the full agent flow:
+--   detected (Sentinel) → analyzed (Investigator posts rca_summary) →
+--   open (Work Order Generator posts recommended_actions) →
+--   in_progress → completed. cancelled is a terminal exit from any active state.
+-- NOTE: existing constraint is named chk_wo_status (from migration 005),
+-- not the postgres-default work_order_status_check.
+-- ============================================
+ALTER TABLE work_order
+    DROP CONSTRAINT chk_wo_status;
+
+ALTER TABLE work_order
+    ADD CONSTRAINT chk_wo_status CHECK (status IN ('detected', 'analyzed', 'open', 'in_progress', 'completed', 'cancelled'));
 
