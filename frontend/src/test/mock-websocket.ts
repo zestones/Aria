@@ -1,19 +1,22 @@
 /**
- * Lightweight WebSocket mock used by ws.test.ts.
+ * Mock WebSocket installed on the global scope during tests.
  *
- * Tests grab the most recent instance via `MockWebSocket.last` and trigger
+ * Usage:
+ *   installMockWebSocket() // beforeEach
+ *   restoreWebSocket()     // afterEach
+ *
+ * Tests grab `MockWebSocket.last` after calling into the client to drive
  * lifecycle transitions manually (simulateOpen / simulateMessage /
- * simulateClose) so reconnection logic can be driven deterministically with
- * vi.useFakeTimers().
+ * simulateClose / simulateError).
  */
 
 type Listener = (event: Event | MessageEvent | CloseEvent) => void;
 
 export class MockWebSocket {
-    static CONNECTING = 0 as const;
-    static OPEN = 1 as const;
-    static CLOSING = 2 as const;
-    static CLOSED = 3 as const;
+    static readonly CONNECTING = 0 as const;
+    static readonly OPEN = 1 as const;
+    static readonly CLOSING = 2 as const;
+    static readonly CLOSED = 3 as const;
 
     static instances: MockWebSocket[] = [];
     static get last(): MockWebSocket {
@@ -28,7 +31,7 @@ export class MockWebSocket {
     readonly url: string;
     readyState: number = MockWebSocket.CONNECTING;
     sent: string[] = [];
-    private listeners = new Map<string, Set<Listener>>();
+    listeners = new Map<string, Set<Listener>>();
 
     constructor(url: string) {
         this.url = url;
@@ -55,14 +58,14 @@ export class MockWebSocket {
         this.sent.push(data);
     }
 
-    close(code?: number, reason?: string): void {
+    close(code = 1000, reason = ""): void {
         if (this.readyState === MockWebSocket.CLOSED) return;
         this.readyState = MockWebSocket.CLOSED;
         this.dispatch("close", {
             type: "close",
-            code: code ?? 1000,
-            reason: reason ?? "",
-            wasClean: true,
+            code,
+            reason,
+            wasClean: code === 1000 || code === 1001,
         } as unknown as CloseEvent);
     }
 
@@ -86,8 +89,14 @@ export class MockWebSocket {
             type: "close",
             code,
             reason,
-            wasClean: false,
+            wasClean: code === 1000 || code === 1001,
         } as unknown as CloseEvent);
+    }
+
+    totalListenerCount(): number {
+        let total = 0;
+        for (const set of this.listeners.values()) total += set.size;
+        return total;
     }
 
     private dispatch(type: string, event: Event | MessageEvent | CloseEvent): void {
@@ -95,4 +104,19 @@ export class MockWebSocket {
         if (!set) return;
         for (const listener of set) listener(event);
     }
+}
+
+let originalWebSocket: typeof WebSocket | undefined;
+
+export function installMockWebSocket(): void {
+    MockWebSocket.reset();
+    originalWebSocket = globalThis.WebSocket;
+    (globalThis as unknown as { WebSocket: unknown }).WebSocket = MockWebSocket;
+}
+
+export function restoreWebSocket(): void {
+    if (originalWebSocket) {
+        (globalThis as unknown as { WebSocket: typeof WebSocket }).WebSocket = originalWebSocket;
+    }
+    MockWebSocket.reset();
 }

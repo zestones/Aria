@@ -1,75 +1,210 @@
 /**
- * Typed WebSocket client with exponential-backoff reconnection.
+ * Typed WebSocket client for the ARIA backend.
  *
- * Two factories expose the same runtime with different type maps:
- * - `createEventBusClient<TMap>(url)`: server-driven event bus. `TMap` is a
- *   `{ eventName: Payload }` record for incoming messages.
- * - `createChatClient<TMap>(url)`: the same runtime, with a conventional
- *   ChatMap shape (`message`, `typing`, `presence`, ...) for consumer
- *   ergonomics.
+ * Two factories share the same runtime:
+ * - `createWsClient<M>({ url, onEvent, ... })`: keyed event bus for
+ *   `/api/v1/events` (EventBusMap-style). `onEvent` receives the event
+ *   `type` as its first argument and the typed payload as its second.
+ * - `createChatWsClient<U>({ url, onEvent, ... })`: discriminated-union
+ *   stream for `/api/v1/agent/chat` (ChatMap-style). `onEvent` receives
+ *   the full message object (whose `type` field discriminates the union).
  *
- * Wire protocol: `{ type: string, payload: unknown }` (JSON over text frames).
+ * Auth is cookie-based (see M5.2) — no token handling here. Reconnect
+ * backoff: 500ms, 1500ms, 4500ms (x3 multiplier), cap 3 attempts, counter
+ * resets after 30s of stable OPEN connection. No retry on clean close
+ * (1000) or going-away (1001). Honors an external `AbortSignal`.
  *
- * Chose 2 factories rather than a discriminated-union overload so that
- * callers never have to narrow unions at each `.on(...)`: the map they pass
- * already constrains the keys. Same runtime, zero duplication.
+ * Chose a second factory `createChatWsClient` over a typed overload so
+ * the union-discriminated ChatMap can stay as-is without needing an
+ * index signature. Zero runtime duplication — both delegate to one
+ * shared implementation.
  */
 
-export type EventMap = Record<string, unknown>;
+const RECONNECT_DELAYS_MS = [500, 1500, 4500] as const;
+const STABLE_RESET_MS = 30_000;
+const NO_RETRY_CODES = new Set([1000, 1001]);
 
-type Handler<T> = (payload: T) => void;
+export interface WsClientOptions<M extends Record<string, unknown>> {
+    /** Absolute (`ws://` / `wss://`) or relative path (`/api/v1/events`). */
+    url: string;
+    /** Invoked for every well-formed message. */
+    onEvent: <K extends keyof M>(type: K, payload: M[K]) => void;
+    /** Invoked on parse errors or when reconnect attempts are exhausted. */
+    onError?: (err: Error) => void;
+    /** Invoked every time the socket reaches OPEN (including after reconnects). */
+    onOpen?: () => void;
+    /** Invoked when the socket closes (before reconnect is scheduled). */
+    onClose?: (code: number, reason: string, wasClean: boolean) => void;
+    /** External abort: when it fires, the client closes and stops reconnecting. */
+    signal?: AbortSignal;
+}
 
-export interface WsClient<TMap extends EventMap> {
-    on<K extends keyof TMap & string>(event: K, handler: Handler<TMap[K]>): () => void;
-    send<K extends keyof TMap & string>(event: K, payload: TMap[K]): void;
+export interface ChatWsClientOptions<U extends { type: string }> {
+    url: string;
+    /** Invoked with the full discriminated-union message. */
+    onEvent: (type: U["type"], message: U) => void;
+    onError?: (err: Error) => void;
+    onOpen?: () => void;
+    onClose?: (code: number, reason: string, wasClean: boolean) => void;
+    signal?: AbortSignal;
+}
+
+export interface WsClient {
     close(code?: number, reason?: string): void;
     readonly readyState: number;
 }
 
-export interface WsClientOptions {
-    /** Milliseconds before the first reconnect attempt. Default 500. */
-    reconnectBaseDelayMs?: number;
-    /** Cap on the exponential backoff delay. Default 15_000. */
-    reconnectMaxDelayMs?: number;
-    /** Jitter ratio in [0, 1]. Actual delay is `base * (1 +/- jitter*rand)`. Default 0.2. */
-    reconnectJitter?: number;
-    /** Max reconnect attempts; `Infinity` for unbounded. Default Infinity. */
-    reconnectMaxAttempts?: number;
-    /** Injected WebSocket constructor (tests pass a mock). */
-    WebSocketImpl?: typeof WebSocket;
-    /** Called after every connection failure (reporting / logging hook). */
-    onError?: (error: Event | Error) => void;
-    /** Called when the socket transitions to OPEN (including after reconnects). */
-    onOpen?: () => void;
-    /** Called when the socket closes (before a reconnect is scheduled). */
-    onClose?: (event: CloseEvent) => void;
-}
-
-interface InternalState<TMap extends EventMap> {
-    socket: WebSocket | null;
+interface InternalOptions {
     url: string;
-    handlers: Map<keyof TMap & string, Set<Handler<unknown>>>;
-    closedByUser: boolean;
-    reconnectAttempts: number;
-    reconnectTimer: ReturnType<typeof setTimeout> | null;
-    queued: Array<{ type: string; payload: unknown }>;
-    opts: Required<Omit<WsClientOptions, "onError" | "onOpen" | "onClose">> &
-        Pick<WsClientOptions, "onError" | "onOpen" | "onClose">;
+    dispatch: (raw: string) => void;
+    onError?: (err: Error) => void;
+    onOpen?: () => void;
+    onClose?: (code: number, reason: string, wasClean: boolean) => void;
+    signal?: AbortSignal;
 }
 
-function computeBackoff(attempt: number, base: number, cap: number, jitter: number): number {
-    const raw = Math.min(cap, base * 2 ** attempt);
-    if (jitter <= 0) return raw;
-    const delta = raw * jitter * (Math.random() * 2 - 1);
-    return Math.max(0, raw + delta);
+function resolveUrl(url: string): string {
+    if (url.startsWith("ws://") || url.startsWith("wss://")) return url;
+    if (typeof document === "undefined" || !document.location) return url;
+    const scheme = document.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = document.location.host;
+    const path = url.startsWith("/") ? url : `/${url}`;
+    return `${scheme}//${host}${path}`;
 }
 
-function dispatch<TMap extends EventMap>(state: InternalState<TMap>, raw: string): void {
+function createInternal(opts: InternalOptions): WsClient {
+    const resolved = resolveUrl(opts.url);
+    let socket: WebSocket | null = null;
+    let aborted = false;
+    let failedAttempts = 0;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let stableTimer: ReturnType<typeof setTimeout> | null = null;
+    const disposers: Array<() => void> = [];
+
+    const clearTimers = () => {
+        if (reconnectTimer !== null) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+        if (stableTimer !== null) {
+            clearTimeout(stableTimer);
+            stableTimer = null;
+        }
+    };
+
+    const detach = () => {
+        for (const dispose of disposers) dispose();
+        disposers.length = 0;
+    };
+
+    const scheduleReconnect = () => {
+        if (aborted) return;
+        if (failedAttempts >= RECONNECT_DELAYS_MS.length) {
+            opts.onError?.(new Error("Max reconnect attempts reached"));
+            return;
+        }
+        const delay = RECONNECT_DELAYS_MS[failedAttempts];
+        failedAttempts += 1;
+        reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            if (!aborted) connect();
+        }, delay);
+    };
+
+    const connect = () => {
+        const ws = new WebSocket(resolved);
+        socket = ws;
+
+        const handleOpen = () => {
+            stableTimer = setTimeout(() => {
+                failedAttempts = 0;
+                stableTimer = null;
+            }, STABLE_RESET_MS);
+            opts.onOpen?.();
+        };
+
+        const handleMessage = (event: MessageEvent) => {
+            if (typeof event.data !== "string") {
+                opts.onError?.(new Error("WS: non-string frame received"));
+                return;
+            }
+            opts.dispatch(event.data);
+        };
+
+        const handleError = () => {
+            opts.onError?.(new Error("WS: socket error"));
+        };
+
+        const handleClose = (event: CloseEvent) => {
+            detach();
+            socket = null;
+            if (stableTimer !== null) {
+                clearTimeout(stableTimer);
+                stableTimer = null;
+            }
+            opts.onClose?.(event.code, event.reason, event.wasClean);
+            if (aborted) return;
+            if (NO_RETRY_CODES.has(event.code)) return;
+            scheduleReconnect();
+        };
+
+        ws.addEventListener("open", handleOpen);
+        ws.addEventListener("message", handleMessage);
+        ws.addEventListener("error", handleError);
+        ws.addEventListener("close", handleClose);
+        disposers.push(
+            () => ws.removeEventListener("open", handleOpen),
+            () => ws.removeEventListener("message", handleMessage),
+            () => ws.removeEventListener("error", handleError),
+            () => ws.removeEventListener("close", handleClose),
+        );
+    };
+
+    const close = (code?: number, reason?: string) => {
+        aborted = true;
+        clearTimers();
+        const current = socket;
+        if (current) {
+            detach();
+            socket = null;
+            if (
+                current.readyState === WebSocket.CONNECTING ||
+                current.readyState === WebSocket.OPEN
+            ) {
+                current.close(code, reason);
+            }
+        }
+    };
+
+    if (opts.signal) {
+        if (opts.signal.aborted) {
+            aborted = true;
+        } else {
+            const onAbort = () => close(1000, "aborted");
+            opts.signal.addEventListener("abort", onAbort, { once: true });
+        }
+    }
+
+    if (!aborted) connect();
+
+    return {
+        close,
+        get readyState() {
+            return socket?.readyState ?? WebSocket.CLOSED;
+        },
+    };
+}
+
+function dispatchKeyed<M extends Record<string, unknown>>(
+    raw: string,
+    onEvent: <K extends keyof M>(type: K, payload: M[K]) => void,
+    onError?: (err: Error) => void,
+): void {
     let parsed: unknown;
     try {
         parsed = JSON.parse(raw);
     } catch (err) {
-        state.opts.onError?.(err as Error);
+        onError?.(err instanceof Error ? err : new Error(String(err)));
         return;
     }
     if (
@@ -77,157 +212,69 @@ function dispatch<TMap extends EventMap>(state: InternalState<TMap>, raw: string
         typeof parsed !== "object" ||
         typeof (parsed as { type?: unknown }).type !== "string"
     ) {
-        state.opts.onError?.(new Error("Malformed WS message (missing `type`)"));
+        onError?.(new Error("WS: malformed message (missing `type`)"));
         return;
     }
     const { type, payload } = parsed as { type: string; payload: unknown };
-    const set = state.handlers.get(type);
-    if (!set) return;
-    for (const h of set) h(payload);
+    onEvent(type as keyof M, payload as M[keyof M]);
 }
 
-function connect<TMap extends EventMap>(state: InternalState<TMap>): void {
-    const Impl = state.opts.WebSocketImpl;
-    const socket = new Impl(state.url);
-    state.socket = socket;
+function dispatchUnion<U extends { type: string }>(
+    raw: string,
+    onEvent: (type: U["type"], message: U) => void,
+    onError?: (err: Error) => void,
+): void {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw);
+    } catch (err) {
+        onError?.(err instanceof Error ? err : new Error(String(err)));
+        return;
+    }
+    if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        typeof (parsed as { type?: unknown }).type !== "string"
+    ) {
+        onError?.(new Error("WS: malformed message (missing `type`)"));
+        return;
+    }
+    const message = parsed as U;
+    onEvent(message.type, message);
+}
 
-    socket.addEventListener("open", () => {
-        state.reconnectAttempts = 0;
-        for (const frame of state.queued) socket.send(JSON.stringify(frame));
-        state.queued.length = 0;
-        state.opts.onOpen?.();
+/**
+ * Create a typed WebSocket client for a keyed event bus (EventBusMap shape).
+ * Wire format: each frame is `{ type: string, payload: <typed> }`.
+ */
+export function createWsClient<M extends Record<string, unknown>>(
+    options: WsClientOptions<M>,
+): WsClient {
+    return createInternal({
+        url: options.url,
+        dispatch: (raw) => dispatchKeyed<M>(raw, options.onEvent, options.onError),
+        onError: options.onError,
+        onOpen: options.onOpen,
+        onClose: options.onClose,
+        signal: options.signal,
     });
+}
 
-    socket.addEventListener("message", (event: MessageEvent) => {
-        if (typeof event.data === "string") dispatch(state, event.data);
-    });
-
-    socket.addEventListener("error", (event: Event) => {
-        state.opts.onError?.(event);
-    });
-
-    socket.addEventListener("close", (event: CloseEvent) => {
-        state.opts.onClose?.(event);
-        state.socket = null;
-        if (state.closedByUser) return;
-        if (state.reconnectAttempts >= state.opts.reconnectMaxAttempts) return;
-        const delay = computeBackoff(
-            state.reconnectAttempts,
-            state.opts.reconnectBaseDelayMs,
-            state.opts.reconnectMaxDelayMs,
-            state.opts.reconnectJitter,
-        );
-        state.reconnectAttempts += 1;
-        state.reconnectTimer = setTimeout(() => {
-            state.reconnectTimer = null;
-            if (!state.closedByUser) connect(state);
-        }, delay);
+/**
+ * Create a typed WebSocket client for a discriminated-union stream (ChatMap shape).
+ * Wire format: each frame is the serialized union member itself (with `type` field).
+ */
+export function createChatWsClient<U extends { type: string }>(
+    options: ChatWsClientOptions<U>,
+): WsClient {
+    return createInternal({
+        url: options.url,
+        dispatch: (raw) => dispatchUnion<U>(raw, options.onEvent, options.onError),
+        onError: options.onError,
+        onOpen: options.onOpen,
+        onClose: options.onClose,
+        signal: options.signal,
     });
 }
 
-export function createWsClient<TMap extends EventMap>(
-    url: string,
-    options: WsClientOptions = {},
-): WsClient<TMap> {
-    const state: InternalState<TMap> = {
-        socket: null,
-        url,
-        handlers: new Map(),
-        closedByUser: false,
-        reconnectAttempts: 0,
-        reconnectTimer: null,
-        queued: [],
-        opts: {
-            reconnectBaseDelayMs: options.reconnectBaseDelayMs ?? 500,
-            reconnectMaxDelayMs: options.reconnectMaxDelayMs ?? 15_000,
-            reconnectJitter: options.reconnectJitter ?? 0.2,
-            reconnectMaxAttempts: options.reconnectMaxAttempts ?? Number.POSITIVE_INFINITY,
-            WebSocketImpl: options.WebSocketImpl ?? WebSocket,
-            onError: options.onError,
-            onOpen: options.onOpen,
-            onClose: options.onClose,
-        },
-    };
-
-    connect(state);
-
-    return {
-        on(event, handler) {
-            let set = state.handlers.get(event);
-            if (!set) {
-                set = new Set();
-                state.handlers.set(event, set);
-            }
-            const wrapped = handler as Handler<unknown>;
-            set.add(wrapped);
-            return () => {
-                set?.delete(wrapped);
-                if (set && set.size === 0) state.handlers.delete(event);
-            };
-        },
-        send(event, payload) {
-            const frame = { type: event, payload };
-            if (state.socket && state.socket.readyState === 1) {
-                state.socket.send(JSON.stringify(frame));
-            } else {
-                state.queued.push(frame);
-            }
-        },
-        close(code, reason) {
-            state.closedByUser = true;
-            if (state.reconnectTimer) {
-                clearTimeout(state.reconnectTimer);
-                state.reconnectTimer = null;
-            }
-            state.socket?.close(code, reason);
-            state.handlers.clear();
-            state.queued.length = 0;
-        },
-        get readyState() {
-            return state.socket?.readyState ?? 3;
-        },
-    };
-}
-
-// --- EventBus -------------------------------------------------------------
-
-/** Shape for server-driven event-bus clients. Consumers extend this. */
-export type EventBusMap = EventMap;
-
-export function createEventBusClient<TMap extends EventBusMap>(
-    url: string,
-    options?: WsClientOptions,
-): WsClient<TMap> {
-    return createWsClient<TMap>(url, options);
-}
-
-// --- Chat -----------------------------------------------------------------
-
-export interface ChatMessage {
-    id: string;
-    threadId: string;
-    role: "user" | "assistant" | "system";
-    content: string;
-    createdAt: string;
-}
-
-export interface ChatTyping {
-    threadId: string;
-    userId: string;
-    isTyping: boolean;
-}
-
-export interface ChatPresence {
-    userId: string;
-    status: "online" | "offline";
-}
-
-export interface ChatMap extends EventMap {
-    message: ChatMessage;
-    typing: ChatTyping;
-    presence: ChatPresence;
-}
-
-export function createChatClient(url: string, options?: WsClientOptions): WsClient<ChatMap> {
-    return createWsClient<ChatMap>(url, options);
-}
+export type { ChatMap, EventBusMap } from "./ws.types";

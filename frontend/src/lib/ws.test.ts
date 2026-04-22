@@ -1,212 +1,224 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MockWebSocket } from "../test/mock-websocket";
-import { type ChatMap, createChatClient, createEventBusClient, createWsClient } from "./ws";
-
-type BusMap = {
-    "machine.status": { id: string; state: "up" | "down" };
-    "alarm.raised": { code: number; message: string };
-};
+import { installMockWebSocket, MockWebSocket, restoreWebSocket } from "../test/mock-websocket";
+import { createChatWsClient, createWsClient } from "./ws";
+import type { ChatMap, EventBusMap } from "./ws.types";
 
 beforeEach(() => {
-    MockWebSocket.reset();
+    installMockWebSocket();
     vi.useFakeTimers();
 });
 
 afterEach(() => {
     vi.useRealTimers();
+    restoreWebSocket();
 });
 
-describe("createWsClient", () => {
-    it("dispatches incoming messages to the right typed handler", () => {
-        const client = createEventBusClient<BusMap>("ws://localhost/test", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
+describe("createWsClient (EventBusMap)", () => {
+    it("parses fixture multi-event and dispatches typed events", () => {
+        const onEvent = vi.fn();
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent,
         });
-
-        const statusHandler = vi.fn();
-        const alarmHandler = vi.fn();
-        client.on("machine.status", statusHandler);
-        client.on("alarm.raised", alarmHandler);
-
         MockWebSocket.last.simulateOpen();
+
         MockWebSocket.last.simulateMessage({
-            type: "machine.status",
-            payload: { id: "M1", state: "up" },
+            type: "agent_start",
+            payload: { agent: "planner", turn_id: "t1" },
+        });
+        MockWebSocket.last.simulateMessage({
+            type: "thinking_delta",
+            payload: { agent: "planner", content: "analysing", turn_id: "t1" },
+        });
+        MockWebSocket.last.simulateMessage({
+            type: "work_order_ready",
+            payload: { work_order_id: 42 },
         });
 
-        expect(statusHandler).toHaveBeenCalledExactlyOnceWith({ id: "M1", state: "up" });
-        expect(alarmHandler).not.toHaveBeenCalled();
+        expect(onEvent).toHaveBeenCalledTimes(3);
+        expect(onEvent).toHaveBeenNthCalledWith(1, "agent_start", {
+            agent: "planner",
+            turn_id: "t1",
+        });
+        expect(onEvent).toHaveBeenNthCalledWith(2, "thinking_delta", {
+            agent: "planner",
+            content: "analysing",
+            turn_id: "t1",
+        });
+        expect(onEvent).toHaveBeenNthCalledWith(3, "work_order_ready", {
+            work_order_id: 42,
+        });
     });
 
-    it("ignores messages whose `type` has no subscriber", () => {
-        const client = createEventBusClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
+    it("reconnects with exponential backoff after unexpected close (1006)", () => {
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent: vi.fn(),
         });
+        MockWebSocket.last.simulateOpen();
+        expect(MockWebSocket.instances).toHaveLength(1);
+
+        MockWebSocket.last.simulateClose(1006, "abnormal");
+
+        // Attempt #1: 500ms
+        vi.advanceTimersByTime(499);
+        expect(MockWebSocket.instances).toHaveLength(1);
+        vi.advanceTimersByTime(1);
+        expect(MockWebSocket.instances).toHaveLength(2);
+
+        // Attempt #2: 1500ms
+        MockWebSocket.last.simulateClose(1006, "abnormal");
+        vi.advanceTimersByTime(1499);
+        expect(MockWebSocket.instances).toHaveLength(2);
+        vi.advanceTimersByTime(1);
+        expect(MockWebSocket.instances).toHaveLength(3);
+    });
+
+    it("cleans up listeners after close()", () => {
+        const client = createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent: vi.fn(),
+        });
+        MockWebSocket.last.simulateOpen();
+        const mock = MockWebSocket.last;
+        expect(mock.totalListenerCount()).toBeGreaterThan(0);
+
+        client.close();
+
+        expect(mock.totalListenerCount()).toBe(0);
+        expect(mock.readyState).toBe(MockWebSocket.CLOSED);
+    });
+
+    it("calls onError with 'Max reconnect attempts' after 3 failed retries", () => {
         const onError = vi.fn();
-        client.on("machine.status", vi.fn());
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent: vi.fn(),
+            onError,
+        });
+
+        // Attempt #1: initial close → retry after 500ms
+        MockWebSocket.last.simulateClose(1006);
+        vi.advanceTimersByTime(500);
+        expect(MockWebSocket.instances).toHaveLength(2);
+
+        // Attempt #2: close again → retry after 1500ms
+        MockWebSocket.last.simulateClose(1006);
+        vi.advanceTimersByTime(1500);
+        expect(MockWebSocket.instances).toHaveLength(3);
+
+        // Attempt #3: close again → retry after 4500ms
+        MockWebSocket.last.simulateClose(1006);
+        vi.advanceTimersByTime(4500);
+        expect(MockWebSocket.instances).toHaveLength(4);
+
+        // 4th close → max reached, no new instance, onError fires
+        MockWebSocket.last.simulateClose(1006);
+        vi.advanceTimersByTime(10_000);
+        expect(MockWebSocket.instances).toHaveLength(4);
+        expect(onError).toHaveBeenCalledWith(
+            expect.objectContaining({ message: "Max reconnect attempts reached" }),
+        );
+    });
+
+    it("does not reconnect on clean close (code 1000)", () => {
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent: vi.fn(),
+        });
         MockWebSocket.last.simulateOpen();
 
-        MockWebSocket.last.simulateMessage({ type: "unknown.event", payload: {} });
+        MockWebSocket.last.simulateClose(1000, "normal");
+        vi.advanceTimersByTime(10_000);
 
-        expect(onError).not.toHaveBeenCalled();
+        expect(MockWebSocket.instances).toHaveLength(1);
     });
 
-    it("reports malformed frames through onError", () => {
+    it("resets retry counter after 30s of stable OPEN connection", () => {
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent: vi.fn(),
+        });
+
+        // Burn two failed attempts quickly
+        MockWebSocket.last.simulateClose(1006);
+        vi.advanceTimersByTime(500);
+        MockWebSocket.last.simulateClose(1006);
+        vi.advanceTimersByTime(1500);
+        expect(MockWebSocket.instances).toHaveLength(3);
+
+        // Open stable for 30s+ → counter resets
+        MockWebSocket.last.simulateOpen();
+        vi.advanceTimersByTime(30_001);
+
+        // Close again → should retry with attempt #1 delay (500ms), not #3 (4500ms)
+        MockWebSocket.last.simulateClose(1006);
+        vi.advanceTimersByTime(499);
+        expect(MockWebSocket.instances).toHaveLength(3);
+        vi.advanceTimersByTime(1);
+        expect(MockWebSocket.instances).toHaveLength(4);
+    });
+
+    it("calls onError on invalid JSON without crashing", () => {
         const onError = vi.fn();
-        createEventBusClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
+        const onEvent = vi.fn();
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent,
             onError,
         });
         MockWebSocket.last.simulateOpen();
 
-        MockWebSocket.last.simulateMessage("not-json");
-        MockWebSocket.last.simulateMessage({ no_type: true });
+        MockWebSocket.last.simulateMessage("{not json");
+        MockWebSocket.last.simulateMessage({ no_type_field: true });
 
         expect(onError).toHaveBeenCalledTimes(2);
+        expect(onEvent).not.toHaveBeenCalled();
     });
 
-    it("queues send() before OPEN and flushes on open", () => {
-        const client = createEventBusClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
-        });
-
-        client.send("machine.status", { id: "M1", state: "down" });
-        expect(MockWebSocket.last.sent).toHaveLength(0);
-
-        MockWebSocket.last.simulateOpen();
-
-        expect(MockWebSocket.last.sent).toEqual([
-            JSON.stringify({ type: "machine.status", payload: { id: "M1", state: "down" } }),
-        ]);
-    });
-
-    it("unsubscribes handlers cleanly", () => {
-        const client = createEventBusClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
-        });
-        const handler = vi.fn();
-        const unsubscribe = client.on("machine.status", handler);
-        MockWebSocket.last.simulateOpen();
-
-        MockWebSocket.last.simulateMessage({
-            type: "machine.status",
-            payload: { id: "a", state: "up" },
-        });
-        unsubscribe();
-        MockWebSocket.last.simulateMessage({
-            type: "machine.status",
-            payload: { id: "b", state: "up" },
-        });
-
-        expect(handler).toHaveBeenCalledExactlyOnceWith({ id: "a", state: "up" });
-    });
-
-    it("reconnects with exponential backoff after abnormal close", () => {
-        const onOpen = vi.fn();
-        createEventBusClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
-            reconnectBaseDelayMs: 100,
-            reconnectMaxDelayMs: 10_000,
-            reconnectJitter: 0,
-            onOpen,
-        });
-
-        MockWebSocket.last.simulateOpen();
-        expect(onOpen).toHaveBeenCalledTimes(1);
-
-        MockWebSocket.last.simulateClose();
-        expect(MockWebSocket.instances).toHaveLength(1);
-
-        // 1st reconnect after base * 2^0 = 100ms
-        vi.advanceTimersByTime(100);
-        expect(MockWebSocket.instances).toHaveLength(2);
-
-        // Fail again before it opens, next delay is base * 2^1 = 200ms
-        MockWebSocket.last.simulateClose();
-        vi.advanceTimersByTime(199);
-        expect(MockWebSocket.instances).toHaveLength(2);
-        vi.advanceTimersByTime(1);
-        expect(MockWebSocket.instances).toHaveLength(3);
-
-        MockWebSocket.last.simulateOpen();
-        expect(onOpen).toHaveBeenCalledTimes(2);
-    });
-
-    it("stops reconnecting after close() is called by the user", () => {
-        const client = createEventBusClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
-            reconnectBaseDelayMs: 50,
-            reconnectJitter: 0,
+    it("honors external AbortSignal — closes socket and stops reconnect", () => {
+        const controller = new AbortController();
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent: vi.fn(),
+            signal: controller.signal,
         });
         MockWebSocket.last.simulateOpen();
 
-        client.close();
+        controller.abort();
+
         expect(MockWebSocket.last.readyState).toBe(MockWebSocket.CLOSED);
-
         vi.advanceTimersByTime(10_000);
         expect(MockWebSocket.instances).toHaveLength(1);
     });
-
-    it("caps reconnect attempts when reconnectMaxAttempts is set", () => {
-        createEventBusClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
-            reconnectBaseDelayMs: 10,
-            reconnectJitter: 0,
-            reconnectMaxAttempts: 2,
-        });
-
-        MockWebSocket.last.simulateClose();
-        vi.advanceTimersByTime(10);
-        expect(MockWebSocket.instances).toHaveLength(2);
-
-        MockWebSocket.last.simulateClose();
-        vi.advanceTimersByTime(20);
-        expect(MockWebSocket.instances).toHaveLength(3);
-
-        MockWebSocket.last.simulateClose();
-        vi.advanceTimersByTime(10_000);
-        expect(MockWebSocket.instances).toHaveLength(3);
-    });
 });
 
-describe("createChatClient", () => {
-    it("routes typed chat events", () => {
-        const client = createChatClient("ws://chat", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
+describe("createChatWsClient (ChatMap)", () => {
+    it("dispatches discriminated-union messages with full object", () => {
+        const onEvent = vi.fn();
+        createChatWsClient<ChatMap>({
+            url: "ws://localhost/api/v1/agent/chat",
+            onEvent,
         });
-        const onMessage = vi.fn<(m: ChatMap["message"]) => void>();
-        client.on("message", onMessage);
         MockWebSocket.last.simulateOpen();
 
+        MockWebSocket.last.simulateMessage({ type: "text_delta", content: "Hel" });
         MockWebSocket.last.simulateMessage({
-            type: "message",
-            payload: {
-                id: "1",
-                threadId: "t1",
-                role: "assistant",
-                content: "hello",
-                createdAt: "2026-04-22T10:00:00Z",
-            },
+            type: "tool_call",
+            name: "query_db",
+            args: { sql: "SELECT 1" },
         });
+        MockWebSocket.last.simulateMessage({ type: "done" });
 
-        expect(onMessage).toHaveBeenCalledExactlyOnceWith({
-            id: "1",
-            threadId: "t1",
-            role: "assistant",
-            content: "hello",
-            createdAt: "2026-04-22T10:00:00Z",
+        expect(onEvent).toHaveBeenNthCalledWith(1, "text_delta", {
+            type: "text_delta",
+            content: "Hel",
         });
-    });
-});
-
-describe("createWsClient (generic)", () => {
-    it("exposes readyState reflecting the underlying socket", () => {
-        const client = createWsClient<BusMap>("ws://x", {
-            WebSocketImpl: MockWebSocket as unknown as typeof WebSocket,
+        expect(onEvent).toHaveBeenNthCalledWith(2, "tool_call", {
+            type: "tool_call",
+            name: "query_db",
+            args: { sql: "SELECT 1" },
         });
-        expect(client.readyState).toBe(MockWebSocket.CONNECTING);
-        MockWebSocket.last.simulateOpen();
-        expect(client.readyState).toBe(MockWebSocket.OPEN);
-        client.close();
-        expect(client.readyState).toBe(MockWebSocket.CLOSED);
+        expect(onEvent).toHaveBeenNthCalledWith(3, "done", { type: "done" });
     });
 });
