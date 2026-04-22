@@ -1,28 +1,14 @@
-"""ARIA MCP tools — KPI wrappers (M2.2).
-
-Each tool acquires its own connection from the shared asyncpg pool via
-``_with_conn()``. No FastAPI Depends, no persistent session per agent.
-"""
+"""KPI tools (M2.2) — OEE, MTBF, MTTR, downtime breakdown."""
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from datetime import timedelta
-from typing import AsyncIterator
 
-import asyncpg
+from aria_mcp._common import with_conn
 from aria_mcp.server import mcp
-from core.database import db
 from core.datetime_helpers import parse_tz_aware
 from modules.kpi.repository import KpiRepository
 from modules.kpi.schemas import MaintenanceKpiDTO, OeeBucketDTO, OeeDTO
-
-
-@asynccontextmanager
-async def _with_conn() -> AsyncIterator[asyncpg.Connection]:
-    """Acquire+release a pooled DB connection for one tool call."""
-    async with db.pool.acquire() as conn:
-        yield conn
 
 
 @mcp.tool()
@@ -50,7 +36,7 @@ async def get_oee(
     """
     ws = parse_tz_aware(window_start)
     we = parse_tz_aware(window_end)
-    async with _with_conn() as conn:
+    async with with_conn() as conn:
         repo = KpiRepository(conn)
         if bucket_minutes is not None:
             rows = await repo.oee_bucketed(cell_ids, ws, we, timedelta(minutes=bucket_minutes))
@@ -72,7 +58,7 @@ async def get_mtbf(
     """
     ws = parse_tz_aware(window_start)
     we = parse_tz_aware(window_end)
-    async with _with_conn() as conn:
+    async with with_conn() as conn:
         mtbf = await KpiRepository(conn).mtbf(cell_ids, ws, we)
     return MaintenanceKpiDTO(mtbf_seconds=mtbf).model_dump(mode="json", include={"mtbf_seconds"})
 
@@ -90,7 +76,7 @@ async def get_mttr(
     """
     ws = parse_tz_aware(window_start)
     we = parse_tz_aware(window_end)
-    async with _with_conn() as conn:
+    async with with_conn() as conn:
         mttr = await KpiRepository(conn).mttr(cell_ids, ws, we)
     return MaintenanceKpiDTO(mttr_seconds=mttr).model_dump(mode="json", include={"mttr_seconds"})
 
@@ -120,7 +106,7 @@ async def get_downtime_events(
     """
     ws = parse_tz_aware(window_start)
     we = parse_tz_aware(window_end)
-    async with _with_conn() as conn:
+    async with with_conn() as conn:
         cats = categories if categories else ["unplanned_stop", "planned_stop", "changeover"]
         rows = await conn.fetch(
             """

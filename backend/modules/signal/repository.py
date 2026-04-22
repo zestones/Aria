@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import asyncpg
@@ -127,6 +127,37 @@ class SignalRepository:
             window_start,
             window_end,
             limit,
+        )
+
+    async def signal_data_bucketed(
+        self,
+        signal_def_ids: list[int],
+        window_start: datetime,
+        window_end: datetime,
+        bucket: timedelta,
+    ):
+        """Time-bucketed aggregation (avg/min/max) over multiple signals.
+
+        Used by the MCP ``get_signal_trends`` tool — Investigator overlays
+        3–4 correlated signals in one round-trip.
+        """
+        return await self.conn.fetch(
+            """
+            SELECT time_bucket($4, time) AS bucket,
+                   signal_def_id,
+                   AVG(raw_value)::float AS avg,
+                   MIN(raw_value)::float AS min,
+                   MAX(raw_value)::float AS max
+            FROM process_signal_data
+            WHERE signal_def_id = ANY($1::int[])
+              AND time >= $2 AND time < $3
+            GROUP BY bucket, signal_def_id
+            ORDER BY bucket, signal_def_id
+            """,
+            signal_def_ids,
+            window_start,
+            window_end,
+            bucket,
         )
 
     async def current_values(self, cell_ids: list[int] | None):

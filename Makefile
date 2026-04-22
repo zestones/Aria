@@ -90,7 +90,7 @@ rebuild: ## Force rebuild without cache
 # ============================================================
 # Database
 # ============================================================
-.PHONY: db.shell db.reset migrate
+.PHONY: db.shell db.reset migrate db.seed.p02
 
 db.shell: ## Open a psql shell into the database
 	$(COMPOSE) exec timescaledb psql -U $${POSTGRES_USER:-aria} -d $${POSTGRES_DB:-aria}
@@ -104,6 +104,12 @@ db.reset: ## ⚠️  Drop the database volume and re-run migrations (destroys al
 
 migrate: ## Re-run database migrations
 	$(COMPOSE) up migrate
+
+db.seed.p02: ## Restore the canonical P-02 KB row (idempotent — safe to re-run after KB drift)
+	@printf "$(C_CYAN)→ Re-seeding equipment_kb for P-02$(C_RESET)\n"
+	@$(COMPOSE) exec -T timescaledb psql -U $${POSTGRES_USER:-aria} -d $${POSTGRES_DB:-aria} \
+		< $(BACKEND_DIR)/infrastructure/database/seeds/p02_kb.sql
+	@printf "$(C_GREEN)  ✓ P-02 KB restored$(C_RESET)\n"
 
 # ============================================================
 # Backend quality gates
@@ -150,7 +156,7 @@ frontend.build: ## Production build (vite)
 # ============================================================
 # Combined targets
 # ============================================================
-.PHONY: format lint typecheck check test e2e clean
+.PHONY: format lint typecheck check test e2e clean backend.smoke.mcp
 
 format: backend.format frontend.format ## Auto-format both backend and frontend
 
@@ -165,6 +171,9 @@ test: backend.test ## Run all unit tests
 
 e2e: ## Run backend E2E smoke test (requires stack to be up)
 	bash $(BACKEND_DIR)/tests/e2e_smoke.sh
+
+backend.smoke.mcp: ## Run MCP server E2E smoke (requires stack + canonical KB; see issue #69)
+	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/e2e/aria_mcp_smoke.py
 
 clean: ## Remove caches and build artifacts
 	@find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +

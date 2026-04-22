@@ -129,12 +129,16 @@ hit GET    "/api/v1/work-orders/$WO_ID" 404
 echo "=== 13. KB ==="
 hit GET "/api/v1/kb/equipment" 200
 hit GET "/api/v1/kb/equipment/1" 200
-hit PUT "/api/v1/kb/equipment" 201 '{"cell_id":1,"manufacturer":"FlowTech","model":"CP-3200","structured_data":{"thresholds":{"flow_m3h":{"nominal":32,"alert":40,"unit":"m3/h","confidence":0.9}}}}'
-if python3 -c "import json;d=json.load(open('/tmp/_e2e_body.json'));exit(0 if d['data']['structured_data']['thresholds']['flow_m3h']['nominal']==32 else 1)"; then
+# Upsert preserves canonical thresholds — issue #69 validation refuses payloads
+# that would orphan a process_signal_definition.kb_threshold_key.
+hit PUT "/api/v1/kb/equipment" 201 '{"cell_id":1,"manufacturer":"FlowTech","model":"CP-3200","structured_data":{"thresholds":{"vibration_mm_s":{"nominal":2.2,"alert":4.5,"trip":7.1,"unit":"mm/s","confidence":0.9},"bearing_temp_c":{"nominal":48,"alert":75,"trip":90,"unit":"C","confidence":0.85},"flow_l_min":{"nominal":533,"low_alert":480,"high_alert":580,"unit":"L/min","confidence":0.9},"pressure_bar":{"nominal":5.5,"low_alert":4.5,"high_alert":6.5,"unit":"bar","confidence":0.9}}}}'
+if python3 -c "import json;d=json.load(open('/tmp/_e2e_body.json'));exit(0 if d['data']['structured_data']['thresholds']['vibration_mm_s']['alert']==4.5 else 1)"; then
     echo "  KB JSON round-trip OK"
 else
     FAIL=$((FAIL+1)); FAILURES+=("KB structured_data round-trip mismatch")
 fi
+# Validation guard (#69): an upsert that drops a referenced key must be rejected.
+hit PUT "/api/v1/kb/equipment" 422 '{"cell_id":1,"structured_data":{"thresholds":{"flow_m3h":{"nominal":32,"alert":40,"unit":"m3/h"}}}}'
 hit GET "/api/v1/kb/failures?cell_id=1" 200
 
 echo "=== 14. RBAC: viewer cannot write ==="
