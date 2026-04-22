@@ -76,8 +76,14 @@ async def get_signal_anomalies(
         List of ``{signal_def_id, display_name, kb_key, time: iso_str,
         value: float, threshold_field: "alert"|"trip"|"low_alert"|"high_alert",
         threshold_value: float, severity: "alert"|"trip", direction: "high"|"low"}``
-        ordered by time ascending. Empty list if KB has no thresholds, no
-        signals carry a ``kb_threshold_key``, or no breaches occurred.
+        ordered by time ascending. Empty list **only** when threshold evaluation
+        ran cleanly and produced no breaches.
+
+    Raises:
+        ValueError: When the cell has no KB row, the KB has no thresholds, or
+            none of its ``process_signal_definition.kb_threshold_key`` values
+            match a key in the KB. These are configuration errors that would
+            otherwise silently look like "no anomalies" (issue #69).
     """
     ws = parse_tz_aware(window_start)
     we = parse_tz_aware(window_end)
@@ -87,10 +93,13 @@ async def get_signal_anomalies(
             cell_id,
         )
         if not kb_row or not kb_row["structured_data"]:
-            return []
+            raise ValueError(f"cell {cell_id} has no equipment_kb row; cannot evaluate anomalies")
         kb = EquipmentKB.model_validate_json(kb_row["structured_data"])
         if not kb.thresholds:
-            return []
+            raise ValueError(
+                f"equipment_kb for cell {cell_id} has no thresholds; "
+                "calibrate the KB before requesting anomalies"
+            )
 
         sig_rows = await conn.fetch(
             """
@@ -103,7 +112,21 @@ async def get_signal_anomalies(
             list(kb.thresholds.keys()),
         )
         if not sig_rows:
-            return []
+            # Diagnose which side is misconfigured so the agent (or operator) knows
+            # whether to fix the KB or the signal_def.kb_threshold_key column.
+            sig_keys_rows = await conn.fetch(
+                "SELECT DISTINCT kb_threshold_key FROM process_signal_definition "
+                "WHERE cell_id = $1 AND kb_threshold_key IS NOT NULL",
+                cell_id,
+            )
+            sig_keys = sorted({r["kb_threshold_key"] for r in sig_keys_rows})
+            kb_keys = sorted(kb.thresholds.keys())
+            raise ValueError(
+                f"cell {cell_id}: no process_signal_definition.kb_threshold_key "
+                f"matches a key in equipment_kb.thresholds. "
+                f"signal_def keys={sig_keys}, kb keys={kb_keys}. "
+                "Run `make db.seed.p02` (or fix the kb_threshold_key column) to recover."
+            )
 
         sig_to_kb: dict[int, str] = {r["id"]: r["kb_threshold_key"] for r in sig_rows}
         sig_to_name: dict[int, str] = {r["id"]: r["display_name"] for r in sig_rows}
