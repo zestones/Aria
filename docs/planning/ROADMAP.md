@@ -245,6 +245,125 @@ sequenceDiagram
 
 ---
 
+## Team split — qui fait quoi en parallèle
+
+Équipe de 2 : **Backend (zestones)** + **Frontend (vgtray)**. Le contrat WS
+(`EventBusMap` / `ChatMap` dans [`ALIGNMENT.md`](./ALIGNMENT.md)) est figé dès
+M1 → les deux peuvent coder en parallèle sans se bloquer mutuellement.
+
+### Ownership par milestone
+
+```mermaid
+gantt
+    title Parallèle Backend (zestones) / Frontend (vgtray)
+    dateFormat YYYY-MM-DD
+    axisFormat %a %d
+    excludes weekends
+
+    section zestones (backend)
+    M1 Data Layer            :done, 2026-04-22, 1d
+    M2 MCP Server            :      2026-04-23, 1d
+    M3 KB Builder            :      2026-04-23, 1d
+    M4 Sentinel + Investig.  :crit, 2026-04-24, 1d
+    M5 WO Gen + Q&A          :crit, 2026-04-25, 1d
+
+    section vgtray (frontend)
+    M6 Foundation            :      2026-04-23, 1d
+    M7 Control Room          :      2026-04-24, 1d
+    M8 Agentic Workspace     :crit, 2026-04-25, 1d
+
+    section Ensemble (sync)
+    M9 Polish + E2E rehearse :crit, 2026-04-26, 12h
+    M10 Vidéo + submission   :milestone, 2026-04-26, 0d
+```
+
+### Répartition concrète
+
+| Lane                                                   | Owner    | Issues        | Démarre quand                                |
+|--------------------------------------------------------|----------|---------------|----------------------------------------------|
+| Migrations + Pydantic                                  | zestones | M1 (#2-#7)    | maintenant (Wed AM)                          |
+| FastMCP + 14 tools + MCPClient                         | zestones | M2 (#8-#16)   | dès M1 mergé (Wed PM)                        |
+| KB Builder agent + onboarding                          | zestones | M3 (#17-#22)  | en parallèle de M2 (peut commencer dès M1.4) |
+| Sentinel + Investigator + WSManager                    | zestones | M4 (#23-#29)  | dès M2 mergé (Thu)                           |
+| WO Gen + Q&A WS + Managed Agents                       | zestones | M5 (#30-#33)  | dès M4 mergé (Fri PM/Sat)                    |
+| Vite shell + design tokens + WS client typé            | vgtray   | M6 (#34-#39)  | **maintenant** (pas de dep backend)          |
+| P&ID + KPI bar + anomaly banner + ChatPanel + registry | vgtray   | M7 (#40-#44)  | dès M6.4 prêt (Thu PM)                       |
+| Tous les artifacts + Inspector + onboarding wizard     | vgtray   | M8 (#45-#50)  | dès M7.5 prêt (Fri PM)                       |
+| WO console + motion + démo rehearse                    | les deux | M9 (#51-#54)  | Sun matin                                    |
+| README + DEMO.md + vidéo + submission                  | les deux | M10 (#55-#57) | Sun aprem                                    |
+
+### Comment travailler en parallèle sans se bloquer
+
+> [!IMPORTANT]
+> **Le contrat WS est la seule interface partagée.** Tant que les types
+> `EventBusMap` et `ChatMap` ([`ALIGNMENT.md`](./ALIGNMENT.md) §3) ne bougent pas,
+> chacun avance sans toucher au code de l'autre.
+
+```mermaid
+flowchart LR
+    subgraph contract["Contrat figé Day 1"]
+        WS["EventBusMap + ChatMap\n(ALIGNMENT.md)"]
+        REST["OpenAPI auto-gen FastAPI"]
+    end
+    subgraph zestones["Backend (zestones)"]
+        BE["FastAPI + agents + MCP"]
+    end
+    subgraph vgtray["Frontend (vgtray)"]
+        Mock["WS mock (M6.5)\nfixtures JSON par event type"]
+        FE["React UI"]
+    end
+    BE -- "émet" --> WS
+    Mock -- "émet (avant que BE soit prêt)" --> WS
+    WS --> FE
+    BE -- "schemas Pydantic" --> REST
+    REST -- "openapi-typescript" --> FE
+```
+
+**Mécaniques de parallélisation :**
+
+1. **Mock-first frontend.** vgtray code M6/M7/M8 contre le mock WS de M6.5 (un
+   `ws.mock.ts` qui rejoue des fixtures JSON). Ne dépend pas que zestones ait
+   fini M4. Branchement réel = remplacer `createMockWs` par `createWsClient` en
+   1 ligne.
+2. **OpenAPI auto-generated types.** zestones lance FastAPI dès M1 → vgtray
+   lance `npx openapi-typescript http://localhost:8000/openapi.json -o src/lib/api.types.ts`
+   pour avoir les types REST sans attendre.
+3. **Une fixture par event type.** Pour chaque entry de `EventBusMap` (10) et
+   `ChatMap` (7), créer `frontend/src/lib/ws.fixtures.ts` avec un exemple de
+   payload. C'est la spec exécutable du contrat.
+4. **Branche par milestone.** `feat/m4-investigator` (zestones), `feat/m6-shell`
+   (vgtray). PR dès qu'un milestone est démontrable, merge sur `main` derrière
+   un tag `vX.Y`.
+
+### Points de synchronisation obligatoires
+
+| Quand         | Quoi                                                              | Durée  |
+|---------------|-------------------------------------------------------------------|--------|
+| **Wed soir**  | M1 mergé + M6 démarré + WS contract review ensemble               | 15 min |
+| **Thu soir**  | M2 + M6 mergés, vgtray peut tester contre vrai backend (mock OFF) | 15 min |
+| **Fri soir**  | M4 mergé → vgtray rebranche M7.4 sur vrai `WS /api/v1/agent/chat` | 30 min |
+| **Sat soir**  | E2E P-02 testé bout en bout (Scene 1 à 5)                         | 1h     |
+| **Sun matin** | Démo rehearsal en duo, M9.4                                       | 1h     |
+| **Sun 18h**   | Lock code, vidéo + soumission                                     | 2h     |
+
+> [!TIP]
+> **Daily 5 min stand-up async sur Discord** : ce que j'ai mergé, ce que je
+> bloque, ce dont j'ai besoin. Pas plus.
+
+### Règles de no-conflit
+
+- zestones ne touche **jamais** à `frontend/`. vgtray ne touche **jamais** à
+  `backend/`. La doc partagée (`docs/`) → toujours en PR séparée.
+- Tout changement au contrat WS (ajout d'event, rename de field) =
+  ping immédiat sur Discord + update `ALIGNMENT.md` dans la même PR.
+- Les types TypeScript de `EventBusMap`/`ChatMap` vivent côté frontend
+  ([`frontend/src/lib/ws.types.ts`](../../frontend/src/lib/ws.types.ts)). Côté
+  backend, ils existent en commentaire dans `WSManager.broadcast()`. Si
+  divergence → frontend gagne (c'est lui qui les voit en runtime).
+- **Pas de force-push sur `main`.** Seulement sur les branches `feat/*`.
+
+---
+
 ## Prize alignment
 
 > [!NOTE]
