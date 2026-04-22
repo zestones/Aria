@@ -6,4 +6,4 @@ sub-module imports below. Order is irrelevant; each module is independent.
 
 from __future__ import annotations
 
-from aria_mcp.tools import kpi, signals  # noqa: F401  side-effect imports
+from aria_mcp.tools import context, hierarchy, kpi, signals  # noqa: F401  side-effect imports

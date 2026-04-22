@@ -22,7 +22,16 @@ class WorkOrderRepository:
         LEFT JOIN users u ON wo.assigned_to = u.id
     """
 
-    async def list(self, cell_id: int | None, status: str | None, limit: int):
+    async def list(
+        self,
+        cell_id: int | None,
+        status: str | None,
+        limit: int,
+        date_start: Any | None = None,
+        date_end: Any | None = None,
+        priority: str | None = None,
+        generated_by_agent: bool | None = None,
+    ):
         clauses, params = [], []
         if cell_id is not None:
             params.append(cell_id)
@@ -30,6 +39,18 @@ class WorkOrderRepository:
         if status is not None:
             params.append(status)
             clauses.append(f"wo.status = ${len(params)}")
+        if priority is not None:
+            params.append(priority)
+            clauses.append(f"wo.priority = ${len(params)}")
+        if generated_by_agent is not None:
+            params.append(generated_by_agent)
+            clauses.append(f"wo.generated_by_agent = ${len(params)}")
+        if date_start is not None:
+            params.append(date_start)
+            clauses.append(f"wo.created_at >= ${len(params)}")
+        if date_end is not None:
+            params.append(date_end)
+            clauses.append(f"wo.created_at < ${len(params)}")
         where = "WHERE " + " AND ".join(clauses) if clauses else ""
         params.append(limit)
         sql = f"{self._SELECT} {where} ORDER BY wo.created_at DESC LIMIT ${len(params)}"
