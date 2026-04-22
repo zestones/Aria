@@ -67,7 +67,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
                 e.preventDefault();
                 submit();
             }}
-            className="border-t border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-3 py-3"
+            className="border-t border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-3 pt-2.5 pb-2"
         >
             <div className="flex items-end gap-2 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] px-3 py-2 transition-colors duration-[var(--ds-motion-fast)] focus-within:border-[var(--ds-border-strong)] focus-within:ring-2 focus-within:ring-[var(--ds-accent-ring)]">
                 <textarea
@@ -94,7 +94,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
                     <Icons.ArrowRight className="size-3.5" />
                 </button>
             </div>
-            <p className="mt-1.5 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+            <p className="mt-1 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
                 Enter to send · Shift + Enter for new line
             </p>
         </form>
