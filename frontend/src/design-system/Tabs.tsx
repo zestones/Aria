@@ -43,6 +43,11 @@ export function Tabs({
     );
 }
 
+/**
+ * Tabs list — editorial/SCADA flavor: no filled-pill background, just a
+ * bottom border running under every trigger plus a 2px accent rail on the
+ * selected one (DESIGN_PLAN §8).
+ */
 export function TabsList({
     className = "",
     children,
@@ -53,7 +58,7 @@ export function TabsList({
     return (
         <div
             role="tablist"
-            className={`inline-flex items-center gap-1 p-1 bg-[var(--ds-bg-elevated)] border border-[var(--ds-border)] rounded-[var(--ds-radius-md)] ${className}`}
+            className={`inline-flex items-end gap-0 border-b border-[var(--ds-border)] ${className}`}
         >
             {children}
         </div>
@@ -79,10 +84,10 @@ export function TabsTrigger({
             aria-controls={`${idBase}-panel-${value}`}
             id={`${idBase}-trigger-${value}`}
             onClick={() => setValue(value)}
-            className={`h-7 px-3 text-xs font-medium rounded-[var(--ds-radius-sm)] transition-colors duration-[var(--ds-motion-fast)] ${
+            className={`relative h-8 px-4 text-[11px] font-mono font-medium tracking-[0.08em] uppercase transition-colors duration-[var(--ds-motion-fast)] -mb-px border-b-2 ${
                 selected
-                    ? "bg-[var(--ds-bg-surface)] text-[var(--ds-fg-primary)]"
-                    : "text-[var(--ds-fg-muted)] hover:text-[var(--ds-fg-primary)]"
+                    ? "text-[var(--ds-fg-primary)] border-[var(--ds-accent)]"
+                    : "text-[var(--ds-fg-subtle)] border-transparent hover:text-[var(--ds-fg-muted)]"
             } ${className}`}
         >
             {children}

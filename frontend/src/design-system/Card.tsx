@@ -1,8 +1,16 @@
 import { forwardRef, type HTMLAttributes } from "react";
+import { type RailTone, StatusRail } from "./StatusRail";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
     padding?: "none" | "sm" | "md" | "lg";
     elevated?: boolean;
+    /**
+     * Left-edge 2px status rail conveying the card's live state.
+     * See DESIGN_PLAN §5.4.
+     */
+    rail?: RailTone;
+    /** Pulse the rail when warning/critical (defaults true for those tones). */
+    railPulse?: boolean;
 }
 
 const paddings = {
@@ -13,14 +21,21 @@ const paddings = {
 };
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-    ({ padding = "md", elevated = false, className = "", children, ...rest }, ref) => {
+    (
+        { padding = "md", elevated = false, rail, railPulse, className = "", children, ...rest },
+        ref,
+    ) => {
         const bg = elevated ? "bg-[var(--ds-bg-elevated)]" : "bg-[var(--ds-bg-surface)]";
+        const hasRail = rail !== undefined;
+        const pulse = railPulse ?? (rail === "critical" || rail === "warning");
+        const railPadding = hasRail ? "pl-[calc(var(--ds-space-rail,14px))]" : "";
         return (
             <div
                 ref={ref}
-                className={`${bg} border border-[var(--ds-border)] rounded-[var(--ds-radius-md)] ${paddings[padding]} ${className}`}
+                className={`relative ${bg} border border-[var(--ds-border)] rounded-[var(--ds-radius-md)] ${paddings[padding]} ${railPadding} ${className}`}
                 {...rest}
             >
+                {hasRail && <StatusRail tone={rail} pulse={pulse} />}
                 {children}
             </div>
         );
@@ -42,7 +57,10 @@ export function CardTitle({
     ...rest
 }: HTMLAttributes<HTMLHeadingElement>) {
     return (
-        <h3 className={`text-sm font-semibold text-[var(--ds-fg-primary)] ${className}`} {...rest}>
+        <h3
+            className={`text-[16px] font-semibold leading-tight tracking-[-0.01em] text-[var(--ds-fg-primary)] ${className}`}
+            {...rest}
+        >
             {children}
         </h3>
     );
