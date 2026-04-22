@@ -170,19 +170,6 @@ sentinel_task.cancel()
 
 ---
 
-## Bloque
-
-- Scène 2 (anomalie live) et Scène 3 (RCA) de la démo
-- M5 (le Work Order Generator est triggered par l'Investigator)
-
-## Bloqué par
-
-- M1 (`work_order` colonnes)
-- M2 (tools, MCPClient)
-- M3 (KB doit exister pour que Sentinel ait des seuils)
-
----
-
 ## Issue M4.5 🔴 — Extended thinking sur Investigator (Opus 4.7 wow factor)
 
 **Scope.** Activer `thinking` sur l'agent loop Investigator. C'est le seul argument
@@ -209,7 +196,7 @@ await ws_manager.broadcast("thinking_delta", {
 ```
 
 **Périmètre.** Activé **uniquement** sur Investigator. Budget 10k tokens ≈ 5¢ par
-run avec Opus 4.7, négligeable. Les autres agents n'en ont pas besoin (et économie
+run avec Opus 4.7, négligeable. Les autres agents n'en ont pas besoin (et économie
 coûts).
 
 **Pourquoi critique.** Le frontend (M8.5 Agent Inspector) streame le thinking en
@@ -296,3 +283,16 @@ utilise `failure_history` en contexte (sans la scène scénarisée).
 **Acceptance.**
 - [ ] Investigator cite la panne passée dans son RCA si pattern matche
 - [ ] Endpoint demo `/trigger-memory-scene` rejouable autant de fois que voulu
+
+---
+
+## Bloque
+
+- Scène 2 (anomalie live) et Scène 3 (RCA) de la démo
+- M5 (le Work Order Generator est triggered par l'Investigator)
+
+## Bloqué par
+
+- M1 (`work_order` colonnes)
+- M2 (tools, MCPClient, M2.9 UI tools)
+- M3 (KB doit exister pour que Sentinel ait des seuils)

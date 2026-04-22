@@ -14,10 +14,8 @@
   KB de l'équipement (procedures + parts disponibles)."
 - System prompt : "Tu génères des work orders de maintenance. Tu as accès à la KB
   équipement via tools. Output JSON via `submit_work_order(...)` :
-  `{title, description, recommended_actions: [step1, step2, ...], parts_required: [{ref, qty}], priority, estimated_duration_min, suggested_window_start, suggested_window_end}`. Après soumission, appelle `render_work_order_card(work_order_id, printable: true)` pour l'afficher en chat."
-- Tools : `tools = await mcp_client.get_tools_schema() + UI_TOOLS + [SUBMIT_WORK_ORDER_TOOL]`
-  (UI_TOOLS cf. M2.9 — utilise `render_work_order_card` ; SUBMIT_WORK_ORDER_TOOL déclaré inline comme `SUBMIT_RCA_TOOL`)
-- Agent loop (court — typiquement 2–3 tool calls : `get_equipment_kb` + `submit_work_order` + `render_work_order_card`)
+  `{title, description, recommended_actions: [step1, step2, ...], parts_required: [{ref, qty}], priority, estimated_duration_min, suggested_window_start, suggested_window_end}`"
+- Agent loop (court — typiquement 2 tool calls : `get_equipment_kb` + `submit_work_order`)
 - UPDATE work_order avec les champs structurés
 - `ws_manager.broadcast("work_order_ready", ...)`
 
@@ -91,56 +89,61 @@ et retourne `{response, tool_calls: [...]}`.
 
 ---
 
-## Issue M5.4 🔴 — Q&A migration vers Claude Managed Agents
+## Issue M5.4 — Q&A migration vers Claude Managed Agents
 
-**Scope.** Remplacer l'agent loop Messages API du M5.2 par **Claude Managed
-Agents** sur le seul agent Q&A. Sans ça, aucune chance de gagner le prix dédié
-**Best Managed Agents $5k**.
+> Ajoutée après alignement front/back. Contexte complet dans `docs/planning/ALIGNMENT.md`.
 
-**Périmètre clair.**
-- Q&A = seul agent en Managed Agents (interactif, stateful, long-running —
-  cas d'usage idéal)
-- Sentinel, Investigator, KB Builder, Work Order Gen restent en Messages API
-  + orchestrateur maison + agent-as-tool (cf. M4.6)
+**Scope.** Remplacer l'agent loop Messages API du **M5.2** par **Claude Managed
+Agents** (custom tools). Le M5.2 actuel devient le fallback (M5.3 carte de triche).
+
+**Problème actuel.** M5.2 implémente Q&A en agent loop classique Messages API +
+streaming Anthropic standard. Correct mais on rate le prix **Best Managed Agents
+\$5k** qui est la raison d'être du pattern. Il faut au minimum 1 agent en
+Managed Agents pour cocher la case.
+
+**Décision.** Q&A = **seul** agent en Managed Agents. Les 4 autres (Sentinel,
+Investigator, KB Builder, Work Order Gen) restent en Messages API + orchestrateur
+maison + agent-as-tool (cf. M4.6). Raison : Q&A est interactif, stateful,
+long-running — cas d'usage idéal. Les autres n'en ont pas besoin.
 
 **Implémentation.**
-- Utiliser la Managed Agents SDK (custom tools)
-- Tools exposés : les 14 MCP tools + `UI_TOOLS` (cf. M2.9) + `ask_investigator`
-  (cf. M4.6)
-- Streaming via WebSocket `/api/v1/agent/chat` (même contrat que M5.2)
-- L'état conversationnel est géré par Managed Agents côté Anthropic — plus
-  besoin du dict `messages` per-connection en mémoire
+- Utiliser la Claude Managed Agents SDK (custom tools)
+- Tools exposés au Managed Agent :
+  - Les 14 MCP tools (via `mcp_client.get_tools_schema()`)
+  - `ask_investigator` (agent-as-tool cf. M4.6)
+  - Les `render_*` generative UI tools (cf. M2.9)
+- Streaming vers le frontend via `WS /api/v1/agent/chat` (cf. contrat `ALIGNMENT.md`)
+- System prompt : identique à M5.2 ("Tu es ARIA, assistant maintenance...")
+- Session stateful maintenue côté Managed Agents (plus besoin de `messages: list` manuel)
 
-**Feature flag.** `USE_MANAGED_AGENTS=true|false` dans `core/config.py`.
-- `true` (défaut J6) → route `/agent/chat` utilise Managed Agents
-- `false` → route `/agent/chat` utilise l'impl Messages API du M5.2
+**Fallback.** Feature flag `USE_MANAGED_AGENTS=true/false` dans `.env`. Si Managed
+Agents KO en démo → bascule à `false` → Q&A retombe sur l'agent loop M5.2
+(code pas supprimé, juste contourné). Switch testable en <5 min.
 
-Le handler WS choisit l'impl au runtime. Switch testable en < 5 min : changer
-l'env var, restart backend.
+✅ **DÉCIDÉ — Managed Agents pour Q&A uniquement.** Pas les 4 autres. Faire tourner
+5 agents en Managed Agents est over-engineered et risqué. 1 seul Managed Agent +
+4 agents loop Messages API + pattern agent-as-tool = le bon compromis (cf.
+discussion Discord J3 13h45).
 
-**Pourquoi M5.2 reste implémenté.** M5.2 = filet de sécurité garanti.
-Managed Agents est nouveau dans l'écosystème — si bug, instabilité SDK, ou
-rate limit pendant la démo, on bascule en 1 commande.
+**Pourquoi critique.** Sans ça, aucune chance de gagner le prix **Best Managed
+Agents \$5k**. L'implémentation est modérée (30–60 min) et le fallback existe
+déjà (M5.2 devient le plan B).
 
 **Acceptance.**
-- [ ] Q&A répond via Managed Agents avec streaming WS visible
-- [ ] Tools MCP accessibles depuis le Managed Agent (au moins 1 tool call par
-  question complexe)
-- [ ] Feature flag testé → switch Managed Agents ↔ Messages API en < 5 min
-- [ ] Latence p50 réponse complète < 8s pour question type "OEE pompe P-02 ?"
+- [ ] Q&A répond via Managed Agents, streaming visible côté WS
+- [ ] Fallback testé : `USE_MANAGED_AGENTS=false` → Q&A tourne sur M5.2 sans break
+- [ ] Les 14 MCP tools accessibles depuis le Managed Agent
+- [ ] `ask_investigator` appelable par le Managed Agent (vérifié avec M4.6)
 
-**Bloque.** Prix "Best Managed Agents $5k".
+**Bloque.** Éligibilité prix "Best Managed Agents \$5k".
 
 ---
 
 ## Bloque
 
 - Scènes 4 (work order imprimable) et 5 (Q&A) de la démo
-- Frontend Chat (M6)
-- Prix "Best Managed Agents" (via M5.4)
+- Frontend Chat (M7.4 wire vrai WS)
 
 ## Bloqué par
 
-- M1, M2, M4 (chaîne RCA → WO)
-- M2.9 (UI tools pour Q&A enrichi)
-- M4.6 (`ask_investigator` agent-as-tool pour handoffs Q&A → Investigator)
+- M1, M2, M4 (chaîne RCA → WO, M4.6 pour `ask_investigator`, M2.9 pour UI tools)

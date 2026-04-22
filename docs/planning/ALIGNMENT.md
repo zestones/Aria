@@ -79,11 +79,14 @@ corréler tous les events d'un même tour agentique dans l'Activity Feed / Inspe
 
 ---
 
-## Les 4 issues à ajouter dans le plan backend pour sécuriser les prix
+## Les 4 issues backend critiques pour sécuriser les prix
 
-Ces 4 issues manquent actuellement dans M1–M5 et bloquent des features de l'UI qui
-sont critiques pour les prix "Best Managed Agents $5k" et "Opus 4.7 Use" (25% de
-la note).
+> ℹ️ Ces 4 issues ont été **ajoutées directement dans les milestones backend**
+> par cette PR (M2.9 dans M2, M4.5 + M4.6 + M4.7 dans M4, M5.4 dans M5). Cette
+> section reste comme vue synthétique et rappel du "pourquoi critique".
+
+Les 4 issues `🔴` + 1 bonus `🟡`, toutes nécessaires pour les prix "Best Managed
+Agents \$5k" et "Opus 4.7 Use" (25% de la note).
 
 ### 🔴 Issue M4.5 (nouveau) — Extended thinking sur Investigator
 
