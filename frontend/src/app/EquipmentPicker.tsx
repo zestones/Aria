@@ -1,12 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    Building2 as RawBuilding2,
-    Cpu as RawCpu,
-    GitBranch as RawGitBranch,
-    Layers as RawLayers,
-    MapPin as RawMapPin,
-} from "lucide-react";
-import {
     type KeyboardEvent as ReactKeyboardEvent,
     useCallback,
     useEffect,
@@ -812,11 +805,11 @@ const LEVEL_ICON: Record<
     TreeLevel,
     React.ComponentType<{ className?: string; strokeWidth?: number }>
 > = {
-    enterprise: RawBuilding2,
-    site: RawMapPin,
-    area: RawLayers,
-    line: RawGitBranch,
-    cell: RawCpu,
+    enterprise: Icons.Building2,
+    site: Icons.MapPin,
+    area: Icons.Layers,
+    line: Icons.GitBranch,
+    cell: Icons.Cpu,
 };
 
 function LevelIcon({ level, className }: { level: TreeLevel; className?: string }) {
