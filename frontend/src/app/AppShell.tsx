@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useId } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
+import { ChatPanel } from "./chat/ChatPanel";
+import { useChatStore } from "./chat/chatStore";
 import { DRAWER_DEFAULT_WIDTH, DRAWER_MAX_WIDTH, DRAWER_MIN_WIDTH, Drawer } from "./Drawer";
 import { TopBar } from "./TopBar";
 
@@ -57,6 +59,8 @@ export function AppShell() {
     );
 
     const safeDrawer = sanitizeDrawer(drawer);
+    const drawerOpenRef = useRef(safeDrawer.open);
+    drawerOpenRef.current = safeDrawer.open;
     const drawerId = useId();
 
     const toggleDrawer = useCallback(() => {
@@ -79,7 +83,14 @@ export function AppShell() {
             if (!comboPressed) return;
             if (isTypingTarget(e.target)) return;
             e.preventDefault();
-            toggleDrawer();
+            if (drawerOpenRef.current) {
+                useChatStore.getState().requestFocus();
+            } else {
+                toggleDrawer();
+                window.setTimeout(() => {
+                    useChatStore.getState().requestFocus();
+                }, 240);
+            }
         }
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
@@ -112,7 +123,9 @@ export function AppShell() {
                     width={safeDrawer.width}
                     onToggle={toggleDrawer}
                     onWidthChange={setDrawerWidth}
-                />
+                >
+                    <ChatPanel />
+                </Drawer>
             </div>
         </div>
     );
