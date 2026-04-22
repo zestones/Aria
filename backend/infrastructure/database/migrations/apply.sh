@@ -1,9 +1,12 @@
 #!/bin/sh
-# ARIA — apply all .up.sql migration files in order to TimescaleDB.
-# Tracks applied migrations via schema_migrations table so re-runs are safe.
+# ARIA — apply all .up.sql migration files in order to TimescaleDB,
+# then apply every seeds/*.sql (idempotent by construction — no version tracking).
+# Migrations are tracked via schema_migrations so re-runs skip applied files.
 set -eu
 
-MIGRATIONS_DIR="$(cd "$(dirname "$0")" && pwd)/versions"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+MIGRATIONS_DIR="$SCRIPT_DIR/versions"
+SEEDS_DIR="$SCRIPT_DIR/../seeds"
 
 : "${POSTGRES_HOST:=timescaledb}"
 : "${POSTGRES_PORT:=5432}"
@@ -38,4 +41,18 @@ for f in "$MIGRATIONS_DIR"/*.up.sql; do
     psql_run -c "INSERT INTO schema_migrations (filename) VALUES ('$name');" >/dev/null
 done
 
-echo "[migrate] done"
+echo "[migrate] migrations done"
+
+# ---- seeds (idempotent, always re-applied) ----
+if [ -d "$SEEDS_DIR" ]; then
+    for f in "$SEEDS_DIR"/*.sql; do
+        [ -e "$f" ] || continue
+        name="$(basename "$f")"
+        echo "[seed] applying $name"
+        psql_run -f "$f"
+    done
+    echo "[seed] done"
+else
+    echo "[seed] no seeds dir — skipping"
+fi
+
