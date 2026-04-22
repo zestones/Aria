@@ -5,6 +5,7 @@ import {
     AlertTriangle as RawAlertTriangle,
     ArrowRight as RawArrowRight,
     Bot as RawBot,
+    Building2 as RawBuilding2,
     Check as RawCheck,
     ChevronDown as RawChevronDown,
     ChevronLeft as RawChevronLeft,
@@ -14,12 +15,16 @@ import {
     Clock as RawClock,
     Command as RawCommand,
     Copy as RawCopy,
+    Cpu as RawCpu,
     Database as RawDatabase,
     Eye as RawEye,
     FileText as RawFileText,
     Filter as RawFilter,
     Gauge as RawGauge,
+    GitBranch as RawGitBranch,
+    Layers as RawLayers,
     LogOut as RawLogOut,
+    MapPin as RawMapPin,
     MessageSquare as RawMessageSquare,
     Monitor as RawMonitor,
     MoreHorizontal as RawMoreHorizontal,
@@ -61,6 +66,7 @@ export const AlertCircle = styled(RawAlertCircle, "AlertCircle");
 export const AlertTriangle = styled(RawAlertTriangle, "AlertTriangle");
 export const ArrowRight = styled(RawArrowRight, "ArrowRight");
 export const Bot = styled(RawBot, "Bot");
+export const Building2 = styled(RawBuilding2, "Building2");
 export const Check = styled(RawCheck, "Check");
 export const ChevronDown = styled(RawChevronDown, "ChevronDown");
 export const ChevronLeft = styled(RawChevronLeft, "ChevronLeft");
@@ -70,12 +76,16 @@ export const CircleDot = styled(RawCircleDot, "CircleDot");
 export const Clock = styled(RawClock, "Clock");
 export const Command = styled(RawCommand, "Command");
 export const Copy = styled(RawCopy, "Copy");
+export const Cpu = styled(RawCpu, "Cpu");
 export const Database = styled(RawDatabase, "Database");
 export const Eye = styled(RawEye, "Eye");
 export const FileText = styled(RawFileText, "FileText");
 export const Filter = styled(RawFilter, "Filter");
 export const Gauge = styled(RawGauge, "Gauge");
+export const GitBranch = styled(RawGitBranch, "GitBranch");
+export const Layers = styled(RawLayers, "Layers");
 export const LogOut = styled(RawLogOut, "LogOut");
+export const MapPin = styled(RawMapPin, "MapPin");
 export const MessageSquare = styled(RawMessageSquare, "MessageSquare");
 export const Monitor = styled(RawMonitor, "Monitor");
 export const MoreHorizontal = styled(RawMoreHorizontal, "MoreHorizontal");
