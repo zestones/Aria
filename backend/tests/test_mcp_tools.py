@@ -41,3 +41,38 @@ async def test_get_downtime_events_has_categories_param():
     tools = await mcp.list_tools()
     schema = next(t for t in tools if t.name == "get_downtime_events").parameters
     assert "categories" in schema.get("properties", {})
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_signal_tools_registered():
+    from aria_mcp.server import mcp
+
+    tools = await mcp.list_tools()
+    names = {t.name for t in tools}
+    assert {"get_signal_trends", "get_signal_anomalies", "get_current_signals"} <= names
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_get_signal_trends_uses_plural_signal_def_ids():
+    from aria_mcp.server import mcp
+
+    tools = await mcp.list_tools()
+    schema = next(t for t in tools if t.name == "get_signal_trends").parameters
+    props = schema.get("properties", {})
+    assert "signal_def_ids" in props, "audit §1: must accept multiple signals"
+    assert "aggregation" in props
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_get_signal_anomalies_takes_cell_id():
+    from aria_mcp.server import mcp
+
+    tools = await mcp.list_tools()
+    schema = next(t for t in tools if t.name == "get_signal_anomalies").parameters
+    props = schema.get("properties", {})
+    assert "cell_id" in props
+    assert "window_start" in props
+    assert "window_end" in props
