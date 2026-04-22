@@ -18,9 +18,12 @@ Write contract (audit M2.5 §1-§3):
    refreshes ``kb_meta.last_calibrated_by`` and the column ``last_enriched_at``.
    Callers MUST NOT bump these themselves.
 
-Audit M2.5 §4 (broadcast on write): deferred to M8.2 — no ``ws_manager``
-infrastructure exists in the repo today and a single-event WS scaffold here
-would be over-engineering. Tracked in the issue.
+Audit M2.5 §4 (broadcast on write): deferred to M8.2 (issue #46) — no
+``ws_manager`` infrastructure exists in the repo today and a single-event
+WS scaffold here would be over-engineering. The M8.2 implementer must add
+``await ws_manager.broadcast("kb_updated", {"cell_id": cell_id, "version":
+kb_meta["version"]})`` at the end of ``update_equipment_kb`` (search this
+file for ``audit M2.5 §4`` to find the exact insertion point).
 """
 
 from __future__ import annotations
@@ -257,6 +260,14 @@ async def update_equipment_kb(
             }
         )
         fresh = await repo.get_by_cell(cell_id)
+
+    # TODO(M8.2 — issue #46): audit M2.5 §4 broadcast.
+    # When ws_manager lands, insert here:
+    #     await ws_manager.broadcast(
+    #         "kb_updated", {"cell_id": cell_id, "version": kb_meta["version"]}
+    #     )
+    # Without this, two browser tabs editing the same cell silently overwrite
+    # each other (lost-update bug). See sequence diagrams on issue #46.
 
     assert fresh is not None  # just upserted
     structured = _decode_structured_data(fresh["structured_data"])
