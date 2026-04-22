@@ -13,8 +13,7 @@ from aria_mcp._common import with_conn
 from aria_mcp.server import mcp
 from core.datetime_helpers import parse_tz_aware
 from modules.kpi.repository import KpiRepository
-from modules.kpi.schemas import (MaintenanceKpiDTO, OeeBucketDTO, OeeDTO,
-                                 QualityByCellDTO)
+from modules.kpi.schemas import MaintenanceKpiDTO, OeeBucketDTO, OeeDTO, QualityByCellDTO
 
 
 @mcp.tool()
@@ -217,5 +216,4 @@ async def get_production_stats(
         "total_pieces": stats["total_pieces"],
         "good_pieces": stats["good_pieces"],
         "bad_pieces": bad_pieces,
-    }
     }

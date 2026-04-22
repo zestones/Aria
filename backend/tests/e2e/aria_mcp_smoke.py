@@ -82,6 +82,9 @@ async def main() -> int:
                 "get_equipment_kb",
                 "get_failure_history",
                 "update_equipment_kb",
+                # M2.6 (issue #13) — production tools
+                "get_quality_metrics",
+                "get_production_stats",
             }
             assert expected <= names, f"missing tools: {expected - names}"
             print(f"[OK] tools/list -> {len(names)} tools, all expected ARIA tools present")
@@ -271,6 +274,39 @@ async def main() -> int:
                     "source": "e2e_smoke",
                     "calibrated_by": "smoke_test",
                 },
+            )
+
+            # ---- M2.6 production tools (issue #13) ----
+            quality = await _call(session, "get_quality_metrics", cells)
+            assert isinstance(quality, list) and len(quality) > 0
+            row = quality[0]
+            assert {
+                "cell_id",
+                "cell_name",
+                "line_name",
+                "total_pieces",
+                "good_pieces",
+                "bad_pieces",
+                "quality_rate",
+            } <= set(row), f"missing fields in get_quality_metrics row: {set(row)}"
+            print(
+                f"[OK] get_quality_metrics -> {len(quality)} cell(s), "
+                f"total={row['total_pieces']}, good={row['good_pieces']}, "
+                f"quality_rate={row['quality_rate']}"
+            )
+
+            prod = await _call(session, "get_production_stats", cells)
+            assert isinstance(prod, dict)
+            assert {
+                "productive_seconds",
+                "unplanned_stop_seconds",
+                "planned_stop_seconds",
+                "total_pieces",
+                "good_pieces",
+                "bad_pieces",
+            } <= set(prod)
+            print(
+                f"[OK] get_production_stats -> total_pieces={prod['total_pieces']}, productive_s={prod['productive_seconds']:.0f}"
             )
 
     print("\nALL TOOLS WORK END-TO-END")
