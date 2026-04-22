@@ -92,7 +92,7 @@ Start from a real problem in a real place: your work, your community, a field yo
 
 Start from something that doesn't exist yet: a new way to work, learn, or make that only makes sense now that the tools have changed. An interface without a name. A workflow from a few years out. The best projects here are easier to demo than to explain
 
-*Looks like:* an interface that doesn't have a name yet. A workflow that changes how you do the thing, not just how fast. A first draft of how this will work in a few years when Claude is even more capable. 
+*Looks like:* an interface that doesn't have a name yet. A workflow that changes how you do the thing, not just how fast. A first draft of how this will work in a few years when Claude is even more capable.
 
 ## **5. Anthropic-Provided Resources**
 
@@ -156,7 +156,7 @@ Start from something that doesn't exist yet: a new way to work, learn, or make t
 
 ### **Other**
 
-[Claude Quickstarts](https://github.com/anthropics/claude-quickstarts) - A collection of projects designed to help developers quickly get started with building deployable applications using the Claude API 
+[Claude Quickstarts](https://github.com/anthropics/claude-quickstarts) - A collection of projects designed to help developers quickly get started with building deployable applications using the Claude API
 
 [A Complete Guide to Building Skills for Claude (eBook)](https://claude.com/blog/complete-guide-to-building-skills-for-claude)
 
