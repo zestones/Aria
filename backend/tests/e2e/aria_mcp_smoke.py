@@ -78,6 +78,10 @@ async def main() -> int:
                 "get_shift_assignments",
                 "get_work_orders",
                 "list_cells",
+                # M2.5 (issue #12) — KB tools
+                "get_equipment_kb",
+                "get_failure_history",
+                "update_equipment_kb",
             }
             assert expected <= names, f"missing tools: {expected - names}"
             print(f"[OK] tools/list -> {len(names)} tools, all expected ARIA tools present")
@@ -199,6 +203,74 @@ async def main() -> int:
             print(
                 f"[OK] get_work_orders (priority=critical, agent=True) -> "
                 f"{len(wos_critical)} match"
+            )
+
+            # ---- M2.5 KB tools (issue #12) ----
+            kb_before = await _call(session, "get_equipment_kb", {"cell_id": cell_id})
+            assert isinstance(kb_before, dict) and isinstance(
+                kb_before["structured_data"], dict
+            ), "audit §5: structured_data must be a parsed dict, not a raw asyncpg string"
+            print(
+                f"[OK] get_equipment_kb -> version="
+                f"{kb_before['structured_data'].get('kb_meta', {}).get('version')}, "
+                f"completeness={kb_before['confidence_score']}"
+            )
+
+            failures = await _call(
+                session, "get_failure_history", {"cell_id": cell_id, "limit": 10}
+            )
+            assert isinstance(failures, list)
+            print(f"[OK] get_failure_history -> {len(failures)} failures")
+
+            vib_before = (
+                kb_before["structured_data"]
+                .get("thresholds", {})
+                .get("vibration_mm_s", {})
+                .get("alert")
+            )
+            assert vib_before is not None, "P-02 KB seed must have vibration_mm_s.alert"
+            new_alert = float(vib_before) + 0.1
+            updated = await _call(
+                session,
+                "update_equipment_kb",
+                {
+                    "cell_id": cell_id,
+                    "structured_data_patch": {
+                        "thresholds": {"vibration_mm_s": {"alert": new_alert}}
+                    },
+                    "source": "e2e_smoke",
+                    "calibrated_by": "smoke_test",
+                },
+            )
+            assert isinstance(updated, dict)
+            sd = updated["structured_data"]
+            assert (
+                sd["thresholds"]["vibration_mm_s"]["alert"] == new_alert
+            ), "audit §1: leaf-level patch must be visible via get_equipment_kb"
+            log = sd.get("calibration_log") or []
+            assert len(log) >= 1, "audit §2: calibration_log must contain a new entry"
+            assert log[-1]["calibrated_by"] == "smoke_test"
+            assert log[-1]["source"] == "e2e_smoke"
+            new_version = sd.get("kb_meta", {}).get("version")
+            old_version = kb_before["structured_data"].get("kb_meta", {}).get("version", 1)
+            assert new_version == old_version + 1, "audit §3: kb_meta.version must auto-bump"
+            print(
+                f"[OK] update_equipment_kb -> alert={new_alert}, version={new_version}, "
+                f"calibration_log entries={len(log)}"
+            )
+
+            # Restore the original threshold so re-running the smoke is idempotent.
+            await _call(
+                session,
+                "update_equipment_kb",
+                {
+                    "cell_id": cell_id,
+                    "structured_data_patch": {
+                        "thresholds": {"vibration_mm_s": {"alert": float(vib_before)}}
+                    },
+                    "source": "e2e_smoke",
+                    "calibrated_by": "smoke_test",
+                },
             )
 
     print("\nALL TOOLS WORK END-TO-END")
