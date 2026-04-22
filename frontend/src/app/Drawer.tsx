@@ -128,12 +128,12 @@ export function Drawer({ open, width, onToggle, onWidthChange, children, id }: D
             {open && (
                 <div className="flex h-full w-full flex-col" style={{ width: `${width}px` }}>
                     <header className="flex items-center justify-between gap-4 border-b border-[var(--ds-border)] px-4 py-3">
-                        <SectionHeader bracketed label="Chat" />
+                        <SectionHeader label="Chat" size="sm" />
                         <button
                             type="button"
                             onClick={onToggle}
                             aria-label="Collapse chat drawer"
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--ds-radius-sm)] text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-bg-elevated)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent)]"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--ds-radius-sm)] text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
                         >
                             <Icons.PanelRightClose className="size-4" />
                         </button>

@@ -1,61 +1,111 @@
-/* ARIA Design System — Industrial control-room tokens (dark only, v1) */
+/* ARIA Design System — Operator-Calm tokens (v2)
+ * Dark first, light shipped as equal citizen.
+ * See DESIGN_PLAN_v2.md.
+ */
 
 :root {
-  /* Surface hierarchy — widened steps so elevation reads clearly */
-  --ds-bg-base: #0a0e14;
-  --ds-bg-surface: #0d131d;
-  --ds-bg-elevated: #1a2435;
-  --ds-border: #232d3f;
-  --ds-border-strong: #334155;
+  /* Neutral ramp — warm neutral (dark) */
+  --ds-bg-base: #0b0b0f;
+  --ds-bg-surface: #111114;
+  --ds-bg-elevated: #17171c;
+  --ds-bg-hover: #1c1c22;
+  --ds-border: #24242b;
+  --ds-border-strong: #33333c;
 
-  /* Text */
-  --ds-fg-primary: #e4e9f2;
-  --ds-fg-muted: #8491a8;
-  --ds-fg-subtle: #52627a;
+  /* Text (dark) */
+  --ds-fg-primary: #ededef;
+  --ds-fg-muted: #9a9aa3;
+  --ds-fg-subtle: #64646d;
 
-  /* Brand accent — desaturated cyan, industrial SCADA feel (no neon) */
-  --ds-accent: #3ab5c9;
-  --ds-accent-hover: #5fd0e3;
-  --ds-accent-glow: rgb(58 181 201 / 0.25);
-  --ds-accent-fg: #04131a;
+  /* Accent — calm product blue (dark) */
+  --ds-accent: #3478f6;
+  --ds-accent-hover: #5990f8;
+  --ds-accent-soft: rgb(52 120 246 / 0.12);
+  --ds-accent-ring: rgb(52 120 246 / 0.35);
+  --ds-accent-fg: #ffffff;
 
-  /* Equipment status — brick red for critical, readable rest */
-  --ds-status-nominal: #2fa67c;
-  --ds-status-warning: #d9922b;
-  --ds-status-critical: #d84545;
+  /* Status (dark) */
+  --ds-status-nominal: #3ecf8e;
+  --ds-status-warning: #e5a13a;
+  --ds-status-critical: #e5484d;
+  --ds-status-info: var(--ds-accent);
 
-  /* Agent identities — deeper washed tones (whisper, not shout) */
-  --ds-agent-sentinel: #5a7fb5;
-  --ds-agent-investigator: #8b6fd9;
-  --ds-agent-kb-builder: #2fa67c;
-  --ds-agent-work-order: #c89635;
-  --ds-agent-qa: #c76ca3;
+  /* Agent identities (dark) */
+  --ds-agent-sentinel: #6b8fcf;
+  --ds-agent-investigator: #a18bdd;
+  --ds-agent-kb-builder: #3ecf8e;
+  --ds-agent-work-order: #d4a24a;
+  --ds-agent-qa: #d17ba9;
 
-  /* Radii — tightened for more technical feel */
-  --ds-radius-xs: 3px;
-  --ds-radius-sm: 5px;
-  --ds-radius-md: 7px;
-  --ds-radius-lg: 10px;
-  --ds-radius-xl: 14px;
+  /* Radii — collapsed to three */
+  --ds-radius-sm: 6px;
+  --ds-radius-md: 10px;
+  --ds-radius-lg: 14px;
+
+  /* Elevation — overlays only */
+  --ds-shadow-overlay:
+    0 10px 30px -10px rgb(0 0 0 / 0.6),
+    0 4px 12px -4px rgb(0 0 0 / 0.5);
 
   /* Typography */
-  --ds-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --ds-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ds-font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --ds-font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+    monospace;
 
-  /* Type scale */
+  /* Type scale (static px, app-appropriate) */
   --ds-text-xs: 11px;
   --ds-text-sm: 13px;
   --ds-text-base: 14px;
-  --ds-text-md: 16px;
-  --ds-text-lg: 20px;
-  --ds-text-xl: 26px;
-  --ds-text-2xl: 34px;
+  --ds-text-md: 15px;
+  --ds-text-lg: 17px;
+  --ds-text-xl: 20px;
+  --ds-text-2xl: 24px;
+  --ds-text-3xl: 30px;
 
   /* Motion */
   --ds-motion-fast: 120ms;
   --ds-motion-base: 220ms;
   --ds-motion-slow: 420ms;
   --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  color-scheme: dark;
+}
+
+/* Light theme — applied via `data-theme="light"` on <html>. */
+:root[data-theme="light"] {
+  --ds-bg-base: #fafaf9;
+  --ds-bg-surface: #ffffff;
+  --ds-bg-elevated: #f5f5f4;
+  --ds-bg-hover: #efeeec;
+  --ds-border: #e7e5e2;
+  --ds-border-strong: #d4d2cf;
+
+  --ds-fg-primary: #1a1a1a;
+  --ds-fg-muted: #5e5e5a;
+  --ds-fg-subtle: #8a8984;
+
+  --ds-accent: #2563eb;
+  --ds-accent-hover: #1d4fd8;
+  --ds-accent-soft: rgb(37 99 235 / 0.08);
+  --ds-accent-ring: rgb(37 99 235 / 0.35);
+  --ds-accent-fg: #ffffff;
+
+  --ds-status-nominal: #10a877;
+  --ds-status-warning: #b8791b;
+  --ds-status-critical: #c8312f;
+  --ds-status-info: var(--ds-accent);
+
+  --ds-agent-sentinel: #3f6fb8;
+  --ds-agent-investigator: #7858c4;
+  --ds-agent-kb-builder: #10a877;
+  --ds-agent-work-order: #a77318;
+  --ds-agent-qa: #a34e81;
+
+  --ds-shadow-overlay:
+    0 10px 30px -10px rgb(0 0 0 / 0.15),
+    0 4px 12px -4px rgb(0 0 0 / 0.08);
+
+  color-scheme: light;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -63,25 +113,5 @@
     --ds-motion-fast: 0ms;
     --ds-motion-base: 0ms;
     --ds-motion-slow: 0ms;
-  }
-}
-
-/* Industrial grain — subtle fractal noise overlay (~3% opacity, overlay
-   blend) that sits above surfaces but below interactive content so the
-   dark panels feel like matter instead of flat CSS rectangles. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.035;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::before {
-    display: none;
   }
 }

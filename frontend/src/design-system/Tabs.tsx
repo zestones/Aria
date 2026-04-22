@@ -44,9 +44,8 @@ export function Tabs({
 }
 
 /**
- * Tabs list — editorial/SCADA flavor: no filled-pill background, just a
- * bottom border running under every trigger plus a 2px accent rail on the
- * selected one (DESIGN_PLAN §8).
+ * Tabs list — bottom border with a 2px accent underline under the selected
+ * trigger. See DESIGN_PLAN_v2 §10.2.
  */
 export function TabsList({
     className = "",
@@ -84,10 +83,10 @@ export function TabsTrigger({
             aria-controls={`${idBase}-panel-${value}`}
             id={`${idBase}-trigger-${value}`}
             onClick={() => setValue(value)}
-            className={`relative h-8 px-4 text-[11px] font-mono font-medium tracking-[0.08em] uppercase transition-colors duration-[var(--ds-motion-fast)] -mb-px border-b-2 ${
+            className={`relative h-9 px-3.5 text-[var(--ds-text-sm)] font-medium transition-colors duration-[var(--ds-motion-fast)] -mb-px border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] rounded-t-[var(--ds-radius-sm)] ${
                 selected
                     ? "text-[var(--ds-fg-primary)] border-[var(--ds-accent)]"
-                    : "text-[var(--ds-fg-subtle)] border-transparent hover:text-[var(--ds-fg-muted)]"
+                    : "text-[var(--ds-fg-muted)] border-transparent hover:text-[var(--ds-fg-primary)]"
             } ${className}`}
         >
             {children}

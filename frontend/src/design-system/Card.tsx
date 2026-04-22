@@ -5,8 +5,8 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
     padding?: "none" | "sm" | "md" | "lg";
     elevated?: boolean;
     /**
-     * Left-edge 2px status rail conveying the card's live state.
-     * See DESIGN_PLAN §5.4.
+     * Left-edge 2px status rail — opt-in only for live-entity cards.
+     * See DESIGN_PLAN_v2 §5.2.
      */
     rail?: RailTone;
     /** Pulse the rail when warning/critical (defaults true for those tones). */
@@ -17,7 +17,7 @@ const paddings = {
     none: "",
     sm: "p-3",
     md: "p-4",
-    lg: "p-6",
+    lg: "p-5",
 };
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
@@ -58,7 +58,7 @@ export function CardTitle({
 }: HTMLAttributes<HTMLHeadingElement>) {
     return (
         <h3
-            className={`text-[16px] font-semibold leading-tight tracking-[-0.01em] text-[var(--ds-fg-primary)] ${className}`}
+            className={`text-[var(--ds-text-lg)] font-semibold leading-tight text-[var(--ds-fg-primary)] ${className}`}
             {...rest}
         >
             {children}
@@ -72,7 +72,10 @@ export function CardDescription({
     ...rest
 }: HTMLAttributes<HTMLParagraphElement>) {
     return (
-        <p className={`text-xs text-[var(--ds-fg-muted)] mt-0.5 ${className}`} {...rest}>
+        <p
+            className={`text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] mt-1 ${className}`}
+            {...rest}
+        >
             {children}
         </p>
     );

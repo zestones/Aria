@@ -48,7 +48,7 @@ import { forwardRef } from "react";
  */
 function styled(Raw: LucideIcon, name: string) {
     const Wrapped = forwardRef<SVGSVGElement, LucideProps>(
-        ({ strokeWidth = 1.5, ...props }, ref) => (
+        ({ strokeWidth = 1.75, ...props }, ref) => (
             <Raw ref={ref} strokeWidth={strokeWidth} {...props} />
         ),
     );

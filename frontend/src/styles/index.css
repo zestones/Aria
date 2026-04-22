@@ -9,6 +9,7 @@
   --color-ds-bg-base: var(--ds-bg-base);
   --color-ds-bg-surface: var(--ds-bg-surface);
   --color-ds-bg-elevated: var(--ds-bg-elevated);
+  --color-ds-bg-hover: var(--ds-bg-hover);
   --color-ds-border: var(--ds-border);
   --color-ds-border-strong: var(--ds-border-strong);
 
@@ -19,10 +20,12 @@
   --color-ds-accent: var(--ds-accent);
   --color-ds-accent-hover: var(--ds-accent-hover);
   --color-ds-accent-fg: var(--ds-accent-fg);
+  --color-ds-accent-soft: var(--ds-accent-soft);
 
   --color-ds-nominal: var(--ds-status-nominal);
   --color-ds-warning: var(--ds-status-warning);
   --color-ds-critical: var(--ds-status-critical);
+  --color-ds-info: var(--ds-status-info);
 
   --color-ds-sentinel: var(--ds-agent-sentinel);
   --color-ds-investigator: var(--ds-agent-investigator);

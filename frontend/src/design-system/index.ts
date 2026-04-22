@@ -22,3 +22,7 @@ export type { RailTone, StatusRailProps } from "./StatusRail";
 export { StatusRail } from "./StatusRail";
 export type { TabsProps } from "./Tabs";
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
+export type { ResolvedTheme, ThemeMode } from "./ThemeProvider";
+export { ThemeProvider, useTheme } from "./ThemeProvider";
+export type { ThemeToggleProps } from "./ThemeToggle";
+export { ThemeToggle } from "./ThemeToggle";
