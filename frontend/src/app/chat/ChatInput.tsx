@@ -67,36 +67,38 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
                 e.preventDefault();
                 submit();
             }}
-            className="border-t border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-3 pt-2.5 pb-2"
+            className="border-t border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-3 py-2"
         >
-            <div className="flex items-end gap-2 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] px-3 py-2 transition-colors duration-[var(--ds-motion-fast)] focus-within:border-[var(--ds-border-strong)] focus-within:ring-2 focus-within:ring-[var(--ds-accent-ring)]">
-                <textarea
-                    ref={textareaRef}
-                    value={value}
-                    onChange={(e) => {
-                        setValue(e.target.value);
-                        autoResize(e.target);
-                    }}
-                    onKeyDown={onKeyDown}
-                    placeholder={placeholder}
-                    disabled={disabled}
-                    rows={1}
-                    spellCheck
-                    aria-label="Message input"
-                    className="min-h-[20px] flex-1 resize-none bg-transparent text-[var(--ds-text-sm)] leading-[1.4] text-[var(--ds-fg-primary)] placeholder:text-[var(--ds-fg-subtle)] focus:outline-none disabled:opacity-50"
-                />
-                <button
-                    type="submit"
-                    disabled={!canSubmit}
-                    aria-label="Send message"
-                    className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-[var(--ds-radius-sm)] bg-[var(--ds-accent)] text-[var(--ds-accent-fg)] transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--ds-bg-hover)] disabled:text-[var(--ds-fg-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
-                >
-                    <Icons.ArrowRight className="size-3.5" />
-                </button>
+            <div className="rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] transition-colors duration-[var(--ds-motion-fast)] focus-within:border-[var(--ds-border-strong)] focus-within:ring-2 focus-within:ring-[var(--ds-accent-ring)]">
+                <div className="flex items-end gap-2 px-3 pt-2">
+                    <textarea
+                        ref={textareaRef}
+                        value={value}
+                        onChange={(e) => {
+                            setValue(e.target.value);
+                            autoResize(e.target);
+                        }}
+                        onKeyDown={onKeyDown}
+                        placeholder={placeholder}
+                        disabled={disabled}
+                        rows={1}
+                        spellCheck
+                        aria-label="Message input"
+                        className="min-h-[20px] flex-1 resize-none bg-transparent text-[var(--ds-text-sm)] leading-[1.4] text-[var(--ds-fg-primary)] placeholder:text-[var(--ds-fg-subtle)] focus:outline-none disabled:opacity-50"
+                    />
+                    <button
+                        type="submit"
+                        disabled={!canSubmit}
+                        aria-label="Send message"
+                        className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-[var(--ds-radius-sm)] bg-[var(--ds-accent)] text-[var(--ds-accent-fg)] transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--ds-bg-hover)] disabled:text-[var(--ds-fg-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                    >
+                        <Icons.ArrowRight className="size-3.5" />
+                    </button>
+                </div>
+                <p className="px-3 pb-1.5 pt-1 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                    Enter to send · Shift + Enter for new line
+                </p>
             </div>
-            <p className="mt-1 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
-                Enter to send · Shift + Enter for new line
-            </p>
         </form>
     );
 });
