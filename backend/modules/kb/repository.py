@@ -8,9 +8,7 @@ import asyncpg
 from core.json_fields import encode_fields
 
 JSON_FIELDS = (
-    "nominal_specs",
-    "common_failure_modes",
-    "maintenance_recommendations",
+    "structured_data",
     "parts_replaced",
     "signal_patterns",
 )

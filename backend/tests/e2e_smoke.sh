@@ -129,11 +129,11 @@ hit GET    "/api/v1/work-orders/$WO_ID" 404
 echo "=== 13. KB ==="
 hit GET "/api/v1/kb/equipment" 200
 hit GET "/api/v1/kb/equipment/1" 200
-hit PUT "/api/v1/kb/equipment" 201 '{"cell_id":1,"manufacturer":"FlowTech","model":"CP-3200","nominal_specs":{"flow_m3h":32,"head_m":120},"common_failure_modes":[{"mode":"bearing_wear","kpi":"vibration_rms"}]}'
-if python3 -c "import json;d=json.load(open('/tmp/_e2e_body.json'));exit(0 if d['data']['nominal_specs']=={'flow_m3h':32,'head_m':120} else 1)"; then
+hit PUT "/api/v1/kb/equipment" 201 '{"cell_id":1,"manufacturer":"FlowTech","model":"CP-3200","structured_data":{"thresholds":{"flow_m3h":{"nominal":32,"alert":40,"unit":"m3/h","confidence":0.9}}}}'
+if python3 -c "import json;d=json.load(open('/tmp/_e2e_body.json'));exit(0 if d['data']['structured_data']['thresholds']['flow_m3h']['nominal']==32 else 1)"; then
     echo "  KB JSON round-trip OK"
 else
-    FAIL=$((FAIL+1)); FAILURES+=("KB nominal_specs round-trip mismatch")
+    FAIL=$((FAIL+1)); FAILURES+=("KB structured_data round-trip mismatch")
 fi
 hit GET "/api/v1/kb/failures?cell_id=1" 200
 

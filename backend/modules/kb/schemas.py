@@ -6,6 +6,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Optional
 
+from modules.kb.kb_schema import EquipmentKB
 from pydantic import BaseModel, ConfigDict
 
 
@@ -21,10 +22,11 @@ class EquipmentKbOut(_Base):
     manufacturer: Optional[str] = None
     model: Optional[str] = None
     installation_date: Optional[date] = None
-    nominal_specs: Optional[Any] = None
-    common_failure_modes: Optional[Any] = None
-    maintenance_recommendations: Optional[Any] = None
-    notes: Optional[str] = None
+    structured_data: Optional[EquipmentKB] = None
+    raw_markdown: Optional[str] = None
+    confidence_score: float = 0.0
+    last_enriched_at: Optional[datetime] = None
+    onboarding_complete: bool = False
     last_updated_by: Optional[str] = None
     last_updated_at: datetime
     created_at: datetime
@@ -36,9 +38,11 @@ class EquipmentKbUpsert(BaseModel):
     manufacturer: Optional[str] = None
     model: Optional[str] = None
     installation_date: Optional[date] = None
-    nominal_specs: Optional[Any] = None
-    common_failure_modes: Optional[Any] = None
-    maintenance_recommendations: Optional[Any] = None
+    structured_data: Optional[EquipmentKB] = None
+    raw_markdown: Optional[str] = None
+    confidence_score: Optional[float] = None
+    last_enriched_at: Optional[datetime] = None
+    onboarding_complete: Optional[bool] = None
     notes: Optional[str] = None
     last_updated_by: Optional[str] = "kb_builder_agent"
 

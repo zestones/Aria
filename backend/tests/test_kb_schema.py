@@ -226,6 +226,52 @@ def test_compute_completeness_partial_kb():
     assert score < 0.25
 
 
+@pytest.mark.unit
+def test_upsert_roundtrip_structured_data():
+    """Roundtrip: EquipmentKbUpsert → encode_fields → decode_record → EquipmentKbOut."""
+    from core.json_fields import decode_record, encode_fields
+    from modules.kb.repository import JSON_FIELDS
+    from modules.kb.schemas import EquipmentKbOut, EquipmentKbUpsert
+
+    upsert = EquipmentKbUpsert(
+        cell_id=1,
+        structured_data=EquipmentKB.model_validate(P02_STRUCTURED_DATA),
+        confidence_score=0.85,
+        onboarding_complete=True,
+    )
+    # Step 1: Pydantic → dict (mirrors body.model_dump(exclude_unset=True) in the router)
+    fields = upsert.model_dump(mode="json", exclude_unset=True)
+
+    # Step 2: encode for DB (structured_data dict → JSON string)
+    encoded = encode_fields(fields, JSON_FIELDS)
+    assert isinstance(
+        encoded["structured_data"], str
+    ), "encode_fields must stringify structured_data"
+
+    # Step 3: simulate DB row returned by asyncpg (add required out-only columns)
+    fake_row = {
+        **encoded,
+        "id": 1,
+        "cell_name": "P-02",
+        "notes": None,
+        "last_updated_by": "kb_builder_agent",
+        "last_updated_at": "2026-04-22T00:00:00+00:00",
+        "created_at": "2026-04-22T00:00:00+00:00",
+    }
+
+    # Step 4: decode from DB (JSON string → dict, mirrors decode_record in router)
+    decoded = decode_record(fake_row, JSON_FIELDS)
+    assert isinstance(decoded["structured_data"], dict), "decode_record must parse back to dict"
+
+    # Step 5: validate as output DTO
+    out = EquipmentKbOut.model_validate(decoded)
+    assert out.structured_data is not None
+    assert out.structured_data.equipment.manufacturer == "Grundfos"
+    assert out.structured_data.compute_completeness() >= 0.85
+    assert out.confidence_score == 0.85
+    assert out.onboarding_complete is True
+
+
 # ---------------------------------------------------------------------------
 # Integration test — requires a running TimescaleDB with migrations applied
 # ---------------------------------------------------------------------------
