@@ -25,7 +25,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.streamable_http import streamable_http_client
 
 URL = os.environ.get("ARIA_MCP_URL", "http://localhost:8000/mcp/")
 
@@ -59,7 +59,7 @@ async def main() -> int:
     start = end - timedelta(hours=24)
     cell_id = 1  # P-02
 
-    async with streamablehttp_client(URL) as (read, write, _):
+    async with streamable_http_client(URL) as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
 
