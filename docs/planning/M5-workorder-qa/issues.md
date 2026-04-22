@@ -37,13 +37,18 @@
 **Scope.** `backend/agents/qa_agent.py` + route dans `main.py` :
 - `WS /api/v1/agent/chat`
 - Stateful per connection : maintient `messages: list` côté serveur
+- Tools : `tools = await mcp_client.get_tools_schema() + UI_TOOLS + [ASK_INVESTIGATOR_TOOL]`
+  (M5.2 est le fallback impl des M5.4 Managed Agents — même toolset)
 - Sur message client `{type: "user", content: str}` :
   - Append au history
-  - Lance agent loop avec `MCPClient` tools + Anthropic streaming
+  - Lance agent loop avec tools + Anthropic streaming
   - Pour chaque event reçu de l'API Anthropic :
     - Si `content_block_delta` text → envoie `{type: "text_delta", content: ...}` au client
-    - Si `tool_use` block → envoie `{type: "tool_call", name, args}` puis appelle
-      `mcp_client.call_tool()` puis envoie `{type: "tool_result", name, ...}`
+    - Si `tool_use` block avec `render_*` → broadcast `ui_render` + envoie `{type: "ui_render", component, props}` au client
+    - Si `tool_use` block avec `ask_investigator` → broadcast `agent_handoff` + spawn mini-session Investigator
+      + envoie `{type: "agent_handoff", from: "qa", to: "investigator", reason}` au client
+    - Si `tool_use` autre → envoie `{type: "tool_call", name, args}` + appelle `mcp_client.call_tool()`
+      + envoie `{type: "tool_result", name, ...}`
   - À end_turn → envoie `{type: "done"}`
 
 **System prompt.** "Tu es ARIA, assistant maintenance. Réponds aux questions de

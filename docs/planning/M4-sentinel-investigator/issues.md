@@ -63,6 +63,10 @@ HTTP status ou `{type: "done", error: "..."}` final côté `/agent/chat`.
        trigger_anomaly_time=value_time, triggered_by_signal_def_id=...,
        title="Anomalie détectée — <signal>", priority='high')`
      - `ws_manager.broadcast("anomaly_detected", ...)`
+     - Broadcast `ui_render` avec `render_alert_banner` (cf. M2.9) pour afficher
+       le banner inline dans le dashboard/chat :
+       `ws_manager.broadcast("ui_render", {agent: "sentinel", component: "render_alert_banner",
+        props: {severity, cell_id, message, anomaly_id: work_order_id}, turn_id: ...})`
      - `asyncio.create_task(run_investigator(work_order_id))`
 
 **Démarrage.** Lancer dans le `lifespan` de `main.py` :

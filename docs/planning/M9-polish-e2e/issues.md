@@ -20,6 +20,10 @@ un technicien repartir avec ce papier imprimé.
 
 **Fonctions.**
 - List : table avec filters priority/type/status/cell/date, sort par priority
+- **WS live update** : écoute `WS /api/v1/events` → event `work_order_ready` →
+  `queryClient.invalidateQueries(['work-orders'])` pour rafraîchir la liste en
+  temps réel sans reload. Event `rca_ready` → badge RCA disponible apparaît sur
+  la row concernée.
 - Detail : tous les champs depuis `GET /api/v1/work-orders/{id}` incluant `rca_summary`,
   `recommended_actions`, `parts_required`
 - Printable : CSS `@media print`, layout A4, QR code WO id (via `qrcode` dynamic import)
@@ -27,6 +31,8 @@ un technicien repartir avec ce papier imprimé.
 
 **Acceptance.**
 - [ ] Filtres et sort fonctionnels
+- [ ] Quand Sentinel crée un WO → apparaît dans la liste en < 5s (sans reload)
+- [ ] Quand Investigator finit → badge RCA s'affiche sur la row en live
 - [ ] Detail page rend tous les champs
 - [ ] Print preview pro (no chrome, black on white, hiérarchie claire)
 
