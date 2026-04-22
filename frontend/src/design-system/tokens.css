@@ -1,0 +1,58 @@
+/* ARIA Design System — Industrial control-room tokens (dark only, v1) */
+
+:root {
+  /* Surface hierarchy */
+  --ds-bg-base: #0a0e14;
+  --ds-bg-surface: #121821;
+  --ds-bg-elevated: #1a2130;
+  --ds-border: #232d3f;
+  --ds-border-strong: #334155;
+
+  /* Text */
+  --ds-fg-primary: #e4e9f2;
+  --ds-fg-muted: #8491a8;
+  --ds-fg-subtle: #52627a;
+
+  /* Brand accent — ARIA industrial cyan */
+  --ds-accent: #00d4ff;
+  --ds-accent-hover: #22ddff;
+  --ds-accent-glow: rgb(0 212 255 / 0.25);
+  --ds-accent-fg: #041016;
+
+  /* Equipment status */
+  --ds-status-nominal: #10b981;
+  --ds-status-warning: #f59e0b;
+  --ds-status-critical: #ef4444;
+
+  /* Agent identities */
+  --ds-agent-sentinel: #60a5fa;
+  --ds-agent-investigator: #a78bfa;
+  --ds-agent-kb-builder: #34d399;
+  --ds-agent-work-order: #fbbf24;
+  --ds-agent-qa: #f472b6;
+
+  /* Radii */
+  --ds-radius-xs: 4px;
+  --ds-radius-sm: 6px;
+  --ds-radius-md: 8px;
+  --ds-radius-lg: 12px;
+  --ds-radius-xl: 16px;
+
+  /* Typography */
+  --ds-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --ds-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Motion */
+  --ds-motion-fast: 120ms;
+  --ds-motion-base: 220ms;
+  --ds-motion-slow: 420ms;
+  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ds-motion-fast: 0ms;
+    --ds-motion-base: 0ms;
+    --ds-motion-slow: 0ms;
+  }
+}

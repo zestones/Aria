@@ -1,0 +1,39 @@
+import { type ButtonHTMLAttributes, forwardRef } from "react";
+
+type Variant = "default" | "accent" | "ghost" | "danger";
+type Size = "sm" | "md" | "lg";
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: Variant;
+    size?: Size;
+}
+
+const base =
+    "inline-flex items-center justify-center gap-2 font-medium rounded-[var(--ds-radius-sm)] transition-colors duration-[var(--ds-motion-fast)] disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ds-bg-base)]";
+
+const variants: Record<Variant, string> = {
+    default:
+        "bg-[var(--ds-bg-elevated)] text-[var(--ds-fg-primary)] border border-[var(--ds-border)] hover:bg-[color-mix(in_oklab,var(--ds-bg-elevated),white_6%)] hover:border-[var(--ds-border-strong)]",
+    accent: "bg-[var(--ds-accent)] text-[var(--ds-accent-fg)] hover:bg-[var(--ds-accent-hover)]",
+    ghost: "bg-transparent text-[var(--ds-fg-muted)] hover:text-[var(--ds-fg-primary)] hover:bg-[var(--ds-bg-elevated)]",
+    danger: "bg-[var(--ds-status-critical)] text-white hover:bg-[color-mix(in_oklab,var(--ds-status-critical),white_10%)]",
+};
+
+const sizes: Record<Size, string> = {
+    sm: "h-7 px-2.5 text-xs",
+    md: "h-9 px-3.5 text-sm",
+    lg: "h-11 px-5 text-base",
+};
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+    ({ variant = "default", size = "md", className = "", ...rest }, ref) => {
+        return (
+            <button
+                ref={ref}
+                className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+                {...rest}
+            />
+        );
+    },
+);
+Button.displayName = "Button";
