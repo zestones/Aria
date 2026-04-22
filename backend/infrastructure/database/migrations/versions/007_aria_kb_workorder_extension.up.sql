@@ -86,3 +86,11 @@ ALTER TABLE work_order
 ALTER TABLE work_order
     ADD CONSTRAINT chk_wo_status CHECK (status IN ('detected', 'analyzed', 'open', 'in_progress', 'completed', 'cancelled'));
 
+-- ============================================
+-- failure_history — signal signature column (M1.3)
+-- Stores the time-series signal pattern captured at anomaly time.
+-- Used by Investigator for pattern matching against past failures.
+-- ============================================
+ALTER TABLE failure_history
+    ADD COLUMN signal_patterns jsonb DEFAULT NULL;
+

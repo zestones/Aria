@@ -56,4 +56,5 @@ class FailureHistoryOut(_Base):
     downtime_minutes: Optional[int] = None
     cost_estimate: Optional[Decimal] = None
     work_order_id: Optional[int] = None
+    signal_patterns: Optional[Any] = None
     created_at: datetime
