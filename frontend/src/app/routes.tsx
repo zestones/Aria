@@ -4,6 +4,7 @@ import ControlRoomPage from "../pages/ControlRoomPage";
 import DataPage from "../pages/DataPage";
 import DesignPage from "../pages/DesignPage";
 import LoginPage from "../pages/LoginPage";
+import OnboardingPage from "../pages/OnboardingPage";
 import { AppShell } from "./AppShell";
 
 export function AppRoutes() {
@@ -16,6 +17,22 @@ export function AppRoutes() {
                 element={
                     <RequireAuth>
                         <DataPage />
+                    </RequireAuth>
+                }
+            />
+            <Route
+                path="/onboarding"
+                element={
+                    <RequireAuth>
+                        <OnboardingPage />
+                    </RequireAuth>
+                }
+            />
+            <Route
+                path="/onboarding/:session_id"
+                element={
+                    <RequireAuth>
+                        <OnboardingPage />
                     </RequireAuth>
                 }
             />
