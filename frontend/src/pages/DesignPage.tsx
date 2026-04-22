@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import {
     type AgentId,
+    AriaMark,
     Badge,
     Button,
     Card,
@@ -38,7 +39,7 @@ export default function DesignPage() {
             <div className="max-w-5xl mx-auto px-8 py-10 space-y-10">
                 <header>
                     <div className="flex items-center gap-3">
-                        <Icons.Sparkles className="size-5 text-[var(--ds-accent)]" />
+                        <AriaMark className="size-6 text-[var(--ds-accent)]" />
                         <h1 className="text-2xl font-semibold tracking-tight">
                             ARIA Design System
                         </h1>
@@ -47,6 +48,16 @@ export default function DesignPage() {
                         Dark-only industrial control-room primitives. M6.2 reference route.
                     </p>
                 </header>
+
+                {/* Mark */}
+                <Section title="Brand mark">
+                    <div className="flex items-end gap-8">
+                        <AriaMark size={16} className="text-[var(--ds-fg-muted)]" />
+                        <AriaMark size={24} className="text-[var(--ds-accent)]" />
+                        <AriaMark size={40} className="text-[var(--ds-accent)]" />
+                        <AriaMark size={64} className="text-[var(--ds-accent)]" />
+                    </div>
+                </Section>
 
                 {/* Tokens */}
                 <Section title="Tokens · Surface">
@@ -161,6 +172,21 @@ export default function DesignPage() {
                         <Badge variant="nominal">nominal</Badge>
                         <Badge variant="warning">warning</Badge>
                         <Badge variant="critical">critical</Badge>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap mt-3">
+                        <Badge tag variant="accent">
+                            Monitored
+                        </Badge>
+                        <Badge tag variant="nominal">
+                            Running
+                        </Badge>
+                        <Badge tag variant="warning">
+                            Drift detected
+                        </Badge>
+                        <Badge tag variant="critical">
+                            Alarm
+                        </Badge>
+                        <Badge tag>Idle</Badge>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap mt-3">
                         {agents.map((a) => (

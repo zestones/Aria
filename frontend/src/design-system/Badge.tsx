@@ -8,6 +8,11 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
     variant?: Variant;
     agent?: AgentId;
     size?: "sm" | "md";
+    /**
+     * Status-tag look: uppercased text + mono + letter-spacing (SCADA feel).
+     * Default false for long-form labels like "Generating work order".
+     */
+    tag?: boolean;
 }
 
 const agentColorVar: Record<AgentId, string> = {
@@ -33,12 +38,14 @@ export function Badge({
     variant = "default",
     agent,
     size = "sm",
+    tag = false,
     className = "",
     style,
     children,
     ...rest
 }: BadgeProps) {
-    const sizing = size === "md" ? "h-6 px-2.5 text-xs" : "h-5 px-2 text-[11px]";
+    const sizing = size === "md" ? "h-6 px-2 text-xs" : "h-5 px-1.5 text-[11px]";
+    const typography = tag ? "font-mono uppercase tracking-[0.08em]" : "font-medium";
 
     if (variant === "agent" && agent) {
         const cssVar = agentColorVar[agent];
@@ -51,7 +58,7 @@ export function Badge({
         return (
             <span
                 style={agentStyle}
-                className={`inline-flex items-center gap-1 ${sizing} rounded-full border font-medium whitespace-nowrap ${className}`}
+                className={`inline-flex items-center gap-1 ${sizing} rounded-[var(--ds-radius-xs)] border ${typography} whitespace-nowrap ${className}`}
                 {...rest}
             >
                 {children}
@@ -62,7 +69,7 @@ export function Badge({
     const v = variant === "agent" ? "default" : variant;
     return (
         <span
-            className={`inline-flex items-center gap-1 ${sizing} rounded-full border font-medium whitespace-nowrap ${baseVariants[v]} ${className}`}
+            className={`inline-flex items-center gap-1 ${sizing} rounded-[var(--ds-radius-xs)] border ${typography} whitespace-nowrap ${baseVariants[v]} ${className}`}
             style={style}
             {...rest}
         >
