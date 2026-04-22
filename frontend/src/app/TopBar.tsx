@@ -1,17 +1,7 @@
 import { useEffect, useState } from "react";
 import { AriaMark, Icons, KbdKey, MetaStrip, StatusDot } from "../design-system";
-
-export interface EquipmentOption {
-    id: string;
-    label: string;
-}
-
-export const EQUIPMENT_OPTIONS: EquipmentOption[] = [
-    { id: "P-01", label: "P-01" },
-    { id: "P-02", label: "P-02" },
-    { id: "Tank-A", label: "Tank-A" },
-    { id: "Tank-B", label: "Tank-B" },
-];
+import type { EquipmentSelection } from "../lib/hierarchy";
+import { EquipmentPicker } from "./EquipmentPicker";
 
 function computeShift(date: Date) {
     const h = date.getHours();
@@ -31,8 +21,8 @@ function useShift() {
 }
 
 export interface TopBarProps {
-    equipmentId: string;
-    onEquipmentChange: (id: string) => void;
+    selection: EquipmentSelection | null;
+    onSelectionChange: (selection: EquipmentSelection) => void;
     drawerOpen: boolean;
     drawerControlsId: string;
     onDrawerToggle: () => void;
@@ -41,8 +31,8 @@ export interface TopBarProps {
 }
 
 export function TopBar({
-    equipmentId,
-    onEquipmentChange,
+    selection,
+    onSelectionChange,
     drawerOpen,
     drawerControlsId,
     onDrawerToggle,
@@ -50,6 +40,12 @@ export function TopBar({
 }: TopBarProps) {
     const shift = useShift();
     const DrawerIcon = drawerOpen ? Icons.PanelRightClose : Icons.PanelRightOpen;
+
+    const metaItems = [
+        { label: "SITE", value: selection?.siteName ?? "—" },
+        { label: "LINE", value: selection?.lineName ?? "—" },
+        { label: "REV", value: "2026.04.22" },
+    ];
 
     return (
         <header className="sticky top-0 z-30 flex h-14 flex-none items-center gap-6 border-b border-[var(--ds-border)] bg-[var(--ds-bg-base)] px-4">
@@ -62,22 +58,7 @@ export function TopBar({
 
             <div className="h-6 w-px flex-none bg-[var(--ds-border)]" aria-hidden />
 
-            <label className="flex items-center gap-2">
-                <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ds-fg-subtle)]">
-                    Equipment
-                </span>
-                <select
-                    value={equipmentId}
-                    onChange={(e) => onEquipmentChange(e.target.value)}
-                    className="h-7 rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-2 font-mono text-[var(--ds-text-sm)] text-[var(--ds-fg-primary)] transition-colors duration-[var(--ds-motion-fast)] hover:border-[var(--ds-border-strong)] focus-visible:border-[var(--ds-accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ds-accent)]"
-                >
-                    {EQUIPMENT_OPTIONS.map((opt) => (
-                        <option key={opt.id} value={opt.id}>
-                            {opt.label}
-                        </option>
-                    ))}
-                </select>
-            </label>
+            <EquipmentPicker selection={selection} onChange={onSelectionChange} />
 
             <div className="min-w-0 flex-1" data-kpi-slot>
                 {kpiSlot}
@@ -93,13 +74,7 @@ export function TopBar({
                 </span>
             </div>
 
-            <MetaStrip
-                items={[
-                    { label: "UNIT", value: "D-02" },
-                    { label: "CELL", value: "02.01" },
-                    { label: "REV", value: "2026.04.22" },
-                ]}
-            />
+            <MetaStrip items={metaItems} />
 
             <button
                 type="button"

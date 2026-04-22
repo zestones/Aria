@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useId } from "react";
 import { Outlet } from "react-router-dom";
+import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
 import { DRAWER_DEFAULT_WIDTH, DRAWER_MAX_WIDTH, DRAWER_MIN_WIDTH, Drawer } from "./Drawer";
-import { EQUIPMENT_OPTIONS, TopBar } from "./TopBar";
+import { TopBar } from "./TopBar";
 
 interface ChatDrawerState {
     open: boolean;
@@ -27,6 +28,15 @@ function sanitizeDrawer(state: ChatDrawerState): ChatDrawerState {
     };
 }
 
+function validateEquipmentSelection(raw: unknown): EquipmentSelection | null {
+    if (!raw || typeof raw !== "object") return null;
+    const r = raw as Record<string, unknown>;
+    if (typeof r.cellId !== "number" || typeof r.lineId !== "number") return null;
+    if (typeof r.cellName !== "string" || typeof r.lineName !== "string") return null;
+    if (typeof r.areaName !== "string" || typeof r.siteName !== "string") return null;
+    return raw as EquipmentSelection;
+}
+
 function isTypingTarget(target: EventTarget | null) {
     if (!(target instanceof HTMLElement)) return false;
     const tag = target.tagName;
@@ -40,9 +50,10 @@ export function AppShell() {
         CHAT_DRAWER_KEY,
         DEFAULT_DRAWER_STATE,
     );
-    const [equipmentId, setEquipmentId] = useLocalStorage<string>(
+    const [selection, setSelection] = useLocalStorage<EquipmentSelection | null>(
         EQUIPMENT_KEY,
-        EQUIPMENT_OPTIONS[0].id,
+        null,
+        { validator: validateEquipmentSelection },
     );
 
     const safeDrawer = sanitizeDrawer(drawer);
@@ -77,8 +88,8 @@ export function AppShell() {
     return (
         <div className="flex h-screen w-screen flex-col overflow-hidden bg-[var(--ds-bg-base)] text-[var(--ds-fg-primary)]">
             <TopBar
-                equipmentId={equipmentId}
-                onEquipmentChange={setEquipmentId}
+                selection={selection}
+                onSelectionChange={setSelection}
                 drawerOpen={safeDrawer.open}
                 drawerControlsId={drawerId}
                 onDrawerToggle={toggleDrawer}
