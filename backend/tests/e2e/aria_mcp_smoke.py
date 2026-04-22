@@ -73,9 +73,14 @@ async def main() -> int:
                 "get_signal_trends",
                 "get_signal_anomalies",
                 "get_current_signals",
+                # M2.4 (issue #11) — human context + hierarchy
+                "get_logbook_entries",
+                "get_shift_assignments",
+                "get_work_orders",
+                "list_cells",
             }
             assert expected <= names, f"missing tools: {expected - names}"
-            print(f"[OK] tools/list -> {len(names)} tools, all 7 ARIA tools present")
+            print(f"[OK] tools/list -> {len(names)} tools, all expected ARIA tools present")
 
             window = {"window_start": _iso(start), "window_end": _iso(end)}
             cells = {"cell_ids": [cell_id], **window}
@@ -149,6 +154,52 @@ async def main() -> int:
                 print(f"[OK] naive datetime rejected: {type(e).__name__}")
             except Exception as e:
                 print(f"[OK] naive datetime rejected: {type(e).__name__}")
+
+            # ---- M2.4 human-context tools (issue #11) ----
+            cells_all = await _call(session, "list_cells", {})
+            assert isinstance(cells_all, list) and len(cells_all) > 0
+            assert any(c["name"] == "P-02" for c in cells_all), "P-02 not in list_cells output"
+            print(f"[OK] list_cells -> {len(cells_all)} cells (P-02 present)")
+
+            logbook = await _call(session, "get_logbook_entries", {"cell_id": cell_id, **window})
+            assert (
+                isinstance(logbook, list) and len(logbook) > 0
+            ), "logbook_entry seed (006) empty — `get_logbook_entries` must return rows for P-02"
+            print(f"[OK] get_logbook_entries -> {len(logbook)} entries")
+
+            today = datetime.now(timezone.utc).date()
+            shifts = await _call(
+                session,
+                "get_shift_assignments",
+                {
+                    "cell_id": cell_id,
+                    "date_start": (today - timedelta(days=7)).isoformat(),
+                    "date_end": today.isoformat(),
+                },
+            )
+            assert (
+                isinstance(shifts, list) and len(shifts) > 0
+            ), "shift_assignment seed (seeds/p02_human_context.sql) empty"
+            print(f"[OK] get_shift_assignments -> {len(shifts)} assignments")
+
+            wos = await _call(session, "get_work_orders", {"cell_id": cell_id})
+            assert (
+                isinstance(wos, list) and len(wos) > 0
+            ), "work_order seed (seeds/p02_human_context.sql) empty"
+            print(f"[OK] get_work_orders -> {len(wos)} work orders")
+
+            wos_critical = await _call(
+                session,
+                "get_work_orders",
+                {"cell_id": cell_id, "priority": "critical", "generated_by_agent": True},
+            )
+            assert (
+                isinstance(wos_critical, list) and len(wos_critical) > 0
+            ), "audit §1.2 filters wired but no agent-generated critical WO returned"
+            print(
+                f"[OK] get_work_orders (priority=critical, agent=True) -> "
+                f"{len(wos_critical)} match"
+            )
 
     print("\nALL TOOLS WORK END-TO-END")
     return 0
