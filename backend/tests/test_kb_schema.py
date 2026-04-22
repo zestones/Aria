@@ -214,9 +214,11 @@ def test_compute_completeness_p02_is_high():
 @pytest.mark.unit
 def test_compute_completeness_partial_kb():
     """Partial KB with only 1 threshold and no failure patterns scores < 0.5."""
-    kb = EquipmentKB(
-        equipment={"manufacturer": "Grundfos"},
-        thresholds={"vibration_mm_s": {"alert": 4.5}},
+    kb = EquipmentKB.model_validate(
+        {
+            "equipment": {"manufacturer": "Grundfos"},
+            "thresholds": {"vibration_mm_s": {"alert": 4.5}},
+        }
     )
     score = kb.compute_completeness()
     # 1 threshold out of 3 expected -> 0.5 * (1/3) = ~0.167
