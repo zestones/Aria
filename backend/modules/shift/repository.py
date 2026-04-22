@@ -56,6 +56,31 @@ class ShiftRepository:
         sql = f"{self._ASSIGN_SELECT} {where} ORDER BY sa.assigned_date DESC, sa.id"
         return await self.conn.fetch(sql, *params)
 
+    async def list_assignments_for_range(
+        self,
+        date_start: date,
+        date_end: date,
+        cell_id: int | None = None,
+        user_id: int | None = None,
+    ):
+        """Range variant used by MCP `get_shift_assignments` (audit §1, issue #11).
+
+        ``date_end`` is inclusive — shift assignments are day-granular.
+        """
+        params: list[object] = [date_start, date_end]
+        clauses = ["sa.assigned_date >= $1", "sa.assigned_date <= $2"]
+        if cell_id is not None:
+            params.append(cell_id)
+            clauses.append(f"sa.cell_id = ${len(params)}")
+        if user_id is not None:
+            params.append(user_id)
+            clauses.append(f"sa.user_id = ${len(params)}")
+        sql = (
+            f"{self._ASSIGN_SELECT} WHERE {' AND '.join(clauses)} "
+            "ORDER BY sa.assigned_date DESC, sa.id"
+        )
+        return await self.conn.fetch(sql, *params)
+
     async def list_assignments_for_shift_date(self, shift_id: int, day: date):
         return await self.conn.fetch(
             self._ASSIGN_SELECT + " WHERE sa.shift_id = $1 AND sa.assigned_date = $2",
