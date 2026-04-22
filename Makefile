@@ -58,16 +58,16 @@ install.frontend: ## Install frontend npm deps locally (so VS Code can resolve t
 .PHONY: up up.backend up.frontend down restart logs ps build rebuild
 
 up: ## Start all services (db, migrate, simulator, backend, frontend) — hot reload enabled
-	$(COMPOSE) up -d
+	$(COMPOSE) up -d --build
 	@printf "\n$(C_GREEN)✓ Stack up$(C_RESET)\n"
 	@printf "  • Frontend  $(C_CYAN)http://localhost:5173$(C_RESET)\n"
 	@printf "  • Backend   $(C_CYAN)http://localhost:8000$(C_RESET)  (docs: /docs)\n"
 
 up.backend: ## Start only db + migrate + backend (no simulator/frontend)
-	$(COMPOSE) up -d timescaledb migrate backend
+	$(COMPOSE) up -d --build timescaledb migrate backend
 
 up.frontend: ## Start only the frontend container
-	$(COMPOSE) up -d frontend
+	$(COMPOSE) up -d --build frontend
 
 down: ## Stop all services
 	$(COMPOSE) down
