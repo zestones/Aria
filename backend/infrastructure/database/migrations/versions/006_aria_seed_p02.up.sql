@@ -197,27 +197,11 @@ ON CONFLICT (name)
     DO NOTHING;
 
 -- ============================================
--- Equipment KB (pre-seeded so agents have a starting fiche)
+-- Equipment KB is seeded in migration 007 (it depends on columns
+-- added there — structured_data, confidence_score, onboarding_complete,
+-- last_enriched_at). Keeping the seed co-located with the schema change
+-- avoids a cross-migration column dependency.
 -- ============================================
-INSERT INTO equipment_kb(cell_id, equipment_type, manufacturer, model, installation_date, nominal_specs, common_failure_modes, maintenance_recommendations, notes, last_updated_by)
-SELECT
-    c.id,
-    'Centrifugal Pump',
-    'FlowTech',
-    'CP-3200',
-(NOW() - INTERVAL '18 months')::date,
-    jsonb_build_object('flow_nominal_l_min', 533, 'pressure_nominal_bar', 12.0, 'vibration_nominal_mm_s', 2.2, 'vibration_alarm_mm_s', 4.5, 'vibration_trip_mm_s', 7.1, 'bearing_temp_nominal_c', 48, 'bearing_temp_alarm_c', 75, 'motor_power_kw', 18.5, 'rpm_nominal', 2950),
-    jsonb_build_array(jsonb_build_object('mode', 'bearing_wear', 'symptoms', 'progressive vibration drift, bearing temp rise', 'mtbf_months', 14), jsonb_build_object('mode', 'mechanical_seal_leak', 'symptoms', 'flow drop, pressure fluctuation', 'mtbf_months', 24), jsonb_build_object('mode', 'impeller_imbalance', 'symptoms', 'sudden vibration spike at 1x rpm', 'mtbf_months', 36)),
-    jsonb_build_array(jsonb_build_object('action', 'bearing replacement', 'interval_months', 12, 'duration_min', 240, 'parts', jsonb_build_array('FBR-6310-2RS', 'FBR-6312-2RS')), jsonb_build_object('action', 'mechanical seal replacement', 'interval_months', 18, 'duration_min', 180, 'parts', jsonb_build_array('FlowTech MKII seal kit')), jsonb_build_object('action', 'vibration spectrum analysis', 'interval_months', 3, 'duration_min', 30, 'parts', jsonb_build_array())),
-    'P-02 — main raw water booster, 24/7 service. Last bearing change: 14 months ago.',
-    'seed'
-FROM
-    cell c
-WHERE
-    c.name = 'P-02'
-ON CONFLICT (cell_id)
-    DO NOTHING;
-
 -- ============================================
 -- Failure history (3 past bearing replacements over 18 months)
 -- ============================================
