@@ -40,7 +40,7 @@ Mettre à jour `006_aria_seed_p02.up.sql` pour seeder directement `structured_da
 avec un blob `EquipmentKB` minimal valide (Grundfos CR 32-2 réaliste pour P-02).
 
 **Acceptance.**
-- [ ] `make reset-db` (drop + recreate + apply 001→007) passe sans erreur
+- [ ] `make db.reset` (drop + recreate + apply 001→007) passe sans erreur
 - [ ] `\d equipment_kb` ne montre QUE les nouvelles colonnes (plus les 3 héritées)
 - [ ] Seed 006 produit un `structured_data` parsable par `EquipmentKB.model_validate()`
 - [ ] Pas de fichier `.down.sql`
