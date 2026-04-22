@@ -170,6 +170,76 @@ un agent loop est un cauchemar.
 
 ---
 
+## Issue M2.9 — UI tools generative (`render_*`) déclarés dans les agents
+
+> Ajoutée après alignement front/back. Contexte complet dans `docs/planning/ALIGNMENT.md`.
+
+**Scope.** En plus des 14 data tools MCP, exposer 9 tools `render_*` aux agents
+pour qu'ils puissent émettre des events `ui_render` consommés par le frontend
+(generative UI inline dans le chat).
+
+**Pas d'implémentation Python.** Ces tools n'ont **pas** de code métier — ce sont
+juste des schémas passés au LLM. Quand un agent appelle `render_signal_chart`,
+l'orchestrateur capture le `tool_use`, broadcast un event `ui_render` via WSManager,
+et retourne immédiatement un `tool_result = "rendered"` sans effet DB.
+
+**Fichier.** `backend/agents/ui_tools.py` — module avec les 9 schémas + helper.
+
+**Les 9 tools.**
+
+| Tool name | Used by | Props schema (résumé) |
+|---|---|---|
+| `render_signal_chart` | Investigator, Q&A | `{signal_def_id, window_hours, mark_anomaly_at?, threshold?}` |
+| `render_equipment_kb_card` | KB Builder, Q&A | `{cell_id, highlight_fields?}` |
+| `render_work_order_card` | Work Order Gen | `{work_order_id, printable}` |
+| `render_diagnostic_card` | Investigator | `{title, confidence, root_cause, contributing_factors[], pattern_match_id?}` |
+| `render_correlation_matrix` | Investigator | `{sources[], impact_matrix[][]}` |
+| `render_pattern_match` | Investigator | `{current_event, past_event_ref, similarity}` |
+| `render_bar_chart` | Q&A | `{title, x_label, y_label, bars[]}` |
+| `render_alert_banner` | Sentinel (auto-emit) | `{severity, cell_id, message, anomaly_id}` |
+| `render_kb_progress` | KB Builder | `{steps[{label, status}]}` |
+
+✅ **DÉCIDÉ — tools locaux agent, pas via FastMCP.** Même règle que `submit_rca`
+(cf. M4.3) : tool d'output structuré = local, tool de lecture/écriture DB = MCP.
+Les `render_*` sont déclarés inline dans chaque agent concerné et concaténés à
+`tools_schema` avant l'appel Anthropic.
+
+**Pattern d'intégration dans le system prompt de chaque agent.**
+```
+Pour rendre visuels tes résultats, tu peux appeler :
+- render_signal_chart(...) pour afficher une courbe
+- render_diagnostic_card(...) pour afficher ton diagnostic final
+- render_work_order_card(...) pour afficher un WO
+Appelle-les quand c'est plus parlant qu'une réponse texte seule.
+```
+
+**Handler orchestrateur.**
+```python
+if tool_name.startswith("render_"):
+    await ws_manager.broadcast("ui_render", {
+        "agent": agent_id,
+        "component": tool_name.removeprefix("render_"),  # SignalChart, DiagnosticCard, ...
+        "props": args,
+        "turn_id": turn_id,
+    })
+    tool_result = {"type": "tool_result", "tool_use_id": tu_id, "content": "rendered"}
+    # pas de persistence DB, pas de side-effect
+```
+
+**Pourquoi critique.** Sans ces tools, Q&A/Investigator répondent en markdown texte
+uniquement. Avec, le chat affiche inline des graphes, cards, diagnostics **rendus
+par l'agent lui-même** — pattern Generative UI / Claude artifacts. C'est ce qui
+rend la démo visuellement agentique et distingue ARIA d'un chatbot classique.
+
+**Acceptance.**
+- [ ] Investigator émet `ui_render` pour `render_diagnostic_card` à la fin du RCA
+- [ ] Q&A émet `ui_render` pour `render_signal_chart` sur question relative à un signal
+- [ ] Frontend (M7.5 + M8.1–M8.3) rend les composants correctement
+
+**Bloque.** Frontend M7.5 (artifact registry), M8.1 / M8.2 / M8.3 (artifacts).
+
+---
+
 ## Bloque
 
 - M3 (KB Builder utilise `update_equipment_kb` indirectement)

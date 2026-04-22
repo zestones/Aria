@@ -117,12 +117,86 @@ chaque upsert pour rafraîchir le score.
 
 ---
 
+## Issue M3.5 🔴 — KB Builder en mode "agent appelé" (`ask_kb_builder` handler)
+
+**Scope.** Le KB Builder n'est pas seulement orchestré par les endpoints d'onboarding
+(M3.2/M3.3) — il est aussi **appelable comme tool** par l'Investigator via
+`ask_kb_builder` (cf. M4.6). Cette issue implémente le handler partagé.
+
+**Fichier.** `backend/agents/kb_builder.py` :
+```python
+async def answer_kb_question(cell_id: int, question: str) -> dict:
+    """Mini-session Messages API pour répondre factuellement à un agent collègue."""
+    kb = await mcp_client.call_tool("get_equipment_kb", {"cell_id": cell_id})
+    system = (
+        "Tu réponds factuellement à un agent collègue qui investigue une panne. "
+        "Utilise la KB ci-dessous. Si l'info manque, dis 'inconnu' — ne devine pas. "
+        "Réponse concise, JSON: {answer, source, confidence}."
+    )
+    user = f"KB équipement: {kb}\n\nQuestion: {question}"
+    response = await anthropic.messages.create(
+        model=model_for("agent"),
+        max_tokens=1024,
+        system=system,
+        messages=[{"role": "user", "content": user}],
+    )
+    return parse_json_response(response)
+```
+
+**Appelé depuis.** Le handler `ask_kb_builder` dans `backend/agents/investigator.py`
+(cf. M4.6). Différent du flow onboarding (M3.2/M3.3) : pas de session multi-turn,
+pas d'écriture KB, juste lecture + réponse.
+
+**Acceptance.**
+- [ ] `await answer_kb_question(2, "Quel torque max boulons turbine ?")` retourne
+  `{answer, source, confidence}`
+- [ ] Latence < 5s (Sonnet en dev)
+- [ ] Si info absente → `answer="inconnu"`, pas d'hallucination
+
+**Bloque.** M4.6 (handoff dynamique Investigator → KB Builder).
+
+---
+
+## Issue M3.6 🟡 — UI tools pour KB Builder onboarding
+
+**Scope.** Pendant l'onboarding (M3.3), le KB Builder émet des `ui_render` events
+pour rendre le flow visuel côté frontend.
+
+**Tools utilisés** (déclarés dans `UI_TOOLS` cf. M2.9) :
+- `render_kb_progress(steps[{label, status}])` — émit à chaque étape de
+  l'onboarding ("Lecture du manuel...", "Extraction des seuils...", "Question 1/4...")
+- `render_equipment_kb_card(cell_id, highlight_fields)` — émit à la fin pour
+  afficher la KB complète avec les champs nouvellement remplis surlignés
+
+**Pattern d'émission (sans agent loop).** Pour les 2 tools ci-dessus, le KB Builder
+n'a pas besoin de raisonner — c'est l'orchestrateur d'onboarding qui broadcast
+directement :
+```python
+await ws_manager.broadcast("ui_render", {
+    "agent": "kb_builder",
+    "component": "render_kb_progress",
+    "props": {"steps": [...]},
+    "turn_id": current_turn_id,
+})
+```
+
+**Acceptance.**
+- [ ] PDF upload → 5 events `ui_render` `render_kb_progress` (1 par phase)
+- [ ] Fin onboarding → 1 event `ui_render` `render_equipment_kb_card`
+- [ ] Frontend M8.6 (Onboarding wizard) consomme correctement
+
+**Bloque.** Frontend M8.6 onboarding wizard.
+
+---
+
 ## Bloque
 
 - Scène 1 de la démo (Onboarding)
-- Frontend page Onboarding (M6)
+- Frontend page Onboarding (M8.6)
+- M4.6 (handoff Investigator → KB Builder — via M3.5)
 
 ## Bloqué par
 
 - M1 (kb_schema, migration 007)
 - M2.5 (tool `update_equipment_kb`) et M2.7 (`MCPClient`)
+- M2.9 (UI_TOOLS déclarés — pour M3.6)
