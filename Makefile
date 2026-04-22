@@ -175,6 +175,9 @@ e2e: ## Run backend E2E smoke test (requires stack to be up)
 backend.smoke.mcp: ## Run MCP server E2E smoke (requires stack + canonical KB; see issue #69)
 	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/e2e/aria_mcp_smoke.py
 
+backend.smoke.tools: ## Run per-tool MCPClient isolation smoke on P-02 (issue #15; requires stack + canonical KB)
+	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/integration/aria_mcp/tools_p02_isolation.py
+
 clean: ## Remove caches and build artifacts
 	@find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
 	@rm -rf $(BACKEND_DIR)/coverage.xml $(BACKEND_DIR)/htmlcov $(FRONTEND_DIR)/dist
