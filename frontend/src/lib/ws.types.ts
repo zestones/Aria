@@ -14,6 +14,8 @@ export type EventBusMap = {
         threshold: number;
         work_order_id: number;
         time: string;
+        severity: "alert" | "trip";
+        direction: "high" | "low";
     };
     tool_call_started: {
         agent: string;
