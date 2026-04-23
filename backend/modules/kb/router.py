@@ -12,13 +12,13 @@ from agents.kb_builder import (
     start_onboarding,
     submit_onboarding_message,
 )
-from agents.kb_builder._ws_stub import broadcast_stub
 from aria_mcp.client import mcp_client
 from core.api_response import created, ok
 from core.database import get_db
 from core.exceptions import NotFoundError
 from core.json_fields import decode_record
 from core.security import Role, get_current_user, require_role
+from core.ws_manager import ws_manager
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from modules.kb.repository import JSON_FIELDS, KbRepository
 from modules.kb.schemas import (
@@ -79,14 +79,17 @@ def _upload_steps(active_idx: int) -> list[dict[str, str]]:
 
 
 async def _emit_upload_phase(cell_id: int, active_idx: int) -> None:
-    """Stub WS broadcast for one PDF-upload phase. See M3.6 (#22) / M4.1 (#23)."""
-    await broadcast_stub(
+    """WS broadcast for one PDF-upload phase. See M3.6 (#22) / M4.1 (#23).
+
+    ``turn_id`` is auto-injected by ``ws_manager.broadcast`` from the
+    ``current_turn_id`` ContextVar when the orchestrator (#26) sets it.
+    """
+    await ws_manager.broadcast(
         "ui_render",
         {
             "agent": "kb_builder",
             "component": "kb_progress",
             "props": {"cell_id": cell_id, "steps": _upload_steps(active_idx)},
-            "turn_id": None,  # set by orchestrator ContextVar after M4.1 (#23)
         },
     )
 
@@ -135,10 +138,9 @@ async def upload_pdf(
        recomputes completeness.
     5. Re-read and serialise via ``EquipmentKbOut``.
 
-    Phase events are emitted via ``broadcast_stub`` (M3.6 / issue #22). Each
-    call will become ``ws_manager.broadcast("ui_render", ...)`` once M4.1
-    (#23) lands; the payload shape is already final, only the transport is
-    stubbed.
+    Phase events are emitted via ``ws_manager.broadcast`` (M4.1 / issue
+    #23). Payload shape matches the ``EventBusMap.ui_render`` contract in
+    ``frontend/src/lib/ws.types.ts``.
     """
     if file.content_type not in ("application/pdf", "application/octet-stream"):
         raise HTTPException(400, "File must be a PDF")
