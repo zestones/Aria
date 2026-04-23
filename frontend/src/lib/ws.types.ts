@@ -72,5 +72,6 @@ export type ChatMap =
     | { type: "tool_call"; name: string; args: Record<string, unknown> }
     | { type: "tool_result"; name: string; summary: string }
     | { type: "ui_render"; component: string; props: Record<string, unknown> }
+    | { type: "agent_start"; agent: string }
     | { type: "agent_handoff"; from: string; to: string; reason: string }
     | { type: "done"; error?: string };

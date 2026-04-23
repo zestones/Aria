@@ -168,4 +168,24 @@ describe("chatStore — real WS integration", () => {
         expect(status).toBe("error");
         expect(error).toMatch(/sign in/i);
     });
+
+    it("updates the agent message badge when an agent_start frame arrives (issue #109)", async () => {
+        const useChatStore = await importStoreFresh();
+        useChatStore.getState().sendMessage("who's speaking?");
+        lastFake().simulateOpen();
+        await flushMicrotasks();
+
+        const before = useChatStore.getState().messages.find((m) => m.role === "agent");
+        if (!before || before.role !== "agent") throw new Error("agent message missing");
+        // Default placeholder before backend declares the speaker.
+        expect(before.agent).toBe("sentinel");
+
+        lastFake().simulateEvent({ type: "agent_start", agent: "investigator" });
+
+        const after = useChatStore
+            .getState()
+            .messages.find((m) => m.id === before.id && m.role === "agent");
+        if (!after || after.role !== "agent") throw new Error("agent message missing after frame");
+        expect(after.agent).toBe("investigator");
+    });
 });
