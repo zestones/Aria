@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
+from agents.sentinel import sentinel_loop
 from aria_mcp.server import http_app as mcp_http_app
 from core.config import get_settings
 from core.database import db
@@ -38,9 +40,19 @@ async def lifespan(app: FastAPI):
     log.info("ARIA backend ready")
     async with mcp_http_app.lifespan(mcp_http_app):
         log.info("MCP server ready at /mcp")
+        # Sentinel must start INSIDE the MCP lifespan wrapper — its first
+        # `mcp_client.call_tool()` hits 404 otherwise (MCP HTTP app not
+        # yet mounted). See #26 audit comment.
+        sentinel_task = asyncio.create_task(sentinel_loop(), name="sentinel")
         try:
             yield
         finally:
+            sentinel_task.cancel()
+            try:
+                await sentinel_task
+            except asyncio.CancelledError:
+                pass
+            log.info("Sentinel cancelled")
             await db.disconnect()
 
 
