@@ -1,4 +1,5 @@
 import { EquipmentNode } from "./EquipmentNode";
+import { useAnomalyStatusMap } from "./useAnomalyStatusMap";
 import type { EquipmentEntry } from "./useEquipmentList";
 
 export interface EquipmentGridProps {
@@ -39,6 +40,10 @@ export function EquipmentGrid({
     isLoading = false,
     className = "",
 }: EquipmentGridProps) {
+    // M7.1b: overlay the live anomaly stream on top of the backend baseline.
+    // Absence from the map = keep the entry's own status (nominal by default).
+    const anomalyStatusMap = useAnomalyStatusMap();
+
     if (isLoading) {
         return (
             <div
@@ -70,18 +75,24 @@ export function EquipmentGrid({
             className={`grid h-full auto-rows-min list-none grid-cols-2 gap-[var(--ds-space-3,12px)] overflow-auto p-[var(--ds-space-4,16px)] md:grid-cols-3 lg:grid-cols-4 ${className}`}
             aria-label="Equipment cells"
         >
-            {entries.map((entry) => (
-                <li key={entry.id}>
-                    <EquipmentNode
-                        id={entry.id}
-                        label={entry.label}
-                        sublabel={entry.sublabel}
-                        status={entry.status}
-                        selected={selectedNodeId === entry.id}
-                        onClick={() => onSelectNode(entry.id)}
-                    />
-                </li>
-            ))}
+            {entries.map((entry) => {
+                // Live anomaly severity wins over the backend-hardcoded
+                // status; absence of a live entry falls back cleanly.
+                const liveStatus = anomalyStatusMap.get(entry.cellId);
+                const status = liveStatus ?? entry.status;
+                return (
+                    <li key={entry.id}>
+                        <EquipmentNode
+                            id={entry.id}
+                            label={entry.label}
+                            sublabel={entry.sublabel}
+                            status={status}
+                            selected={selectedNodeId === entry.id}
+                            onClick={() => onSelectNode(entry.id)}
+                        />
+                    </li>
+                );
+            })}
         </ul>
     );
 }
