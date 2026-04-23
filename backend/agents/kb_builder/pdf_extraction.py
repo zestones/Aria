@@ -1,17 +1,17 @@
-"""KB Builder agent (M3.2 — issue #18).
+"""PDF → ``EquipmentKB`` extraction (M3.2 — issue #18).
 
-Two public helpers used by ``modules/kb/router.py::upload_pdf``:
+Two helpers used by ``modules/kb/router.py::upload_pdf``:
 
-- ``extract_from_pdf(pdf_bytes, cell_id)`` — Opus-vision extraction with one
-  retry on parse / validation failure. Returns ``(EquipmentKB, raw_text)``.
-- ``bootstrap_thresholds(cell_id, extracted)`` — pre-fills any
+- :func:`extract_from_pdf` — Opus-vision extraction with one retry on
+  parse / validation failure. Returns ``(EquipmentKB, raw_text)``.
+- :func:`bootstrap_thresholds` — pre-fills any
   ``process_signal_definition.kb_threshold_key`` entry that Opus missed with a
   ``{alert: None, source: "pending_calibration", confidence: 0.0}`` stub. This
   keeps ``KbRepository._assert_thresholds_cover_signal_keys`` happy without
-  blocking the operator on perfect extractions (demo-breaker fix — see
+  blocking the operator on imperfect extractions (demo-breaker fix — see
   issue #18 §4).
 
-The router calls them in order:
+The router calls them in order::
 
     kb, raw = await extract_from_pdf(bytes, cell_id)
     kb_dict = await bootstrap_thresholds(cell_id, kb.model_dump(exclude={"kb_meta"}))
@@ -33,7 +33,7 @@ from modules.kb.kb_schema import EquipmentKB
 from pydantic import ValidationError
 from pypdf import PdfReader
 
-log = logging.getLogger("aria.kb_builder")
+log = logging.getLogger("aria.kb_builder.pdf_extraction")
 
 
 _MAX_PAGES = 50
@@ -76,7 +76,6 @@ Leave fields null if not found. Never guess."""
 
 
 def _first_text(content: list[Any]) -> str:
-    """Return the first ``TextBlock.text`` from a Claude response, or ''."""
     """Return the first ``TextBlock.text`` from a Claude response, or ''."""
     return next(
         (block.text for block in content if isinstance(block, TextBlock)),
