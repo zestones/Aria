@@ -18,7 +18,6 @@ import logging
 import uuid
 from typing import Any
 
-from agents.kb_builder._ws_stub import broadcast_stub
 from agents.kb_builder.onboarding import session_store
 from agents.kb_builder.onboarding.extraction import extract_patch
 from agents.kb_builder.onboarding.questions import QUESTIONS
@@ -27,6 +26,7 @@ from aria_mcp.client import mcp_client
 from core.database import db
 from core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from core.json_fields import decode_record
+from core.ws_manager import ws_manager
 from modules.kb.repository import JSON_FIELDS, KbRepository
 
 log = logging.getLogger("aria.kb_builder.onboarding.service")
@@ -199,9 +199,10 @@ async def submit_onboarding_message(session_id: str, answer: str) -> dict[str, A
 
     # M3.6 — emit per-question progress AFTER the MCP write completes
     # (issue #22 acceptance #5: "All events are emitted AFTER the
-    # corresponding MCP write completes (not before)"). Will become
-    # ``ws_manager.broadcast`` once M4.1 (#23) lands.
-    await broadcast_stub(
+    # corresponding MCP write completes (not before)"). M4.1 (#23) wired
+    # this through ``ws_manager``; ``turn_id`` is auto-injected from the
+    # ``current_turn_id`` ContextVar.
+    await ws_manager.broadcast(
         "ui_render",
         {
             "agent": "kb_builder",
@@ -222,7 +223,6 @@ async def submit_onboarding_message(session_id: str, answer: str) -> dict[str, A
                     for q in QUESTIONS
                 ],
             },
-            "turn_id": None,  # set by orchestrator ContextVar after M4.1 (#23)
         },
     )
 
@@ -238,8 +238,8 @@ async def submit_onboarding_message(session_id: str, answer: str) -> dict[str, A
             raise NotFoundError(f"No equipment_kb row for cell {session.cell_id} after onboarding")
         # M3.6 — final card AFTER the DB re-read so the frontend's re-fetch
         # via ``GET /api/v1/kb/equipment/{cell_id}`` (M8.2) sees the
-        # post-onboarding KB. Will become ``ws_manager.broadcast`` after M4.1.
-        await broadcast_stub(
+        # post-onboarding KB. M4.1 (#23) wired this through ``ws_manager``.
+        await ws_manager.broadcast(
             "ui_render",
             {
                 "agent": "kb_builder",
@@ -251,7 +251,6 @@ async def submit_onboarding_message(session_id: str, answer: str) -> dict[str, A
                         "failure_patterns",
                     ],
                 },
-                "turn_id": None,  # set by orchestrator ContextVar after M4.1 (#23)
             },
         )
         return {

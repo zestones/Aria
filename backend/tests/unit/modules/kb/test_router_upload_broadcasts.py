@@ -1,10 +1,10 @@
-"""Tests for the M3.6 (#22) WebSocket broadcast stubs in the KB upload route.
+"""Tests for the M3.6 (#22) WebSocket broadcasts in the KB upload route.
 
 These tests exercise the orchestration in ``modules.kb.router.upload_pdf``
 directly (no FastAPI TestClient — the project does not have HTTP fixtures
 yet) by stubbing every collaborator: ``extract_from_pdf``,
 ``bootstrap_thresholds``, ``mcp_client``, ``KbRepository``, and the
-``broadcast_stub`` shim.
+``ws_manager`` singleton (M4.1 #23 — swapped from the M3.6 stub).
 
 Acceptance covered (issue #22 §5):
 
@@ -77,7 +77,7 @@ class _FakeRepo:
 
 def _patch(monkeypatch: pytest.MonkeyPatch, mcp: _FakeMCP, recorder: _Recorder) -> None:
     monkeypatch.setattr(kb_router, "mcp_client", mcp)
-    monkeypatch.setattr(kb_router, "broadcast_stub", recorder)
+    monkeypatch.setattr(kb_router.ws_manager, "broadcast", recorder)
 
     async def _fake_extract(_bytes: bytes, _cell_id: int):
         return _FakeKB(), "raw markdown"
