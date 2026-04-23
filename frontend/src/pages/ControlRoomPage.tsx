@@ -3,6 +3,7 @@ import { Hairline, SectionHeader } from "../design-system";
 import {
     EquipmentGrid,
     EquipmentInspector,
+    INSPECTOR_DRAWER_WIDTH,
     type InspectorNode,
     useEquipmentList,
 } from "../features/control-room";
@@ -65,12 +66,20 @@ export default function ControlRoomPage() {
             />
             <Hairline />
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]">
-                <EquipmentGrid
-                    entries={entries}
-                    selectedNodeId={selectedNodeId}
-                    onSelectNode={setSelectedNodeId}
-                    isLoading={isLoading}
-                />
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        paddingLeft: selectedNode ? `${INSPECTOR_DRAWER_WIDTH}px` : "0px",
+                        transition: "padding-left var(--ds-motion-base) var(--ds-ease-out)",
+                    }}
+                >
+                    <EquipmentGrid
+                        entries={entries}
+                        selectedNodeId={selectedNodeId}
+                        onSelectNode={setSelectedNodeId}
+                        isLoading={isLoading}
+                    />
+                </div>
                 <EquipmentInspector
                     open={selectedNode !== null}
                     node={selectedNode}

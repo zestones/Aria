@@ -24,7 +24,7 @@ export interface EquipmentInspectorProps {
     onClose: () => void;
 }
 
-const DRAWER_WIDTH = 320;
+export const INSPECTOR_DRAWER_WIDTH = 320;
 
 /**
  * Left-docked inspector drawer. Positioned `absolute` inside the diagram
@@ -54,7 +54,7 @@ export function EquipmentInspector({ open, node, onClose }: EquipmentInspectorPr
                     role="dialog"
                     aria-label={`${node.label} inspector`}
                     className="absolute left-0 top-0 bottom-0 z-20 flex flex-col border-r border-[var(--ds-border)] bg-[var(--ds-bg-surface)]"
-                    style={{ width: `${DRAWER_WIDTH}px` }}
+                    style={{ width: `${INSPECTOR_DRAWER_WIDTH}px` }}
                     variants={drawerSlideLeft}
                     initial="hidden"
                     animate="visible"
