@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef } from "react";
 import { Outlet } from "react-router-dom";
+import { KpiBar } from "../features/control-room";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
 import { ChatPanel } from "./chat/ChatPanel";
@@ -104,6 +105,7 @@ export function AppShell() {
                 drawerOpen={safeDrawer.open}
                 drawerControlsId={drawerId}
                 onDrawerToggle={toggleDrawer}
+                kpiSlot={<KpiBar selection={selection} />}
             />
             <div
                 className="grid min-h-0 flex-1"
