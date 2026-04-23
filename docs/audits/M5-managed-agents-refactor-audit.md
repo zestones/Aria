@@ -12,15 +12,15 @@
 > [!WARNING]
 > **Verdict: the current Managed Agents integration works but is plumbed onto the wrong agent and bypasses the platform's two headline mechanisms (hosted MCP + cloud container). As written it ships, but it will not win the "Best Managed Agents" $5k.**
 
-| Dimension                              | Today                                                                    | After refactor                                            |
-|----------------------------------------|--------------------------------------------------------------------------|-----------------------------------------------------------|
-| Managed Agents target                  | Q&A (interactive, sub-second, user watching)                             | Investigator (12 turns, 120 s, async background)          |
-| MCP wiring                             | 14 tools wrapped as `custom` (round-trips via FastAPI)                   | Hosted MCP server registered on the agent (direct call)   |
-| Tool dispatch code in our backend      | `_dispatch_custom_tool` for every MCP tool + render_* + ask_investigator | Only render_* + submit_rca + ask_kb_builder               |
-| Agent-loop boilerplate (Investigator)  | ~140 lines (`_run_investigator_body` + `_dispatch_tool_uses`: 74 + 64)   | ~80 lines (event consumer + 3 custom tool handlers)       |
-| Session persistence                    | Dies with the WebSocket (Q&A) / dies on submit_rca (Investigator)        | `session_id` persisted on `work_order` row                |
+| Dimension                              | Today                                                                    | After refactor                                                                                                      |
+|----------------------------------------|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| Managed Agents target                  | Q&A (interactive, sub-second, user watching)                             | Investigator (12 turns, 120 s, async background)                                                                    |
+| MCP wiring                             | 14 tools wrapped as `custom` (round-trips via FastAPI)                   | Hosted MCP server registered on the agent (direct call)                                                             |
+| Tool dispatch code in our backend      | `_dispatch_custom_tool` for every MCP tool + render_* + ask_investigator | Only render_* + submit_rca + ask_kb_builder                                                                         |
+| Agent-loop boilerplate (Investigator)  | ~140 lines (`_run_investigator_body` + `_dispatch_tool_uses`: 74 + 64)   | ~80 lines (event consumer + 3 custom tool handlers)                                                                 |
+| Session persistence                    | Dies with the WebSocket (Q&A) / dies on submit_rca (Investigator)        | `session_id` persisted on `work_order` row                                                                          |
 | Cloud container (`bash`, `web_fetch`)  | Unused                                                                   | Python signal diagnostics (trend / SPC / FFT / correlation) + datasheet lookups — optional, equipment-type agnostic |
-| Streaming `thinking_delta` in frontend | Per-chunk deltas (M4.5)                                                  | Block-level via `agent.thinking` events (one frame/block) |
+| Streaming `thinking_delta` in frontend | Per-chunk deltas (M4.5)                                                  | Block-level via `agent.thinking` events (one frame/block)                                                           |
 
 **What's strong in the current code.** Session-per-WebSocket with lazy bootstrap and a process-wide lock; correct event lifecycle (`agent.message` → buffer; `agent.custom_tool_use` → buffer by id; `session.status_idle` → branch on `stop_reason.type`); fallback flag (`use_managed_agents`) so the M5.2 path comes back in <5 min. Test coverage in [test_qa_agent_managed.py](backend/tests/unit/agents/test_qa_agent_managed.py) is solid.
 
@@ -224,14 +224,14 @@ That maps directly to the prize blurb: *"the team that leveraged the Claude plat
 
 **What the agent can actually compute** (menu, not mandate):
 
-| Signal type              | Diagnostic technique                                                  | Asset examples               |
-|--------------------------|-----------------------------------------------------------------------|------------------------------|
-| Any time-series          | Rolling mean / median, linear or exponential trend fit, rate-of-change | All equipment                |
-| Any time-series          | SPC control limits (±3σ), CUSUM drift detection                       | All equipment                |
-| Multi-signal             | Cross-correlation (e.g. current vs temperature rise)                  | Motors, compressors, HVAC    |
-| Vibration / current      | FFT + spectral peak detection                                         | Rotating equipment, VFD-driven motors |
-| Vibration on rolling kit | Bearing fault frequencies (BPFO/BPFI/BSF/FTF) if KB has geometry      | Pumps, fans, gearboxes with known bearing specs |
-| Temperature / pressure   | Degradation fit → projected time-to-threshold                         | Heat exchangers, seals, filters |
+| Signal type              | Diagnostic technique                                                   | Asset examples                                  |
+|--------------------------|------------------------------------------------------------------------|-------------------------------------------------|
+| Any time-series          | Rolling mean / median, linear or exponential trend fit, rate-of-change | All equipment                                   |
+| Any time-series          | SPC control limits (±3σ), CUSUM drift detection                        | All equipment                                   |
+| Multi-signal             | Cross-correlation (e.g. current vs temperature rise)                   | Motors, compressors, HVAC                       |
+| Vibration / current      | FFT + spectral peak detection                                          | Rotating equipment, VFD-driven motors           |
+| Vibration on rolling kit | Bearing fault frequencies (BPFO/BPFI/BSF/FTF) if KB has geometry       | Pumps, fans, gearboxes with known bearing specs |
+| Temperature / pressure   | Degradation fit → projected time-to-threshold                          | Heat exchangers, seals, filters                 |
 
 The agent picks the technique based on the breached signal and the KB's `failure_patterns.signal_signature`. None of it is hardcoded in our backend.
 
@@ -241,13 +241,13 @@ The agent picks the technique based on the breached signal and the KB's `failure
 
 **Implementation sketch.**
 
-| Layer       | Change                                                                                                                                                                                                                                                                                    |
-|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Prompt      | Add a section to `INVESTIGATOR_SYSTEM`: *"For numerical anomalies, you may write Python in `bash` to compute trends, statistics, frequency content, or cross-correlations on raw signals. Numpy, scipy, and pandas are available."* + one worked-example block per technique family.      |
-| Environment | When creating the environment, declare `pip` dependencies: `numpy`, `pandas`, `scipy`. Per docs, environments allow pre-installed packages.                                                                                                                                               |
-| Data access | Either (a) `bash curl http://<tunnel>/api/v1/signal/{id}/csv?start=...&end=...` (path-secret auth as in §3), **or** (b) extend the MCP `get_signal_window` tool to return a CSV-formatted string the agent then writes to a file. Option (a) is simpler and avoids inflating MCP responses. |
+| Layer       | Change                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Prompt      | Add a section to `INVESTIGATOR_SYSTEM`: *"For numerical anomalies, you may write Python in `bash` to compute trends, statistics, frequency content, or cross-correlations on raw signals. Numpy, scipy, and pandas are available."* + one worked-example block per technique family.                                                                                                                                       |
+| Environment | When creating the environment, declare `pip` dependencies: `numpy`, `pandas`, `scipy`. Per docs, environments allow pre-installed packages.                                                                                                                                                                                                                                                                                |
+| Data access | Either (a) `bash curl http://<tunnel>/api/v1/signal/{id}/csv?start=...&end=...` (path-secret auth as in §3), **or** (b) extend the MCP `get_signal_window` tool to return a CSV-formatted string the agent then writes to a file. Option (a) is simpler and avoids inflating MCP responses.                                                                                                                                |
 | KB          | The `equipment_kb.failure_patterns[*].signal_signature` dict already keys by signal name — the agent reads geometry / thresholds / reference values directly from there. No schema change. For rotating kit you need n_balls / pitch_diameter / ball_diameter if FFT-to-BPFO is in scope; for thermal kit you need design temperature ranges; in all cases the agent fetches what it needs from the KB, we don't hardcode. |
-| Tests       | Unit test: assert the prompt includes the diagnostic-computation guidance. Integration test: skip if `bash` tool not available in the test fake; the real check is the demo trace.                                                                                                         |
+| Tests       | Unit test: assert the prompt includes the diagnostic-computation guidance. Integration test: skip if `bash` tool not available in the test fake; the real check is the demo trace.                                                                                                                                                                                                                                         |
 
 **Effort.** ~4 h — prompt update + environment dependencies + signal-CSV endpoint. The agent itself does the analysis — we don't write the analysis code.
 

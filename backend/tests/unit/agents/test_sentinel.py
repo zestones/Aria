@@ -29,7 +29,6 @@ from typing import Any
 import pytest
 from agents import sentinel as sentinel_mod
 
-
 # ---------------------------------------------------------------------------
 # Fakes
 # ---------------------------------------------------------------------------
@@ -186,8 +185,11 @@ def _breach(
         "signal_def_id": signal_def_id,
         "display_name": display_name,
         "kb_key": kb_key,
-        "time": time or datetime.now(timezone.utc).isoformat(),
-        "value": value,
+        "breach_start": time or datetime.now(timezone.utc).isoformat(),
+        "breach_end": time or datetime.now(timezone.utc).isoformat(),
+        "peak_value": value,
+        "sample_count": 1,
+        "duration_seconds": 0,
         "threshold_field": threshold_field,
         "threshold_value": threshold_value,
         "severity": severity,
@@ -284,7 +286,7 @@ async def test_fresh_breach_creates_wo_and_broadcasts(patch_sentinel) -> None:
     assert anomaly_payload["severity"] == "alert"
     assert anomaly_payload["direction"] == "high"
     assert "work_order_id" in anomaly_payload
-    assert "time" in anomaly_payload
+    assert "time" in anomaly_payload  # broadcast key is still "time", set to breach_start
 
     _ui_type, ui_payload = ws.events[1]
     assert ui_payload["agent"] == "sentinel"

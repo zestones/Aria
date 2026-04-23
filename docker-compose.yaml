@@ -81,6 +81,13 @@ services:
       MCP_API_KEY: ${MCP_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ARIA_MODEL: ${ARIA_MODEL:-sonnet}
+      INVESTIGATOR_USE_MANAGED: ${INVESTIGATOR_USE_MANAGED:-false}
+      ARIA_MCP_PATH_SECRET: ${ARIA_MCP_PATH_SECRET}
+      ARIA_MCP_PUBLIC_URL: ${ARIA_MCP_PUBLIC_URL:-}
+      # ARIA_MCP_URL is intentionally omitted: the internal MCP client
+      # derives it from ARIA_MCP_PATH_SECRET at startup. If the secret is
+      # unset or is a placeholder the backend refuses to start with a clear
+      # error message — set it with: openssl rand -hex 32
       CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000","http://localhost:8000"]'
     ports:
       - "${BACKEND_PORT:-8000}:8000"
@@ -90,6 +97,17 @@ services:
     command:
       ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     restart: unless-stopped
+    networks: [aria]
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: aria-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN:-}
+    profiles:
+      - tunnel
+    depends_on:
+      - backend
     networks: [aria]
 
   frontend:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,13 +40,40 @@ class Settings(BaseSettings):
     # deployments do not expose `/api/v1/demo/trigger-memory-scene`. See #29.
     aria_demo_enabled: bool = False
 
-    # Routes Q&A through Claude Managed Agents (beta) instead of the M5.2
-    # Messages API agent loop. Off by default — M5.2 is the safe fallback for
-    # demo day if Managed Agents misbehave (switch takes <5 min). See #33.
-    use_managed_agents: bool = False
+    # Routes Investigator through Claude Managed Agents (beta) instead of the
+    # M4.5 Messages API agent loop. Off by default — M4.5 is the safe fallback
+    # for demo day if Managed Agents misbehave (switch takes <5 min). See #103.
+    investigator_use_managed: bool = False
     # Beta header the Managed Agents endpoints require. Pinned here so the
     # switch survives SDK upgrades until the feature goes GA.
     managed_agents_beta: str = "managed-agents-2026-04-01"
+
+    # ── Managed Agents hosted-MCP wiring (#103 / M5.5) ──────────
+    # 32-byte token that gates the MCP endpoint. Mount path becomes
+    # ``/mcp/{aria_mcp_path_secret}`` so the URL itself is the secret.
+    # Anthropic's ``mcp_servers`` config does not support custom HTTP
+    # headers (docs: *"No auth tokens are provided at this stage."*) so
+    # path-secret is the simplest implementable mitigation.
+    # This field is REQUIRED — no default. The backend refuses to start
+    # if it is unset or still holds a placeholder value.
+    aria_mcp_path_secret: str
+
+    @field_validator("aria_mcp_path_secret")
+    @classmethod
+    def _mcp_secret_must_not_be_placeholder(cls, v: str) -> str:
+        if not v or v.lower().startswith("change-me"):
+            raise ValueError(
+                "ARIA_MCP_PATH_SECRET must be set to a random secret value.\n"
+                "Generate one with: openssl rand -hex 32"
+            )
+        return v
+
+    # Public URL Anthropic's Managed Agents session calls to invoke MCP
+    # tools. Must end with the path secret above (e.g.
+    # ``https://<tunnel>.trycloudflare.com/mcp/<secret>``). Empty string
+    # disables hosted-MCP wiring and the managed Investigator falls back
+    # to wrapping MCP tools as custom tools.
+    aria_mcp_public_url: str = ""
 
     @property
     def database_dsn(self) -> str:

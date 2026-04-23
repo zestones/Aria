@@ -106,7 +106,37 @@ async def _llm_call(
 
 
 async def run_investigator(work_order_id: int) -> None:
-    """Entry point. Wraps the body in a wall-clock timeout + try/except.
+    """Entry point — dispatches to M4.5 Messages API or M5.5 Managed Agents.
+
+    Branches on :attr:`core.config.Settings.investigator_use_managed`:
+
+    - ``False`` (default) — routes to :func:`run_investigator_messages_api`,
+      the hand-rolled agent loop with extended thinking over
+      ``anthropic.messages.stream`` (M4.5 / #27).
+    - ``True`` — routes to
+      :func:`agents.investigator.managed.run_investigator_managed`, which
+      drives the investigation via ``client.beta.sessions.events.stream``
+      on Anthropic-hosted infrastructure (M5.5 / #103).
+
+    Signature is preserved: Sentinel still calls
+    ``asyncio.create_task(run_investigator(work_order_id))`` unchanged.
+    Never raises — the selected path owns its own timeout + fallback.
+    """
+    from core.config import get_settings
+
+    if get_settings().investigator_use_managed:
+        # Late import keeps M4.5-only deployments from loading the
+        # Managed Agents path (and its beta SDK surface) at all.
+        from agents.investigator.managed import run_investigator_managed
+
+        await run_investigator_managed(work_order_id)
+        return
+
+    await run_investigator_messages_api(work_order_id)
+
+
+async def run_investigator_messages_api(work_order_id: int) -> None:
+    """M4.5 Messages API path — wraps the body in a wall-clock timeout.
 
     Never raises. On any failure path the work_order is flipped to
     ``status='analyzed'`` with an explanatory ``rca_summary`` and an
@@ -121,10 +151,10 @@ async def run_investigator(work_order_id: int) -> None:
         )
     except asyncio.TimeoutError:
         log.warning("Investigator timed out for WO %d", work_order_id)
-        await _fallback_rca(work_order_id, "Investigation timed out", turn_id)
+        await fallback_rca(work_order_id, "Investigation timed out", turn_id)
     except Exception as exc:  # noqa: BLE001 — must never raise, outer asyncio task
         log.exception("Investigator crashed for WO %d", work_order_id)
-        await _fallback_rca(work_order_id, f"Investigation failed: {type(exc).__name__}", turn_id)
+        await fallback_rca(work_order_id, f"Investigation failed: {type(exc).__name__}", turn_id)
     finally:
         current_turn_id.reset(token)
 
@@ -140,7 +170,7 @@ async def _run_investigator_body(work_order_id: int, turn_id: str) -> None:
 
     wo_result = await mcp_client.call_tool("get_work_order", {"work_order_id": work_order_id})
     if wo_result.is_error:
-        await _fallback_rca(
+        await fallback_rca(
             work_order_id, f"get_work_order failed: {wo_result.content[:200]}", turn_id
         )
         return
@@ -150,7 +180,7 @@ async def _run_investigator_body(work_order_id: int, turn_id: str) -> None:
         wo_data = {}
     cell_id = wo_data.get("cell_id")
     if cell_id is None:
-        await _fallback_rca(work_order_id, "get_work_order returned no cell_id", turn_id)
+        await fallback_rca(work_order_id, "get_work_order returned no cell_id", turn_id)
         return
 
     past_result = await mcp_client.call_tool(
@@ -241,11 +271,11 @@ async def _dispatch_tool_uses(
 
         try:
             if name.startswith("render_"):
-                content, is_error = await _handle_render(name, args, turn_id)
+                content, is_error = await handle_render(name, args, turn_id)
             elif name == "ask_kb_builder":
                 content, is_error = await handoff.handle_ask_kb_builder(args, turn_id)
             elif name == "submit_rca":
-                content, is_error = await _handle_submit_rca(
+                content, is_error = await handle_submit_rca(
                     args=args, work_order_id=work_order_id, cell_id=cell_id, turn_id=turn_id
                 )
                 submitted = True
@@ -280,12 +310,13 @@ async def _dispatch_tool_uses(
     return tool_results, submitted
 
 
-async def _handle_render(name: str, args: dict[str, Any], turn_id: str) -> tuple[str, bool]:
+async def handle_render(name: str, args: dict[str, Any], turn_id: str) -> tuple[str, bool]:
     """``render_*`` tools: broadcast ``ui_render`` and return 'rendered'.
 
     The component name passed to the frontend is the tool name minus the
     ``render_`` prefix (e.g. ``render_signal_chart`` -> ``signal_chart``).
-    Zero DB or side-effect.
+    Zero DB or side-effect. Public so :mod:`agents.investigator.managed`
+    can reuse it when dispatching ``requires_action`` custom tools.
     """
     component = name.removeprefix("render_")
     await ws_manager.broadcast(
@@ -300,10 +331,21 @@ async def _handle_render(name: str, args: dict[str, Any], turn_id: str) -> tuple
     return "rendered", False
 
 
-async def _handle_submit_rca(
-    *, args: dict[str, Any], work_order_id: int, cell_id: int, turn_id: str
+async def handle_submit_rca(
+    *,
+    args: dict[str, Any],
+    work_order_id: int,
+    cell_id: int,
+    turn_id: str,
+    session_id: str | None = None,
 ) -> tuple[str, bool]:
-    """Terminal tool — persist the RCA and spawn the Work Order Generator."""
+    """Terminal tool — persist the RCA and spawn the Work Order Generator.
+
+    ``session_id`` is populated only on the Managed Agents path (M5.5)
+    — it lands in ``work_order.investigator_session_id`` so the M5.6
+    "Continue investigation" add-on can resume the same Anthropic
+    session later.
+    """
     rca_summary = str(args.get("root_cause", ""))
     confidence_raw = args.get("confidence", 0.0)
     try:
@@ -312,11 +354,12 @@ async def _handle_submit_rca(
         confidence = 0.0
     failure_mode = str(args.get("failure_mode", "unknown"))[:100]
 
+    wo_update: dict[str, Any] = {"rca_summary": rca_summary, "status": "analyzed"}
+    if session_id:
+        wo_update["investigator_session_id"] = session_id
+
     async with db.pool.acquire() as conn:
-        await WorkOrderRepository(conn).update(
-            work_order_id,
-            {"rca_summary": rca_summary, "status": "analyzed"},
-        )
+        await WorkOrderRepository(conn).update(work_order_id, wo_update)
         await KbRepository(conn).create_failure(
             {
                 "cell_id": cell_id,
@@ -345,13 +388,15 @@ async def _handle_submit_rca(
 # ---------------------------------------------------------------------------
 
 
-async def _fallback_rca(work_order_id: int, reason: str, turn_id: str) -> None:
+async def fallback_rca(work_order_id: int, reason: str, turn_id: str) -> None:
     """Graceful-degradation path — always leaves the pipeline unstuck.
 
     Flips the work_order to ``status='analyzed'`` with the failure
     reason as its ``rca_summary`` so the operator sees *something* in
     the UI. Broadcasts ``rca_ready`` with ``confidence=0.0`` so the
-    Activity Feed / Inspector transition to the done state.
+    Activity Feed / Inspector transition to the done state. Public so
+    :mod:`agents.investigator.managed` can reuse the identical fallback
+    shape on session errors.
     """
     try:
         async with db.pool.acquire() as conn:

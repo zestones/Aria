@@ -187,6 +187,16 @@ def patch_inv(monkeypatch: pytest.MonkeyPatch):
         responses: list[_FakeMessage],
         mcp_results: dict[str, _ToolResult] | None = None,
     ) -> tuple[_FakeAnthropic, _FakeMCP, _FakeWS, _FakeRepoSpy]:
+        # Pin the M4.5 Messages API path regardless of ambient
+        # INVESTIGATOR_USE_MANAGED (added in M5.5 / #103). Without this,
+        # running the suite with the env var flipped to true would route
+        # run_investigator() to the managed path and every test here would
+        # fail with a bootstrap error.
+        monkeypatch.setenv("INVESTIGATOR_USE_MANAGED", "false")
+        from core.config import get_settings
+
+        get_settings.cache_clear()
+
         spy = _FakeRepoSpy()
         antr = _FakeAnthropic(responses=responses)
         mcp = _FakeMCP(results=mcp_results)

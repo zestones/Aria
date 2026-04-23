@@ -19,6 +19,9 @@ _DEFAULTS = {
     "POSTGRES_PASSWORD": "test",
     "POSTGRES_DB": "test",
     "JWT_SECRET_KEY": "test-secret-not-used-in-unit-tests",
+    # Required since aria_mcp_path_secret has no default — validator rejects
+    # "change-me" prefixes so we use a fixed 64-char hex test value.
+    "ARIA_MCP_PATH_SECRET": "a" * 64,
 }
 
 for _key, _value in _DEFAULTS.items():

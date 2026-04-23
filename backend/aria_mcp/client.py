@@ -99,12 +99,16 @@ class MCPClient:
             result = await client.call_tool(name, arguments, raise_on_error=False)
 
         # Prefer the JSON-serializable structured payload when the tool emits
-        # one (FastMCP wraps scalar returns as {"result": ...}); fall back to
-        # the first text content block.
+        # one (FastMCP wraps non-object returns — including ``list[dict]`` —
+        # as ``{"result": ...}``; unwrap so callers receive the native shape
+        # the tool's type-hint advertises). Fall back to the first text block.
         if result.structured_content is not None:
             import json
 
-            text = json.dumps(result.structured_content, default=str)
+            payload = result.structured_content
+            if isinstance(payload, dict) and set(payload.keys()) == {"result"}:
+                payload = payload["result"]
+            text = json.dumps(payload, default=str)
         elif result.content:
             first = result.content[0]
             text = getattr(first, "text", "") or ""
@@ -118,8 +122,18 @@ class MCPClient:
         self._tools_cache = None
 
 
-# Module-level singleton. ``ARIA_MCP_URL`` overrides the default for tests /
-# external (Claude Desktop) consumers. The trailing slash matches the
-# streamable-http endpoint mounted in ``main.py``.
-_DEFAULT_URL = os.environ.get("ARIA_MCP_URL", "http://localhost:8000/mcp/")
-mcp_client = MCPClient(_DEFAULT_URL)
+# Module-level singleton. ``ARIA_MCP_URL`` env var overrides the computed
+# default (useful for tests / external consumers). When absent the URL is
+# derived from the validated ``aria_mcp_path_secret`` in Settings so that
+# there is no insecure hard-coded fallback path.
+def _default_mcp_url() -> str:
+    explicit = os.environ.get("ARIA_MCP_URL")
+    if explicit:
+        return explicit
+    from core.config import get_settings  # local import avoids circular dep
+
+    secret = get_settings().aria_mcp_path_secret
+    return f"http://localhost:8000/mcp/{secret}/"
+
+
+mcp_client = MCPClient(_default_mcp_url())

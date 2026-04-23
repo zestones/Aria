@@ -74,3 +74,6 @@ class WorkOrderUpdate(BaseModel):
     rca_summary: Optional[str] = None
     recommended_actions: Optional[Any] = None
     trigger_anomaly_time: Optional[datetime] = None
+    # Set by the Managed Agents Investigator (#103 / M5.5). Unblocks the
+    # M5.6 "Continue investigation" add-on. NULL on the M4.5 fallback.
+    investigator_session_id: Optional[str] = None
