@@ -1,8 +1,48 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EquipmentGrid } from "./EquipmentGrid";
+import type { AnomalyEvent } from "./useAnomalyStream";
 import type { EquipmentEntry } from "./useEquipmentList";
+
+const useAnomalyStreamMock = vi.hoisted(() => vi.fn());
+
+vi.mock("./useAnomalyStream", () => ({
+    useAnomalyStream: useAnomalyStreamMock,
+}));
+
+function anomaly(partial: Partial<AnomalyEvent> & { cell_id: number }): AnomalyEvent {
+    return {
+        cell_id: partial.cell_id,
+        signal_def_id: partial.signal_def_id ?? 11,
+        value: partial.value ?? 5,
+        threshold: partial.threshold ?? 4,
+        work_order_id: partial.work_order_id ?? 101,
+        time: partial.time ?? "2026-04-24T12:00:00.000Z",
+        severity: partial.severity ?? "alert",
+        direction: partial.direction ?? "high",
+        id:
+            partial.id ??
+            `${partial.cell_id}-${partial.signal_def_id ?? 11}-${partial.time ?? "t"}`,
+        receivedAt: partial.receivedAt ?? 0,
+    };
+}
+
+function mockStream(active: AnomalyEvent[]): void {
+    useAnomalyStreamMock.mockReturnValue({
+        active,
+        latest: active[0] ?? null,
+        count: active.length,
+        dismissAll: vi.fn(),
+        dismissLatest: vi.fn(),
+        connectionStatus: "open" as const,
+    });
+}
+
+beforeEach(() => {
+    useAnomalyStreamMock.mockReset();
+    mockStream([]);
+});
 
 const mockEntries: readonly EquipmentEntry[] = [
     {
@@ -81,5 +121,36 @@ describe("EquipmentGrid", () => {
         render(<EquipmentGrid entries={[]} selectedNodeId={null} onSelectNode={() => {}} />);
         expect(screen.getByTestId("equipment-grid")).toHaveAttribute("data-state", "empty");
         expect(screen.getByText("No equipment in scope.")).toBeInTheDocument();
+    });
+
+    it("overrides a backend-nominal status with a live trip anomaly for that cell", () => {
+        mockStream([anomaly({ cell_id: 1, severity: "trip" })]);
+        render(
+            <EquipmentGrid entries={mockEntries} selectedNodeId={null} onSelectNode={() => {}} />,
+        );
+        expect(screen.getByTestId("equipment-node-cell:1")).toHaveAttribute(
+            "data-status",
+            "critical",
+        );
+        // Unaffected cells keep their backend-provided baseline.
+        expect(screen.getByTestId("equipment-node-cell:2")).toHaveAttribute(
+            "data-status",
+            "nominal",
+        );
+        expect(screen.getByTestId("equipment-node-cell:3")).toHaveAttribute(
+            "data-status",
+            "nominal",
+        );
+    });
+
+    it("maps a live alert anomaly to the 'warning' status on the matching card", () => {
+        mockStream([anomaly({ cell_id: 2, severity: "alert" })]);
+        render(
+            <EquipmentGrid entries={mockEntries} selectedNodeId={null} onSelectNode={() => {}} />,
+        );
+        expect(screen.getByTestId("equipment-node-cell:2")).toHaveAttribute(
+            "data-status",
+            "warning",
+        );
     });
 });

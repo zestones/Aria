@@ -14,6 +14,8 @@ export type { KpiBarProps } from "./KpiBar";
 export { KpiBar } from "./KpiBar";
 export type { SparklineProps } from "./Sparkline";
 export { Sparkline } from "./Sparkline";
+export type { AnomalyStatus, LiveAnomalyStatus } from "./useAnomalyStatusMap";
+export { useAnomalyStatusMap } from "./useAnomalyStatusMap";
 export type {
     AnomalyConnectionStatus,
     AnomalyEvent,
