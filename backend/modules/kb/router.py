@@ -12,6 +12,7 @@ from agents.kb_builder import (
     start_onboarding,
     submit_onboarding_message,
 )
+from agents.kb_builder._ws_stub import broadcast_stub
 from aria_mcp.client import mcp_client
 from core.api_response import created, ok
 from core.database import get_db
@@ -49,6 +50,45 @@ def _ser_kb(r):
 
 def _ser_failure(r):
     return FailureHistoryOut.model_validate(decode_record(r, JSON_FIELDS)).model_dump(mode="json")
+
+
+# 5 phase labels — kept in sync with issue #22 §2 acceptance criterion
+# ("PDF upload emits exactly 5 ui_render events with component kb_progress").
+_UPLOAD_PHASES: tuple[str, ...] = (
+    "Validating PDF",
+    "Reading pages with Opus vision",
+    "Extracting thresholds",
+    "Validating schema",
+    "Saving knowledge base",
+)
+
+
+def _phase_status(idx: int, active_idx: int) -> str:
+    if idx < active_idx:
+        return "done"
+    if idx == active_idx:
+        return "in_progress"
+    return "pending"
+
+
+def _upload_steps(active_idx: int) -> list[dict[str, str]]:
+    return [
+        {"label": label, "status": _phase_status(i, active_idx)}
+        for i, label in enumerate(_UPLOAD_PHASES)
+    ]
+
+
+async def _emit_upload_phase(cell_id: int, active_idx: int) -> None:
+    """Stub WS broadcast for one PDF-upload phase. See M3.6 (#22) / M4.1 (#23)."""
+    await broadcast_stub(
+        "ui_render",
+        {
+            "agent": "kb_builder",
+            "component": "kb_progress",
+            "props": {"cell_id": cell_id, "steps": _upload_steps(active_idx)},
+            "turn_id": None,  # set by orchestrator ContextVar after M4.1 (#23)
+        },
+    )
 
 
 @router.get("/equipment")
@@ -95,22 +135,24 @@ async def upload_pdf(
        recomputes completeness.
     5. Re-read and serialise via ``EquipmentKbOut``.
 
-    Phase log lines stand in for live progress events until M4.1 (#23) lands
-    the websocket manager — see issue #18 §7.
+    Phase events are emitted via ``broadcast_stub`` (M3.6 / issue #22). Each
+    call will become ``ws_manager.broadcast("ui_render", ...)`` once M4.1
+    (#23) lands; the payload shape is already final, only the transport is
+    stubbed.
     """
     if file.content_type not in ("application/pdf", "application/octet-stream"):
         raise HTTPException(400, "File must be a PDF")
 
     lock = _upload_locks.setdefault(cell_id, asyncio.Lock())
     async with lock:
-        log.info("kb_upload[cell=%d] phase=Validating PDF", cell_id)
+        await _emit_upload_phase(cell_id, 0)
         pdf_bytes = await file.read()
         if not pdf_bytes:
             raise HTTPException(400, "Uploaded file is empty")
 
-        log.info("kb_upload[cell=%d] phase=Reading pages with Opus vision", cell_id)
+        await _emit_upload_phase(cell_id, 1)
         try:
-            log.info("kb_upload[cell=%d] phase=Extracting thresholds", cell_id)
+            await _emit_upload_phase(cell_id, 2)
             kb, raw_markdown = await extract_from_pdf(pdf_bytes, cell_id)
         except ValueError as e:
             # ValidationError is a subclass of ValueError, so this single
@@ -122,11 +164,11 @@ async def upload_pdf(
                 raise HTTPException(413, msg) from e
             raise HTTPException(422, f"Extraction failed after retry: {msg}") from e
 
-        log.info("kb_upload[cell=%d] phase=Validating schema", cell_id)
+        await _emit_upload_phase(cell_id, 3)
         kb_dict = kb.model_dump(exclude={"kb_meta"})
         kb_dict = await bootstrap_thresholds(cell_id, kb_dict)
 
-        log.info("kb_upload[cell=%d] phase=Saving knowledge base", cell_id)
+        await _emit_upload_phase(cell_id, 4)
         result = await mcp_client.call_tool(
             "update_equipment_kb",
             {
