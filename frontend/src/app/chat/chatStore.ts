@@ -38,7 +38,14 @@ export interface HandoffPart {
     reason: string;
 }
 
-export type AgentPart = ToolCallPart | TextPart | HandoffPart;
+export interface ArtifactPart {
+    kind: "artifact";
+    id: string;
+    component: string;
+    props: Record<string, unknown>;
+}
+
+export type AgentPart = ToolCallPart | TextPart | HandoffPart | ArtifactPart;
 
 export interface AgentMessage {
     id: string;
@@ -188,7 +195,22 @@ export const useChatStore = create<ChatState>((set, get) => {
                 break;
             }
             case "ui_render": {
-                // UI-render widgets land in a later milestone.
+                upsertAgentMessage((msg) => {
+                    const parts = [...msg.parts];
+                    // Seal any ongoing text part so the artifact sits between text runs,
+                    // matching the tool_call insertion pattern above.
+                    const lastIdx = parts.length - 1;
+                    if (parts[lastIdx]?.kind === "text" && (parts[lastIdx] as TextPart).streaming) {
+                        parts[lastIdx] = { ...(parts[lastIdx] as TextPart), streaming: false };
+                    }
+                    parts.push({
+                        kind: "artifact",
+                        id: nextId(internal, "ar"),
+                        component: message.component,
+                        props: message.props,
+                    });
+                    return { ...msg, parts };
+                });
                 break;
             }
             case "done": {

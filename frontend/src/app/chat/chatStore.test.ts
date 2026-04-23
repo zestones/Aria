@@ -96,7 +96,7 @@ describe("chatStore — real WS integration", () => {
         expect(lastFake().sendSpy).toHaveBeenCalledWith({ type: "user", content: "hi" });
     });
 
-    it("ignores ui_render + thinking_delta bursts without breaking the streaming turn", async () => {
+    it("accumulates ui_render as artifact parts and ignores thinking_delta bursts", async () => {
         const useChatStore = await importStoreFresh();
         useChatStore.getState().sendMessage("investigate");
         lastFake().simulateOpen();
@@ -110,8 +110,8 @@ describe("chatStore — real WS integration", () => {
         for (let i = 0; i < 10; i += 1) {
             lastFake().simulateEvent({
                 type: "ui_render",
-                component: "Chart",
-                props: { idx: i },
+                component: "signal_chart",
+                props: { cell_id: 1, signal_def_id: i },
             });
             lastFake().simulateEvent({
                 type: "thinking_delta",
@@ -124,10 +124,18 @@ describe("chatStore — real WS integration", () => {
             .messages.find((m) => m.id === agentId && m.role === "agent");
         if (!after || after.role !== "agent") throw new Error("agent message missing after burst");
 
+        // thinking_delta is still ignored — no "thinking" parts should land.
         for (const part of after.parts) {
-            expect(part.kind).not.toBe("ui_render");
             expect(part.kind).not.toBe("thinking");
         }
+
+        const artifacts = after.parts.filter((p) => p.kind === "artifact");
+        expect(artifacts).toHaveLength(10);
+        artifacts.forEach((p, idx) => {
+            if (p.kind !== "artifact") throw new Error("expected artifact part");
+            expect(p.component).toBe("signal_chart");
+            expect(p.props).toEqual({ cell_id: 1, signal_def_id: idx });
+        });
         expect(after.streaming).toBe(true);
     });
 
