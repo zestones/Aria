@@ -6,7 +6,12 @@ import asyncio
 import logging
 
 import asyncpg
-from agents.kb_builder import bootstrap_thresholds, extract_from_pdf
+from agents.kb_builder import (
+    bootstrap_thresholds,
+    extract_from_pdf,
+    start_onboarding,
+    submit_onboarding_message,
+)
 from aria_mcp.client import mcp_client
 from core.api_response import created, ok
 from core.database import get_db
@@ -15,7 +20,12 @@ from core.json_fields import decode_record
 from core.security import Role, get_current_user, require_role
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from modules.kb.repository import JSON_FIELDS, KbRepository
-from modules.kb.schemas import EquipmentKbOut, EquipmentKbUpsert, FailureHistoryOut
+from modules.kb.schemas import (
+    EquipmentKbOut,
+    EquipmentKbUpsert,
+    FailureHistoryOut,
+    OnboardingMessageIn,
+)
 
 log = logging.getLogger("aria.kb.router")
 
@@ -146,3 +156,48 @@ async def list_failures(
     rows = await KbRepository(conn).list_failures(cell_id, limit)
     return ok([_ser_failure(r) for r in rows])
     return ok([_ser_failure(r) for r in rows])
+
+
+# ── M3.3 — onboarding session endpoints ──────────────────────────────────────
+#
+# State + Sonnet extraction + MCP write all live in
+# ``agents/kb_builder.py``. These handlers are intentionally thin: auth +
+# HTTP shape only.
+
+
+@router.post("/equipment/{cell_id}/onboarding/start")
+async def onboarding_start(
+    cell_id: int,
+    _user=Depends(require_role(Role.ADMIN, Role.OPERATOR)),
+):
+    """Open a 4-question onboarding session for ``cell_id``.
+
+    Gates (see ``start_onboarding``):
+    - 404 when no ``equipment_kb`` row exists.
+    - 409 when the KB has no thresholds (PDF must be uploaded first).
+    - 409 when a session is already active for the cell.
+    """
+    payload = await start_onboarding(cell_id)
+    return created(payload)
+
+
+@router.post("/equipment/{cell_id}/onboarding/message")
+async def onboarding_message(
+    cell_id: int,
+    body: OnboardingMessageIn,
+    _user=Depends(require_role(Role.ADMIN, Role.OPERATOR)),
+):
+    """Submit one operator answer; receive the next question or the final KB.
+
+    The ``cell_id`` path parameter is informative — the session is resolved
+    by ``session_id`` alone. Returns either
+    ``{session_id, question_index, question, total_questions}`` or
+    ``{session_id, complete: true, kb: EquipmentKbOut-shaped dict}``.
+    """
+    result = await submit_onboarding_message(body.session_id, body.answer)
+    if result.get("complete"):
+        # Re-serialise via the canonical DTO so the response matches every
+        # other ``equipment_kb`` endpoint (timestamps as ISO strings, etc.).
+        kb_record = result["kb"]
+        result["kb"] = EquipmentKbOut.model_validate(kb_record).model_dump(mode="json")
+    return ok(result)
