@@ -92,6 +92,28 @@ async def get_shift_assignments(
 
 
 @mcp.tool()
+async def get_work_order(work_order_id: int) -> dict | None:
+    """Fetch a single work order by id.
+
+    Investigator (#25) calls this at the start of every run to load the
+    anomaly context (cell, signal, title, trigger_anomaly_time, any existing
+    rca_summary). Returns ``None`` when the id does not match a row —
+    callers should treat that as a terminal error, not a retry-worthy case.
+
+    Args:
+        work_order_id: ``work_order.id``.
+
+    Returns:
+        ``WorkOrderOut`` dict, or ``None`` when no row matches.
+    """
+    async with with_conn() as conn:
+        row = await WorkOrderRepository(conn).get(work_order_id)
+    if row is None:
+        return None
+    return WorkOrderOut.model_validate(dict(row)).model_dump(mode="json")
+
+
+@mcp.tool()
 async def get_work_orders(
     cell_id: int | None = None,
     status: str | None = None,
