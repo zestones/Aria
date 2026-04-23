@@ -24,15 +24,18 @@ describe("createWsClient (EventBusMap)", () => {
 
         MockWebSocket.last.simulateMessage({
             type: "agent_start",
-            payload: { agent: "planner", turn_id: "t1" },
+            agent: "planner",
+            turn_id: "t1",
         });
         MockWebSocket.last.simulateMessage({
             type: "thinking_delta",
-            payload: { agent: "planner", content: "analysing", turn_id: "t1" },
+            agent: "planner",
+            content: "analysing",
+            turn_id: "t1",
         });
         MockWebSocket.last.simulateMessage({
             type: "work_order_ready",
-            payload: { work_order_id: 42 },
+            work_order_id: 42,
         });
 
         expect(onEvent).toHaveBeenCalledTimes(3);
@@ -47,6 +50,38 @@ describe("createWsClient (EventBusMap)", () => {
         });
         expect(onEvent).toHaveBeenNthCalledWith(3, "work_order_ready", {
             work_order_id: 42,
+        });
+    });
+
+    it("parses flat-payload frames (backend spread at root, not nested)", () => {
+        const onEvent = vi.fn();
+        createWsClient<EventBusMap>({
+            url: "ws://localhost/api/v1/events",
+            onEvent,
+        });
+        MockWebSocket.last.simulateOpen();
+
+        MockWebSocket.last.simulateMessage({
+            type: "anomaly_detected",
+            cell_id: 1,
+            signal_def_id: 4,
+            value: 11.9,
+            threshold: 6.5,
+            work_order_id: 20,
+            time: "2026-04-23T22:34:08.295000+00:00",
+            severity: "alert",
+            direction: "high",
+        });
+
+        expect(onEvent).toHaveBeenCalledWith("anomaly_detected", {
+            cell_id: 1,
+            signal_def_id: 4,
+            value: 11.9,
+            threshold: 6.5,
+            work_order_id: 20,
+            time: "2026-04-23T22:34:08.295000+00:00",
+            severity: "alert",
+            direction: "high",
         });
     });
 

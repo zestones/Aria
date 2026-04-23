@@ -6,6 +6,10 @@
  *   `/api/v1/events` (EventBusMap-style). `onEvent` receives the event
  *   `type` as its first argument and the typed payload as its second.
  *   This factory is READ-ONLY — no `send` is exposed.
+ *   Wire format: each frame is `{ type: string, ...payload }` — the `type`
+ *   discriminator sits alongside the payload fields at the root, matching
+ *   Python's backend ``ws_manager.broadcast(event_type, payload)`` pattern
+ *   that spreads the payload dict at the top level.
  * - `createChatWsClient<U>({ url, onEvent, ... })`: discriminated-union
  *   stream for `/api/v1/agent/chat` (ChatMap-style). `onEvent` receives
  *   the full message object (whose `type` field discriminates the union).
@@ -256,7 +260,7 @@ function dispatchKeyed<M extends Record<string, unknown>>(
         onError?.(new Error("WS: malformed message (missing `type`)"));
         return;
     }
-    const { type, payload } = parsed as { type: string; payload: unknown };
+    const { type, ...payload } = parsed as { type: string } & Record<string, unknown>;
     onEvent(type as keyof M, payload as M[keyof M]);
 }
 
@@ -286,7 +290,7 @@ function dispatchUnion<U extends { type: string }>(
 
 /**
  * Create a typed WebSocket client for a keyed event bus (EventBusMap shape).
- * Wire format: each frame is `{ type: string, payload: <typed> }`.
+ * Wire format: each frame is `{ type: string, ...payload }`.
  *
  * Read-only: no `send` is exposed. Use `createChatWsClient` for bidirectional
  * streams.

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef } from "react";
 import { Outlet } from "react-router-dom";
-import { KpiBar } from "../features/control-room";
+import { AnomalyBanner, KpiBar } from "../features/control-room";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
 import { ChatPanel } from "./chat/ChatPanel";
@@ -107,6 +107,7 @@ export function AppShell() {
                 onDrawerToggle={toggleDrawer}
                 kpiSlot={<KpiBar selection={selection} />}
             />
+            <AnomalyBanner />
             <div
                 className="grid min-h-0 flex-1"
                 style={{
