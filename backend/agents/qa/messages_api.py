@@ -134,7 +134,9 @@ async def _stream_one_turn(
     tool_uses: list[ToolUseBlock] = [
         b for b in final_message.content if isinstance(b, ToolUseBlock)
     ]
-    assistant_content = [b.model_dump() for b in final_message.content]
+    assistant_content = [
+        b.model_dump(exclude_none=True, exclude={"parsed_output"}) for b in final_message.content
+    ]
     _ = turn_id  # reserved for future tool_call_started streaming extensions
     return tool_uses, assistant_content
 

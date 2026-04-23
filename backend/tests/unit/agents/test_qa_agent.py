@@ -38,13 +38,40 @@ from agents.qa import tool_dispatch as qa_tool_dispatch
 # ---------------------------------------------------------------------------
 
 
+def _apply_dump_kwargs(
+    data: dict[str, Any],
+    *,
+    exclude_none: bool = False,
+    exclude: set[str] | None = None,
+) -> dict[str, Any]:
+    """Mimic ``pydantic.BaseModel.model_dump`` kwargs we actually use."""
+    if exclude_none:
+        data = {k: v for k, v in data.items() if v is not None}
+    if exclude:
+        data = {k: v for k, v in data.items() if k not in exclude}
+    return data
+
+
 @dataclass
 class _FakeTextBlock:
     text: str
     type: str = "text"
+    # SDK v0.96.0 adds a client-only ``parsed_output`` attribute on text
+    # blocks for structured outputs. It must NOT round-trip back to the
+    # API. Kept here so tests exercise the real block shape.
+    parsed_output: Any = None
 
-    def model_dump(self) -> dict[str, Any]:
-        return {"type": "text", "text": self.text}
+    def model_dump(
+        self,
+        *,
+        exclude_none: bool = False,
+        exclude: set[str] | None = None,
+    ) -> dict[str, Any]:
+        return _apply_dump_kwargs(
+            {"type": "text", "text": self.text, "parsed_output": self.parsed_output},
+            exclude_none=exclude_none,
+            exclude=exclude,
+        )
 
 
 @dataclass
@@ -54,8 +81,17 @@ class _FakeToolUseBlock:
     input: dict[str, Any]
     type: str = "tool_use"
 
-    def model_dump(self) -> dict[str, Any]:
-        return {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input}
+    def model_dump(
+        self,
+        *,
+        exclude_none: bool = False,
+        exclude: set[str] | None = None,
+    ) -> dict[str, Any]:
+        return _apply_dump_kwargs(
+            {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input},
+            exclude_none=exclude_none,
+            exclude=exclude,
+        )
 
 
 @dataclass
@@ -295,6 +331,34 @@ async def test_mcp_tool_call_streams_tool_call_and_result_summary(patch_qa) -> N
     assert started[0][1]["agent"] == "qa"
     assert completed[0][1]["agent"] == "qa"
     assert isinstance(completed[0][1]["duration_ms"], int)
+
+
+@pytest.mark.asyncio
+async def test_assistant_roundtrip_strips_sdk_only_parsed_output(patch_qa) -> None:
+    """Regression — SDK v0.96.0 sets a client-only ``parsed_output`` on
+    ``TextBlock``. It must NOT be re-POSTed to the API on turn 2, or the
+    server rejects the request with ``Extra inputs are not permitted``.
+    """
+    tool_use = _FakeToolUseBlock(id="tu_1", name="get_oee", input={"cell_id": 2})
+    prose = _FakeTextBlock(text="thinking...", parsed_output={"whatever": 1})
+
+    stream_plans = [
+        ([], [prose, tool_use]),
+        ([], [_FakeTextBlock(text="done")]),
+    ]
+    mcp_results = {"get_oee": _ToolResult(content=json.dumps({"oee": 0.9}))}
+    antr, _, _ = patch_qa(stream_plans=stream_plans, mcp_results=mcp_results)
+
+    ws = _FakeClientWS()
+    await qa.run_qa_turn(ws=ws, messages=[], user_content="OEE?")  # type: ignore[arg-type]
+
+    # Second call is the re-POST carrying the assistant content from turn 1.
+    second_messages = antr.stream_calls[1]["messages"]
+    assistant_msg = next(m for m in second_messages if m["role"] == "assistant")
+    for block in assistant_msg["content"]:
+        assert (
+            "parsed_output" not in block
+        ), "parsed_output must be stripped before round-tripping to the API"
 
 
 @pytest.mark.asyncio
