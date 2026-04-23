@@ -122,8 +122,18 @@ class MCPClient:
         self._tools_cache = None
 
 
-# Module-level singleton. ``ARIA_MCP_URL`` overrides the default for tests /
-# external (Claude Desktop) consumers. The trailing slash matches the
-# streamable-http endpoint mounted in ``main.py``.
-_DEFAULT_URL = os.environ.get("ARIA_MCP_URL", "http://localhost:8000/mcp/")
-mcp_client = MCPClient(_DEFAULT_URL)
+# Module-level singleton. ``ARIA_MCP_URL`` env var overrides the computed
+# default (useful for tests / external consumers). When absent the URL is
+# derived from the validated ``aria_mcp_path_secret`` in Settings so that
+# there is no insecure hard-coded fallback path.
+def _default_mcp_url() -> str:
+    explicit = os.environ.get("ARIA_MCP_URL")
+    if explicit:
+        return explicit
+    from core.config import get_settings  # local import avoids circular dep
+
+    secret = get_settings().aria_mcp_path_secret
+    return f"http://localhost:8000/mcp/{secret}/"
+
+
+mcp_client = MCPClient(_default_mcp_url())

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -53,7 +54,20 @@ class Settings(BaseSettings):
     # Anthropic's ``mcp_servers`` config does not support custom HTTP
     # headers (docs: *"No auth tokens are provided at this stage."*) so
     # path-secret is the simplest implementable mitigation.
-    aria_mcp_path_secret: str = "change-me-mcp-path-secret-32-bytes-min"
+    # This field is REQUIRED — no default. The backend refuses to start
+    # if it is unset or still holds a placeholder value.
+    aria_mcp_path_secret: str
+
+    @field_validator("aria_mcp_path_secret")
+    @classmethod
+    def _mcp_secret_must_not_be_placeholder(cls, v: str) -> str:
+        if not v or v.lower().startswith("change-me"):
+            raise ValueError(
+                "ARIA_MCP_PATH_SECRET must be set to a random secret value.\n"
+                "Generate one with: openssl rand -hex 32"
+            )
+        return v
+
     # Public URL Anthropic's Managed Agents session calls to invoke MCP
     # tools. Must end with the path secret above (e.g.
     # ``https://<tunnel>.trycloudflare.com/mcp/<secret>``). Empty string

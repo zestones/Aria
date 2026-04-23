@@ -33,7 +33,8 @@ def _make_test_server() -> FastMCP:
 def test_module_level_singleton_exists():
     """The audit requires a module-level ``mcp_client`` instance."""
     assert isinstance(mcp_client, MCPClient)
-    assert mcp_client.url.endswith("/mcp/")
+    # URL is derived from ARIA_MCP_PATH_SECRET — ends with the secret segment.
+    assert "/mcp/" in mcp_client.url
 
 
 @pytest.mark.unit
