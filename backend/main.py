@@ -91,6 +91,14 @@ def create_app() -> FastAPI:
     app.include_router(kb_router)
     app.include_router(events_router)
 
+    if settings.aria_demo_enabled:
+        # Demo-only routes (#29 memory-flex scene). Mounted behind a flag
+        # so production deployments do not expose the scene triggers.
+        from modules.demo.router import router as demo_router
+
+        app.include_router(demo_router)
+        log.info("Demo endpoints enabled at /api/v1/demo/*")
+
     app.mount("/mcp", mcp_http_app)
 
     return app
