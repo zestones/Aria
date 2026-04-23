@@ -31,7 +31,6 @@ from typing import Any
 import pytest
 from agents import investigator as inv
 
-
 # ---------------------------------------------------------------------------
 # Lightweight stand-ins for the Anthropic response shape.
 # ---------------------------------------------------------------------------
@@ -70,31 +69,28 @@ class _FakeMessage:
 
 
 class _FakeAnthropic:
-    """Queue-backed fake for ``anthropic.messages.create``.
+    """Queue-backed fake exposing the same surface ``investigator._llm_call`` does.
 
-    Each call pops the next planned response off ``self.responses``.
-    The test sets up a list so the agent loop can be driven through
-    multiple turns.
+    Each invocation pops the next planned message off ``self.responses`` and
+    captures the kwargs in ``self.calls`` so tests can assert on what the
+    agent loop sent (``messages``, ``tools``, etc.).
+
+    The shape is intentionally the same as the previous ``messages.create``
+    fake so the existing test assertions (``antr.calls[N]["messages"]``)
+    keep working after the M4.5 streaming refactor.
     """
 
     def __init__(self, responses: list[_FakeMessage]) -> None:
         self.responses = list(responses)
         self.calls: list[dict[str, Any]] = []
-        self.messages = self._Messages(self)
 
-    class _Messages:
-        def __init__(self, outer: "_FakeAnthropic") -> None:
-            self._outer = outer
+    async def __call__(self, **kwargs: Any) -> _FakeMessage:
+        import copy
 
-        async def create(self, **kwargs: Any) -> _FakeMessage:
-            # Deep-copy so later ``messages.append(...)`` mutations by the
-            # agent loop do not rewrite history inside captured calls.
-            import copy
-
-            self._outer.calls.append(copy.deepcopy(kwargs))
-            if not self._outer.responses:
-                raise AssertionError("No planned Anthropic response left")
-            return self._outer.responses.pop(0)
+        self.calls.append(copy.deepcopy(kwargs))
+        if not self.responses:
+            raise AssertionError("No planned LLM response left")
+        return self.responses.pop(0)
 
 
 @dataclass
@@ -194,7 +190,11 @@ def patch_inv(monkeypatch: pytest.MonkeyPatch):
         antr = _FakeAnthropic(responses=responses)
         mcp = _FakeMCP(results=mcp_results)
         ws = _FakeWS()
-        monkeypatch.setattr(inv, "anthropic", antr)
+        # M4.5 (#27): the loop now goes through ``_llm_call`` which wraps
+        # ``anthropic.messages.stream(...)`` with extended thinking enabled.
+        # Patch the helper directly so tests stay decoupled from the SDK
+        # streaming surface.
+        monkeypatch.setattr(inv, "_llm_call", antr)
         monkeypatch.setattr(inv, "mcp_client", mcp)
         monkeypatch.setattr(inv, "ws_manager", ws)
         monkeypatch.setattr(inv, "db", _FakeDB())
@@ -318,9 +318,7 @@ async def test_tool_call_events_carry_expected_fields(patch_inv) -> None:
 async def test_is_error_tool_result_forwarded_not_raised(patch_inv) -> None:
     """An MCP tool returning is_error=True becomes a tool_result with
     is_error=True — the loop keeps going, the LLM can self-correct."""
-    broken_call = _FakeToolUseBlock(
-        id="tu_1", name="get_signal_anomalies", input={"cell_id": 2}
-    )
+    broken_call = _FakeToolUseBlock(id="tu_1", name="get_signal_anomalies", input={"cell_id": 2})
     submit = _FakeToolUseBlock(
         id="tu_2",
         name="submit_rca",
@@ -525,9 +523,7 @@ def test_work_order_generator_lazy_import_logs_when_missing(
     monkeypatch.setitem(sys.modules, "agents.work_order_generator", None)
     with caplog.at_level("INFO"):
         inv._spawn_work_order_generator(work_order_id=42)
-    assert any(
-        "Work Order Generator not yet implemented" in rec.message for rec in caplog.records
-    )
+    assert any("Work Order Generator not yet implemented" in rec.message for rec in caplog.records)
 
 
 # ---------------------------------------------------------------------------
@@ -550,3 +546,175 @@ def test_ask_kb_builder_tool_shape() -> None:
     assert inv.ASK_KB_BUILDER_TOOL["name"] == "ask_kb_builder"
     required = inv.ASK_KB_BUILDER_TOOL["input_schema"]["required"]
     assert {"question", "cell_id"} <= set(required)
+
+
+# ---------------------------------------------------------------------------
+# M4.5 (#27) — extended thinking + thinking_delta streaming
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class _FakeStreamDelta:
+    type: str
+    thinking: str | None = None
+
+
+@dataclass
+class _FakeStreamEvent:
+    type: str
+    delta: _FakeStreamDelta | None = None
+
+
+class _FakeMessagesStream:
+    """Minimal async context manager mimicking ``anthropic.messages.stream``.
+
+    Yields the planned ``MessageStreamEvent``-like objects from ``events``
+    and returns ``final_message`` from ``get_final_message()``.
+    """
+
+    def __init__(self, events: list[_FakeStreamEvent], final_message: _FakeMessage) -> None:
+        self._events = events
+        self._final = final_message
+        self.kwargs: dict[str, Any] = {}
+
+    def __call__(self, **kwargs: Any) -> "_FakeMessagesStream":
+        self.kwargs = kwargs
+        return self
+
+    async def __aenter__(self) -> "_FakeMessagesStream":
+        return self
+
+    async def __aexit__(self, *exc: Any) -> None:
+        return None
+
+    def __aiter__(self) -> "_FakeMessagesStream":
+        self._iter = iter(self._events)
+        return self
+
+    async def __anext__(self) -> _FakeStreamEvent:
+        try:
+            return next(self._iter)
+        except StopIteration as e:
+            raise StopAsyncIteration from e
+
+    async def get_final_message(self) -> _FakeMessage:
+        return self._final
+
+
+@pytest.mark.asyncio
+async def test_llm_call_enables_thinking_and_streams_thinking_delta(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Acceptance #1 — `thinking_delta` events streamed during a turn.
+
+    Verifies that ``_llm_call`` enables extended thinking, fans out each
+    thinking chunk through ``ws_manager.broadcast`` with the
+    ``EventBusMap.thinking_delta`` shape, and returns the reconstructed
+    final message verbatim.
+    """
+    submit_block = _FakeToolUseBlock(
+        id="tu_x",
+        name="submit_rca",
+        input={
+            "root_cause": "x",
+            "failure_mode": "x",
+            "confidence": 0.5,
+            "contributing_factors": [],
+            "recommended_action": "x",
+        },
+    )
+    final = _FakeMessage(content=[submit_block], stop_reason="tool_use")
+    events = [
+        _FakeStreamEvent(type="message_start"),
+        _FakeStreamEvent(type="content_block_start"),
+        _FakeStreamEvent(
+            type="content_block_delta",
+            delta=_FakeStreamDelta(type="thinking_delta", thinking="The vibration "),
+        ),
+        _FakeStreamEvent(
+            type="content_block_delta",
+            delta=_FakeStreamDelta(type="thinking_delta", thinking="peak suggests bearing wear."),
+        ),
+        # Non-thinking deltas must NOT trigger a broadcast.
+        _FakeStreamEvent(
+            type="content_block_delta",
+            delta=_FakeStreamDelta(type="text_delta", thinking=None),
+        ),
+        _FakeStreamEvent(type="content_block_stop"),
+        _FakeStreamEvent(type="message_stop"),
+    ]
+    stream = _FakeMessagesStream(events=events, final_message=final)
+
+    class _AntStub:
+        class messages:
+            pass
+
+    _AntStub.messages.stream = stream  # type: ignore[attr-defined]
+
+    ws = _FakeWS()
+    monkeypatch.setattr(inv, "anthropic", _AntStub)
+    monkeypatch.setattr(inv, "ws_manager", ws)
+
+    result = await inv._llm_call(
+        system="sys",
+        messages=[{"role": "user", "content": "hi"}],
+        tools=[{"name": "noop"}],
+        turn_id="turn-abc",
+    )
+
+    # Final message returned verbatim (signed-thinking-block preservation).
+    assert result is final
+
+    # Extended thinking enabled with the documented budget.
+    assert stream.kwargs["thinking"] == {
+        "type": "enabled",
+        "budget_tokens": inv._THINKING_BUDGET,
+    }
+    # max_tokens leaves room above the thinking budget (Anthropic requires
+    # max_tokens > thinking.budget_tokens).
+    assert stream.kwargs["max_tokens"] > inv._THINKING_BUDGET
+
+    # Exactly two thinking_delta frames broadcast — text_delta does NOT fan out.
+    deltas = [(t, p) for t, p in ws.events if t == "thinking_delta"]
+    assert len(deltas) == 2
+
+    # Frame shape matches EventBusMap.thinking_delta in ws.types.ts.
+    for _, payload in deltas:
+        assert set(payload.keys()) == {"agent", "content", "turn_id"}
+        assert payload["agent"] == "investigator"
+        assert payload["turn_id"] == "turn-abc"
+    assert deltas[0][1]["content"] == "The vibration "
+    assert deltas[1][1]["content"] == "peak suggests bearing wear."
+
+
+@pytest.mark.asyncio
+async def test_llm_call_skips_empty_thinking_chunk(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Empty/None thinking chunks must not produce noisy frames."""
+    final = _FakeMessage(content=[], stop_reason="end_turn")
+    events = [
+        _FakeStreamEvent(
+            type="content_block_delta",
+            delta=_FakeStreamDelta(type="thinking_delta", thinking=""),
+        ),
+        _FakeStreamEvent(
+            type="content_block_delta",
+            delta=_FakeStreamDelta(type="thinking_delta", thinking=None),
+        ),
+    ]
+    stream = _FakeMessagesStream(events=events, final_message=final)
+
+    class _AntStub:
+        class messages:
+            pass
+
+    _AntStub.messages.stream = stream  # type: ignore[attr-defined]
+
+    ws = _FakeWS()
+    monkeypatch.setattr(inv, "anthropic", _AntStub)
+    monkeypatch.setattr(inv, "ws_manager", ws)
+
+    await inv._llm_call(system="s", messages=[], tools=[], turn_id="t")
+
+    assert [t for t, _ in ws.events if t == "thinking_delta"] == []

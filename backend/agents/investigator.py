@@ -18,11 +18,14 @@ Safety nets
   in ``status='analyzed'`` with a ``rca_summary`` explaining why — the
   operator always sees an outcome, the pipeline never hangs.
 
-Extended thinking (#27) is intentionally NOT enabled here yet — that
-issue flips on ``thinking={"type": "enabled", ...}`` and starts
-streaming ``thinking_delta`` events. The assistant-turn append below
-already preserves every content block verbatim, so the signed-thinking-
-block contract is satisfied the moment thinking is turned on.
+Extended thinking (#27) is enabled here via :func:`_llm_call` which wraps
+``anthropic.messages.stream()`` with ``thinking={"type": "enabled",
+"budget_tokens": 10000}`` and broadcasts each ``thinking_delta`` chunk
+as a ``thinking_delta`` WebSocket frame. The frontend Agent Inspector
+(M8.5 / #49) renders the live reasoning trace. Signed thinking blocks
+are preserved verbatim by ``response.content[*].model_dump()`` so the
+next API call (the one carrying ``tool_result`` blocks) does not trip
+the ``thinking block signature invalid`` 400 error.
 """
 
 from __future__ import annotations
@@ -36,7 +39,7 @@ from typing import Any, cast
 
 from agents.anthropic_client import anthropic, model_for
 from agents.ui_tools import INVESTIGATOR_RENDER_TOOLS
-from anthropic.types import ToolUseBlock
+from anthropic.types import Message, ToolUseBlock
 from aria_mcp.client import mcp_client
 from core.database import db
 from core.ws_manager import current_turn_id, ws_manager
@@ -47,7 +50,11 @@ log = logging.getLogger("aria.investigator")
 
 MAX_TURNS = 12
 _TIMEOUT_SECONDS = 120.0
-_MAX_TOKENS = 4096
+# Total output budget. Anthropic requires ``max_tokens > thinking.budget_tokens``
+# — keep at least 4096 tokens of headroom above the thinking budget for the
+# actual text/tool_use output.
+_THINKING_BUDGET = 10000
+_MAX_TOKENS = 16384
 
 
 # ---------------------------------------------------------------------------
@@ -152,6 +159,62 @@ Past failures context for this cell:
 
 
 # ---------------------------------------------------------------------------
+# LLM streaming + extended thinking (#27)
+# ---------------------------------------------------------------------------
+
+
+async def _llm_call(
+    *,
+    system: str,
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    turn_id: str,
+) -> Message:
+    """One streamed Investigator turn with extended thinking enabled.
+
+    Wraps ``anthropic.messages.stream(...)`` with
+    ``thinking={"type": "enabled", "budget_tokens": _THINKING_BUDGET}`` and
+    fans out each ``thinking_delta`` chunk as a ``thinking_delta`` WebSocket
+    frame matching ``EventBusMap.thinking_delta`` in
+    ``frontend/src/lib/ws.types.ts`` (``{agent, content, turn_id}``).
+
+    The reconstructed final ``Message`` is returned with all content blocks
+    intact — including signed ``thinking`` blocks — so the next turn's
+    ``messages.append({"role": "assistant", "content": ...})`` preserves
+    signatures and avoids the ``thinking block signature invalid`` 400.
+    """
+    async with anthropic.messages.stream(
+        model=model_for("reasoning"),
+        thinking={"type": "enabled", "budget_tokens": _THINKING_BUDGET},
+        system=system,
+        messages=cast(Any, messages),
+        tools=cast(Any, tools),
+        max_tokens=_MAX_TOKENS,
+    ) as stream:
+        async for raw_event in stream:
+            # The MessageStreamEvent union has many variants; pyright would
+            # narrow too aggressively here. Cast to Any since the runtime
+            # check (``getattr`` with default) is the safe path anyway.
+            event = cast(Any, raw_event)
+            if (
+                getattr(event, "type", None) == "content_block_delta"
+                and getattr(getattr(event, "delta", None), "type", None) == "thinking_delta"
+            ):
+                # Anthropic SDK exposes the chunk text on ``.thinking``.
+                chunk = getattr(event.delta, "thinking", None)
+                if chunk:
+                    await ws_manager.broadcast(
+                        "thinking_delta",
+                        {
+                            "agent": "investigator",
+                            "content": chunk,
+                            "turn_id": turn_id,
+                        },
+                    )
+        return await stream.get_final_message()
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -225,12 +288,11 @@ async def _run_investigator_body(work_order_id: int, turn_id: str) -> None:
 
     finish_reason = "max_turns"
     for _turn in range(MAX_TURNS):
-        response = await anthropic.messages.create(
-            model=model_for("reasoning"),
+        response = await _llm_call(
             system=system_prompt,
-            messages=cast(Any, messages),
-            tools=cast(Any, tools_schema),
-            max_tokens=_MAX_TOKENS,
+            messages=messages,
+            tools=tools_schema,
+            turn_id=turn_id,
         )
         # Preserve the full assistant content verbatim — required for
         # signed `thinking` blocks the moment #27 enables thinking. Safe
