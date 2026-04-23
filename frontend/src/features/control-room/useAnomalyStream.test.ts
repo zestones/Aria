@@ -31,7 +31,7 @@ function anomalyFixture(overrides: Partial<AnomalyPayload> = {}): AnomalyPayload
 function emitAnomaly(overrides: Partial<AnomalyPayload> = {}) {
     MockWebSocket.last.simulateMessage({
         type: "anomaly_detected",
-        payload: anomalyFixture(overrides),
+        ...anomalyFixture(overrides),
     });
 }
 
@@ -119,11 +119,14 @@ describe("useAnomalyStream", () => {
             MockWebSocket.last.simulateOpen();
             MockWebSocket.last.simulateMessage({
                 type: "agent_start",
-                payload: { agent: "sentinel", turn_id: "t1" },
+                agent: "sentinel",
+                turn_id: "t1",
             });
             MockWebSocket.last.simulateMessage({
                 type: "thinking_delta",
-                payload: { agent: "sentinel", content: "...", turn_id: "t1" },
+                agent: "sentinel",
+                content: "...",
+                turn_id: "t1",
             });
         });
 
