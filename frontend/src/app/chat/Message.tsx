@@ -124,9 +124,7 @@ function AgentRow({ message, now }: AgentRowProps) {
                 <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
                     {formatRelativeTime(message.createdAt, now)}
                 </span>
-                {message.streaming && (
-                    <StatusDot status="warning" size={6} pulse aria-hidden />
-                )}
+                {message.streaming && <StatusDot status="warning" size={6} pulse aria-hidden />}
             </div>
             <div className="flex flex-col gap-2">
                 {message.parts.length === 0 && message.streaming && (
