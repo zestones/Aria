@@ -39,6 +39,14 @@ class Settings(BaseSettings):
     # deployments do not expose `/api/v1/demo/trigger-memory-scene`. See #29.
     aria_demo_enabled: bool = False
 
+    # Routes Q&A through Claude Managed Agents (beta) instead of the M5.2
+    # Messages API agent loop. Off by default — M5.2 is the safe fallback for
+    # demo day if Managed Agents misbehave (switch takes <5 min). See #33.
+    use_managed_agents: bool = False
+    # Beta header the Managed Agents endpoints require. Pinned here so the
+    # switch survives SDK upgrades until the feature goes GA.
+    managed_agents_beta: str = "managed-agents-2026-04-01"
+
     @property
     def database_dsn(self) -> str:
         return (
