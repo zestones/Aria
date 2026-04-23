@@ -172,6 +172,8 @@ async def update_equipment_kb(
     structured_data_patch: dict,
     source: str,
     calibrated_by: str,
+    raw_markdown: str | None = None,
+    onboarding_complete: bool | None = None,
 ) -> dict:
     """Apply an RFC-7396 patch to ``equipment_kb.structured_data``.
 
@@ -201,6 +203,13 @@ async def update_equipment_kb(
             and on ``kb_meta.last_calibrated_by``. Trusted from the orchestrating
             code per the issue's Option-A decision; will be JWT-injected
             post-hackathon.
+        raw_markdown: Optional raw extraction text (e.g. the Opus-vision JSON
+            response from a PDF upload). Stored in ``equipment_kb.raw_markdown``
+            for later auditing / reprocessing.
+        onboarding_complete: Optional onboarding flag. When provided, sets the
+            ``equipment_kb.onboarding_complete`` column AND mirrors it inside
+            ``structured_data.kb_meta.onboarding_complete`` so reads from either
+            location stay consistent.
 
     Returns:
         The same shape as ``get_equipment_kb`` after the write.
@@ -247,18 +256,23 @@ async def update_equipment_kb(
         kb_model = EquipmentKB.model_validate(merged)
         completeness = kb_model.compute_completeness()
         kb_meta["completeness_score"] = completeness
+        if onboarding_complete is not None:
+            kb_meta["onboarding_complete"] = onboarding_complete
         merged["kb_meta"] = kb_meta
 
         now = datetime.now(timezone.utc)
-        await repo.upsert(
-            {
-                "cell_id": cell_id,
-                "structured_data": merged,
-                "confidence_score": completeness,
-                "last_enriched_at": now,
-                "last_updated_by": calibrated_by,
-            }
-        )
+        upsert_fields: dict[str, Any] = {
+            "cell_id": cell_id,
+            "structured_data": merged,
+            "confidence_score": completeness,
+            "last_enriched_at": now,
+            "last_updated_by": calibrated_by,
+        }
+        if raw_markdown is not None:
+            upsert_fields["raw_markdown"] = raw_markdown
+        if onboarding_complete is not None:
+            upsert_fields["onboarding_complete"] = onboarding_complete
+        await repo.upsert(upsert_fields)
         fresh = await repo.get_by_cell(cell_id)
 
     # TODO(M8.2 — issue #46): audit M2.5 §4 broadcast.
