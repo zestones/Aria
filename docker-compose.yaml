@@ -82,8 +82,12 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ARIA_MODEL: ${ARIA_MODEL:-sonnet}
       INVESTIGATOR_USE_MANAGED: ${INVESTIGATOR_USE_MANAGED:-false}
-      ARIA_MCP_PATH_SECRET: ${ARIA_MCP_PATH_SECRET:-change-me-to-a-random-32-byte-hex-token}
+      ARIA_MCP_PATH_SECRET: ${ARIA_MCP_PATH_SECRET}
       ARIA_MCP_PUBLIC_URL: ${ARIA_MCP_PUBLIC_URL:-}
+      # ARIA_MCP_URL is intentionally omitted: the internal MCP client
+      # derives it from ARIA_MCP_PATH_SECRET at startup. If the secret is
+      # unset or is a placeholder the backend refuses to start with a clear
+      # error message — set it with: openssl rand -hex 32
       CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000","http://localhost:8000"]'
     ports:
       - "${BACKEND_PORT:-8000}:8000"
@@ -95,26 +99,6 @@ services:
     restart: unless-stopped
     networks: [aria]
 
-  # ============================================
-  # CLOUDFLARE TUNNEL (optional, profile: tunnel)
-  # ============================================
-  # Exposes the backend publicly so Anthropic's Managed Agents session
-  # can reach the MCP server via hosted-MCP (#103 / M5.5). Start with:
-  #
-  #   docker compose --profile tunnel up -d tunnel
-  #
-  # The tunnel routes to the backend's MCP mount at
-  # /mcp/${ARIA_MCP_PATH_SECRET}/ — the URL itself is the auth token.
-  # The Cloudflare token is created in the Zero Trust dashboard and
-  # maps a stable hostname to http://backend:8000 on the shared docker
-  # network.
-  #
-  # For ephemeral development you can skip the token and run the quick
-  # tunnel manually instead:
-  #
-  #   docker run --rm --network aria_aria cloudflare/cloudflared:latest \
-  #     tunnel --url http://backend:8000
-  # ============================================
   tunnel:
     image: cloudflare/cloudflared:latest
     container_name: aria-cloudflared
