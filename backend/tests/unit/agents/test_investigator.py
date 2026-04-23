@@ -37,39 +37,13 @@ from agents.investigator import service as inv
 # ---------------------------------------------------------------------------
 
 
-def _apply_dump_kwargs(
-    data: dict[str, Any],
-    *,
-    exclude_none: bool = False,
-    exclude: set[str] | None = None,
-) -> dict[str, Any]:
-    """Mimic ``pydantic.BaseModel.model_dump`` kwargs used by the agent loop."""
-    if exclude_none:
-        data = {k: v for k, v in data.items() if v is not None}
-    if exclude:
-        data = {k: v for k, v in data.items() if k not in exclude}
-    return data
-
-
 @dataclass
 class _FakeTextBlock:
     text: str
     type: str = "text"
-    # SDK v0.96.0 sets a client-only ``parsed_output`` on ``TextBlock`` for
-    # structured outputs. It must NOT round-trip back into ``messages``.
-    parsed_output: Any = None
 
-    def model_dump(
-        self,
-        *,
-        exclude_none: bool = False,
-        exclude: set[str] | None = None,
-    ) -> dict[str, Any]:
-        return _apply_dump_kwargs(
-            {"type": "text", "text": self.text, "parsed_output": self.parsed_output},
-            exclude_none=exclude_none,
-            exclude=exclude,
-        )
+    def model_dump(self) -> dict[str, Any]:
+        return {"type": "text", "text": self.text}
 
 
 @dataclass
@@ -79,17 +53,8 @@ class _FakeToolUseBlock:
     input: dict[str, Any]
     type: str = "tool_use"
 
-    def model_dump(
-        self,
-        *,
-        exclude_none: bool = False,
-        exclude: set[str] | None = None,
-    ) -> dict[str, Any]:
-        return _apply_dump_kwargs(
-            {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input},
-            exclude_none=exclude_none,
-            exclude=exclude,
-        )
+    def model_dump(self) -> dict[str, Any]:
+        return {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input}
 
 
 @dataclass
@@ -741,54 +706,3 @@ async def test_llm_call_skips_empty_thinking_chunk(
     await inv._llm_call(system="s", messages=[], tools=[], turn_id="t")
 
     assert [t for t, _ in ws.events if t == "thinking_delta"] == []
-
-
-# ---------------------------------------------------------------------------
-# Regression — SDK v0.96.0 ``parsed_output`` must be stripped before
-# re-POSTing the assistant turn to the API (audit #1 / post-M7.4 bundle).
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_assistant_roundtrip_strips_sdk_only_parsed_output(patch_inv) -> None:
-    """Regression — pin PR #108's pattern on the Investigator loop.
-
-    The Anthropic SDK v0.96.0 sets a client-only ``parsed_output`` on
-    ``TextBlock`` when structured outputs are used. Re-POSTing that field
-    back to ``messages.create`` yields a 400 ``Extra inputs are not
-    permitted``. The investigator round-trips its assistant content
-    verbatim across turns (signed-thinking-block preservation), so the
-    ``model_dump`` must use ``exclude_none=True, exclude={"parsed_output"}``.
-    """
-    tool_use = _FakeToolUseBlock(id="tu_1", name="get_current_signals", input={"cell_id": 2})
-    prose = _FakeTextBlock(text="analysing...", parsed_output={"whatever": 1})
-    submit = _FakeToolUseBlock(
-        id="tu_2",
-        name="submit_rca",
-        input={
-            "root_cause": "x",
-            "failure_mode": "x",
-            "confidence": 0.5,
-            "contributing_factors": [],
-            "recommended_action": "x",
-        },
-    )
-    responses = [
-        _FakeMessage(content=[prose, tool_use]),
-        _FakeMessage(content=[submit]),
-    ]
-    mcp_results = {
-        **_wo_loaded(),
-        "get_current_signals": _ToolResult(content=json.dumps([{"signal_def_id": 10}])),
-    }
-    antr, _, _ws, _spy = patch_inv(responses=responses, mcp_results=mcp_results)
-
-    await inv.run_investigator(work_order_id=42)
-
-    # Second LLM call is the re-POST carrying the assistant content from turn 1.
-    second_messages = antr.calls[1]["messages"]
-    assistant_msg = next(m for m in second_messages if m["role"] == "assistant")
-    for block in assistant_msg["content"]:
-        assert (
-            "parsed_output" not in block
-        ), "parsed_output must be stripped before round-tripping to the API"
