@@ -122,18 +122,14 @@ class _FakeEvents:
         events = self._stream_plans.pop(0) if self._stream_plans else []
         return _FakeStream(self, events)
 
-    async def send(
-        self, session_id: str, *, events: list[dict[str, Any]], **_kwargs: Any
-    ) -> None:
+    async def send(self, session_id: str, *, events: list[dict[str, Any]], **_kwargs: Any) -> None:
         for ev in events:
             self.sends.append(copy.deepcopy(ev))
             if ev.get("type") == "user.custom_tool_result":
                 # Default resolver: once all pending tool_results land, the
                 # next stream event is an end_turn idle. Individual tests
                 # can override _followups to assert a different flow.
-                self._followups.append(
-                    _FakeIdleEvent(stop_reason=_FakeStopReason(type="end_turn"))
-                )
+                self._followups.append(_FakeIdleEvent(stop_reason=_FakeStopReason(type="end_turn")))
 
 
 @dataclass
@@ -318,8 +314,10 @@ async def test_text_only_turn_trickles_and_ends_with_done(patch_qam) -> None:
 
     state: dict[str, Any] = {}
     await qam.run_qa_turn_managed(
-        ws=ws, session_state=state, user_content="OEE on P-02?"  # pyright: ignore[reportArgumentType]
-    )  # type: ignore[arg-type]
+        ws=ws,  # type: ignore[arg-type]
+        session_state=state,
+        user_content="OEE on P-02?",  # pyright: ignore[reportArgumentType]
+    )
 
     types = [f["type"] for f in ws.sent]
     # Trickle produces multiple text_delta frames whose concatenation
@@ -355,29 +353,21 @@ async def test_text_only_turn_trickles_and_ends_with_done(patch_qam) -> None:
 @pytest.mark.asyncio
 async def test_mcp_custom_tool_dispatch_sends_result_and_ends(patch_qam) -> None:
     ws = _FakeClientWS()
-    tool_use = _FakeCustomToolUse(
-        id="evt_tu_1", name="get_oee", input={"cell_id": 2}
-    )
+    tool_use = _FakeCustomToolUse(id="evt_tu_1", name="get_oee", input={"cell_id": 2})
     events = [
         tool_use,
-        _FakeIdleEvent(
-            stop_reason=_FakeStopReason(
-                type="requires_action", event_ids=["evt_tu_1"]
-            )
-        ),
+        _FakeIdleEvent(stop_reason=_FakeStopReason(type="requires_action", event_ids=["evt_tu_1"])),
         # After the send() callback queues end_turn, the stream sees it.
     ]
-    mcp_results = {
-        "get_oee": _ToolResult(content=json.dumps({"oee": 0.91, "cell_id": 2}))
-    }
-    antr, mcp, bus = patch_qam(
-        stream_plans=[events], mcp_results=mcp_results
-    )
+    mcp_results = {"get_oee": _ToolResult(content=json.dumps({"oee": 0.91, "cell_id": 2}))}
+    antr, mcp, bus = patch_qam(stream_plans=[events], mcp_results=mcp_results)
 
     state: dict[str, Any] = {}
     await qam.run_qa_turn_managed(
-        ws=ws, session_state=state, user_content="OEE on P-02?"  # pyright: ignore[reportArgumentType]
-    )  # type: ignore[arg-type]
+        ws=ws,  # type: ignore[arg-type]
+        session_state=state,
+        user_content="OEE on P-02?",  # pyright: ignore[reportArgumentType]
+    )
 
     # MCP was actually called with the agent's args.
     assert mcp.calls == [("get_oee", {"cell_id": 2})]
@@ -387,9 +377,7 @@ async def test_mcp_custom_tool_dispatch_sends_result_and_ends(patch_qam) -> None
     assert "tool_call" in types
     assert "tool_result" in types
     assert types[-1] == "done"
-    assert next(f for f in ws.sent if f["type"] == "tool_call")["args"] == {
-        "cell_id": 2
-    }
+    assert next(f for f in ws.sent if f["type"] == "tool_call")["args"] == {"cell_id": 2}
     tr = next(f for f in ws.sent if f["type"] == "tool_result")
     assert tr["name"] == "get_oee"
     assert isinstance(tr["summary"], str)
@@ -423,17 +411,15 @@ async def test_render_tool_dual_channel_broadcast(patch_qam) -> None:
     )
     events = [
         render_use,
-        _FakeIdleEvent(
-            stop_reason=_FakeStopReason(
-                type="requires_action", event_ids=["evt_tu_r"]
-            )
-        ),
+        _FakeIdleEvent(stop_reason=_FakeStopReason(type="requires_action", event_ids=["evt_tu_r"])),
     ]
     _antr, _mcp, bus = patch_qam(stream_plans=[events])
 
     state: dict[str, Any] = {}
     await qam.run_qa_turn_managed(
-        ws=ws, session_state=state, user_content="chart me P-02"  # pyright: ignore[reportArgumentType]
+        ws=ws,  # type: ignore[arg-type]
+        session_state=state,
+        user_content="chart me P-02",  # pyright: ignore[reportArgumentType]
     )  # type: ignore[arg-type]
 
     # Chat channel: ui_render with the prefix stripped.
@@ -525,7 +511,5 @@ async def test_second_turn_reuses_cached_session(patch_qam) -> None:
     # Two streams were opened (one per turn).
     assert antr.beta.sessions.events._stream_opens == 2
     # Two user.message events were sent.
-    user_msgs = [
-        e for e in antr.beta.sessions.events.sends if e["type"] == "user.message"
-    ]
+    user_msgs = [e for e in antr.beta.sessions.events.sends if e["type"] == "user.message"]
     assert len(user_msgs) == 2

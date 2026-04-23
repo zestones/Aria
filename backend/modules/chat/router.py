@@ -65,9 +65,7 @@ async def agent_chat_ws(ws: WebSocket) -> None:
                 continue
 
             if use_managed:
-                await run_qa_turn_managed(
-                    ws=ws, session_state=session_state, user_content=content
-                )
+                await run_qa_turn_managed(ws=ws, session_state=session_state, user_content=content)
             else:
                 await run_qa_turn(ws=ws, messages=messages, user_content=content)
     except WebSocketDisconnect:

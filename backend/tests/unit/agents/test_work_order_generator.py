@@ -343,11 +343,13 @@ async def test_mcp_is_error_forwarded_to_llm(patch_wog) -> None:
 
 @pytest.mark.asyncio
 async def test_malformed_window_dates_are_dropped(patch_wog) -> None:
-    args = {**_full_submit_args(), "suggested_window_start": "not-a-date", "suggested_window_end": ""}
+    args = {
+        **_full_submit_args(),
+        "suggested_window_start": "not-a-date",
+        "suggested_window_end": "",
+    }
     submit = _FakeToolUseBlock(id="tu_1", name="submit_work_order", input=args)
-    _, _, _, spy = patch_wog(
-        responses=[_FakeMessage(content=[submit])], mcp_results=_wo_loaded()
-    )
+    _, _, _, spy = patch_wog(responses=[_FakeMessage(content=[submit])], mcp_results=_wo_loaded())
     await wog.run_work_order_generator(work_order_id=42)
 
     update = spy.updates[0][1]

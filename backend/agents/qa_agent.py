@@ -243,9 +243,7 @@ async def run_qa_turn(
                 finish_reason = "end_turn"
                 break
 
-            tool_results = await _dispatch_tool_uses(
-                ws=ws, tool_uses=tool_uses, turn_id=turn_id
-            )
+            tool_results = await _dispatch_tool_uses(ws=ws, tool_uses=tool_uses, turn_id=turn_id)
             messages.append({"role": "user", "content": tool_results})
     except Exception as exc:  # noqa: BLE001 — never let one bad turn take the WS down
         log.exception("qa turn crashed")
@@ -435,13 +433,13 @@ async def _handle_ask_investigator(
         },
     )
     child_turn_id = uuid.uuid4().hex
-    await ws_manager.broadcast(
-        "agent_start", {"agent": "investigator", "turn_id": child_turn_id}
-    )
+    await ws_manager.broadcast("agent_start", {"agent": "investigator", "turn_id": child_turn_id})
     try:
         answer = await answer_investigator_question(cell_id, question)
         is_error = False
-    except Exception as exc:  # noqa: BLE001 — defense-in-depth, answer_investigator_question is never-raising
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 — defense-in-depth, answer_investigator_question is never-raising
         log.warning("ask_investigator handoff failed: %s", exc)
         answer = {
             "answer": f"handoff failed: {type(exc).__name__}",

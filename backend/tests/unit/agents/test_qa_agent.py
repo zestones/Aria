@@ -78,9 +78,7 @@ class _FakeFinalMessage:
 class _FakeStream:
     """Async context manager yielding events, then returning a final message."""
 
-    def __init__(
-        self, *, deltas: list[str], final_content: list[Any]
-    ) -> None:
+    def __init__(self, *, deltas: list[str], final_content: list[Any]) -> None:
         self._deltas = deltas
         self._final = _FakeFinalMessage(content=final_content)
 
@@ -332,7 +330,13 @@ async def test_render_tool_dual_channel_broadcast(patch_qa) -> None:
     render = _FakeToolUseBlock(
         id="tu_1",
         name="render_bar_chart",
-        input={"cell_id": 2, "title": "OEE per week", "x_label": "week", "y_label": "OEE", "bars": []},
+        input={
+            "cell_id": 2,
+            "title": "OEE per week",
+            "x_label": "week",
+            "y_label": "OEE",
+            "bars": [],
+        },
     )
     stream_plans = [
         ([], [render]),
@@ -417,9 +421,7 @@ async def test_ask_investigator_dual_channel_handoff(
 
 @pytest.mark.asyncio
 async def test_ask_investigator_rejects_missing_cell_id(patch_qa) -> None:
-    ask = _FakeToolUseBlock(
-        id="tu_1", name="ask_investigator", input={"question": "what?"}
-    )
+    ask = _FakeToolUseBlock(id="tu_1", name="ask_investigator", input={"question": "what?"})
     stream_plans = [
         ([], [ask]),
         (["ok"], [_FakeTextBlock(text="ok")]),
