@@ -50,24 +50,12 @@ async def resolve_pending_tools(
     for event_id in event_ids:
         entry = pending.pop(event_id, None)
         if entry is None:
-            log.warning(
-                "managed investigator requires_action references unknown event %s", event_id
-            )
-            await anthropic.beta.sessions.events.send(
-                session_id,
-                events=cast(
-                    Any,
-                    [
-                        {
-                            "type": "user.custom_tool_result",
-                            "custom_tool_use_id": event_id,
-                            "content": [{"type": "text", "text": "tool_use event not found"}],
-                            "is_error": True,
-                        }
-                    ],
-                ),
-                betas=cast(Any, [beta]),
-            )
+            # Event id was NOT one of our buffered ``agent.custom_tool_use``
+            # events — almost always a hosted-MCP tool call (the managed
+            # API resolves those itself). Silently skip rather than try to
+            # post a ``user.custom_tool_result`` that would 400 with
+            # "tool_use_id ... does not match any custom_tool_use event".
+            log.debug("skipping non-custom event %s in requires_action batch", event_id)
             continue
 
         name, args = entry

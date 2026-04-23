@@ -73,15 +73,23 @@ async def ensure_agent_and_env() -> tuple[str, str]:
             "model": cast(Any, model_for("reasoning")),
             "system": _build_system_prompt(),
             "tools": cast(Any, _build_custom_tools()),
-            # Extended thinking matches the M4.5 budget so reasoning depth is
-            # comparable across paths and `agent.thinking` events get emitted
-            # for the Inspector's live trace (#103 acceptance).
-            "thinking": cast(Any, {"type": "enabled", "budget_tokens": _THINKING_BUDGET}),
+            # NOTE: extended thinking is NOT a valid kwarg on
+            # ``anthropic.beta.agents.create`` (managed-agents-2026-04-01).
+            # The API surface is intentionally narrow — see
+            # ``docs/audits/M5.5-end-to-end-test-report.md`` for findings.
             "betas": cast(Any, [beta]),
         }
         mcp_servers = _build_mcp_servers()
         if mcp_servers:
             agent_kwargs["mcp_servers"] = cast(Any, mcp_servers)
+            # Managed Agents requires every declared mcp_server to be referenced
+            # by an ``mcp_toolset`` entry in ``tools``; otherwise create() returns
+            # 400 "mcp_servers [aria] declared but no mcp_toolset in tools
+            # references them". Append one toolset per server name.
+            existing_tools = list(agent_kwargs["tools"])
+            for server in mcp_servers:
+                existing_tools.append({"type": "mcp_toolset", "mcp_server_name": server["name"]})
+            agent_kwargs["tools"] = cast(Any, existing_tools)
 
         agent = await anthropic.beta.agents.create(**agent_kwargs)
         _agent_id = agent.id
@@ -121,6 +129,27 @@ def _build_system_prompt() -> str:
     )
 
 
+def _strip_additional_properties(schema: dict[str, Any]) -> dict[str, Any]:
+    """Remove ``additionalProperties`` recursively.
+
+    Managed Agents (``managed-agents-2026-04-01``) rejects custom-tool input
+    schemas containing ``additionalProperties`` ("Extra inputs are not
+    permitted"), unlike the Messages API which accepts it. Strip it so the
+    same Anthropic-format tool definitions can be reused on both paths.
+    """
+    if not isinstance(schema, dict):
+        return schema
+    cleaned = {k: v for k, v in schema.items() if k != "additionalProperties"}
+    for k, v in list(cleaned.items()):
+        if isinstance(v, dict):
+            cleaned[k] = _strip_additional_properties(v)
+        elif isinstance(v, list):
+            cleaned[k] = [
+                _strip_additional_properties(item) if isinstance(item, dict) else item for item in v
+            ]
+    return cleaned
+
+
 def _build_custom_tools() -> list[dict[str, Any]]:
     """Wrap the three tool kinds that need our backend in the custom envelope.
 
@@ -134,13 +163,13 @@ def _build_custom_tools() -> list[dict[str, Any]]:
             "type": "custom",
             "name": SUBMIT_RCA_TOOL["name"],
             "description": SUBMIT_RCA_TOOL["description"],
-            "input_schema": SUBMIT_RCA_TOOL["input_schema"],
+            "input_schema": _strip_additional_properties(SUBMIT_RCA_TOOL["input_schema"]),
         },
         {
             "type": "custom",
             "name": ASK_KB_BUILDER_TOOL["name"],
             "description": ASK_KB_BUILDER_TOOL["description"],
-            "input_schema": ASK_KB_BUILDER_TOOL["input_schema"],
+            "input_schema": _strip_additional_properties(ASK_KB_BUILDER_TOOL["input_schema"]),
         },
     ]
     custom.extend(
@@ -148,7 +177,7 @@ def _build_custom_tools() -> list[dict[str, Any]]:
             "type": "custom",
             "name": t["name"],
             "description": t["description"],
-            "input_schema": t["input_schema"],
+            "input_schema": _strip_additional_properties(t["input_schema"]),
         }
         for t in INVESTIGATOR_RENDER_TOOLS
     )

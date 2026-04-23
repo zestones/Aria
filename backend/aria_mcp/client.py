@@ -99,12 +99,16 @@ class MCPClient:
             result = await client.call_tool(name, arguments, raise_on_error=False)
 
         # Prefer the JSON-serializable structured payload when the tool emits
-        # one (FastMCP wraps scalar returns as {"result": ...}); fall back to
-        # the first text content block.
+        # one (FastMCP wraps non-object returns — including ``list[dict]`` —
+        # as ``{"result": ...}``; unwrap so callers receive the native shape
+        # the tool's type-hint advertises). Fall back to the first text block.
         if result.structured_content is not None:
             import json
 
-            text = json.dumps(result.structured_content, default=str)
+            payload = result.structured_content
+            if isinstance(payload, dict) and set(payload.keys()) == {"result"}:
+                payload = payload["result"]
+            text = json.dumps(payload, default=str)
         elif result.content:
             first = result.content[0]
             text = getattr(first, "text", "") or ""
