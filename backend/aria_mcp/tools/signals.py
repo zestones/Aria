@@ -181,7 +181,6 @@ async def get_signal_anomalies(
         result = evaluate_threshold(kb.thresholds[kb_key], float(row["raw_value"]))
         ts = row["time"]
         val = float(row["raw_value"])
-        key = (sig_id, result["threshold_field"] if result["breached"] else None)
 
         if result["breached"]:
             bkey = (sig_id, result["threshold_field"])
