@@ -43,10 +43,15 @@ export default function ControlRoomPage() {
         if (!selectedNodeId) return null;
         const match = entries.find((e) => e.id === selectedNodeId);
         if (!match) return null;
-        // `kind` is preserved on `InspectorNode` for backwards compatibility
-        // with the inspector's caption — we pass a generic `cell` tag since
-        // we no longer differentiate by equipment type.
-        return { id: match.id, kind: "cell", label: match.label };
+        // `kind` is preserved on `InspectorNode` for backwards compatibility;
+        // we no longer differentiate by equipment type, so pass a generic
+        // `cell` tag. `subLabel` surfaces the parent line name in the header.
+        return {
+            id: match.id,
+            kind: "cell",
+            label: match.label,
+            subLabel: match.sublabel,
+        };
     }, [selectedNodeId, entries]);
 
     const scopeLabel = selection?.lineName ?? "All lines";
