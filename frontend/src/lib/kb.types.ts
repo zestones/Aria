@@ -2,8 +2,8 @@
  * Types pour equipment_kb — miroir exact des DTOs Pydantic backend
  * (`backend/modules/kb/schemas.py` + `kb_schema.py`).
  *
- * Partagés par `mockUpload` (M6.6) et, plus tard, par le vrai call
- * `POST /api/v1/kb/equipment/{cell_id}/upload` une fois M3.2 shipped.
+ * Consommés par le client `POST /api/v1/kb/equipment/{cell_id}/upload`
+ * (shipped en M3.2) et les autres endpoints kb/.
  */
 
 export interface ThresholdValue {

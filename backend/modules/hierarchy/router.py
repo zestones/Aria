@@ -6,7 +6,7 @@ import asyncpg
 from core.api_response import created, deleted, ok
 from core.database import get_db
 from core.exceptions import NotFoundError
-from core.security import Role, require_role
+from core.security import Role, get_current_user, require_role
 from core.serialization import serialize as _serialize
 from fastapi import APIRouter, Depends
 from modules.hierarchy.repository import HierarchyRepository
@@ -28,7 +28,11 @@ from modules.hierarchy.schemas import (
     SiteUpdate,
 )
 
-router = APIRouter(prefix="/api/v1/hierarchy", tags=["hierarchy"])
+router = APIRouter(
+    prefix="/api/v1/hierarchy",
+    tags=["hierarchy"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 # ── tree ─────────────────────────────────────────────

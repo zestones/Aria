@@ -130,7 +130,9 @@ async def _run_body(work_order_id: int, turn_id: str) -> None:
             tools=cast(Any, tools_schema),
             max_tokens=_MAX_TOKENS,
         )
-        assistant_content = [b.model_dump() for b in response.content]
+        assistant_content = [
+            b.model_dump(exclude_none=True, exclude={"parsed_output"}) for b in response.content
+        ]
         messages.append({"role": "assistant", "content": assistant_content})
 
         tool_uses: list[ToolUseBlock] = [b for b in response.content if isinstance(b, ToolUseBlock)]

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { type Status, StatusDot } from "../../design-system";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import { useChatStore } from "./chatStore";
 import { MessageList } from "./MessageList";
@@ -51,22 +52,18 @@ function ConnectionIndicator({ status }: { status: string }) {
                   ? "Disconnected"
                   : "Idle";
 
-    const dotColor =
+    const dotStatus: Status =
         status === "open"
-            ? "var(--ds-status-nominal)"
+            ? "nominal"
             : status === "error"
-              ? "var(--ds-status-critical)"
+              ? "critical"
               : status === "connecting"
-                ? "var(--ds-status-warning)"
-                : "var(--ds-fg-subtle)";
+                ? "warning"
+                : "unknown";
 
     return (
         <div className="flex items-center gap-2 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
-            <span
-                className="inline-block size-1.5 flex-none rounded-full"
-                style={{ backgroundColor: dotColor }}
-                aria-hidden
-            />
+            <StatusDot status={dotStatus} size={6} aria-hidden />
             <span>{label}</span>
         </div>
     );

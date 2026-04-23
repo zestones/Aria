@@ -1,24 +1,104 @@
 /**
  * PdfUpload — drop or pick a PDF, preview first page, send to backend.
  *
- * Scope M6.6 (shell). Backend M3.2 not yet shipped — upload flows through
- * `mockUpload.mockUploadPdf` with a signature-compatible swap target.
- *
  * Flow: idle → previewing (file chosen + first page rendered) →
  *       uploading (progress + abort) → success (navigate /onboarding/:id)
  *       error path is reachable from any stage.
+ *
+ * Calls POST /api/v1/kb/equipment/{cell_id}/upload (backend M3.2). Uses
+ * XMLHttpRequest to surface native upload progress + abort signalling.
+ * The backend also emits five `ui_render` progress events via the WS
+ * channel (kb_progress phases), surfaced separately by the orchestrator;
+ * our in-component progress is wire-level bytes sent.
  */
 
 import { motion } from "framer-motion";
 import { type DragEvent, useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button, Icons } from "../../design-system";
 import type { EquipmentKbOut } from "../../lib/kb.types";
-import { mockUploadPdf, UploadAbortError } from "../../lib/mockUpload";
 import { pdfjsLib } from "../../lib/pdfjs";
 
 const MAX_BYTES = 50 * 1024 * 1024;
 
 type Stage = "idle" | "previewing" | "uploading" | "success" | "error";
+
+export class UploadAbortError extends Error {
+    constructor() {
+        super("upload aborted");
+        this.name = "AbortError";
+    }
+}
+
+interface UploadPdfOptions {
+    cellId: number;
+    file: File;
+    onProgress?: (pct: number) => void;
+    signal?: AbortSignal;
+}
+
+function uploadPdf(options: UploadPdfOptions): Promise<EquipmentKbOut> {
+    const { cellId, file, onProgress, signal } = options;
+
+    return new Promise<EquipmentKbOut>((resolve, reject) => {
+        if (signal?.aborted) {
+            reject(new UploadAbortError());
+            return;
+        }
+
+        const xhr = new XMLHttpRequest();
+        const url = `/api/v1/kb/equipment/${cellId}/upload`;
+
+        const onAbort = () => {
+            xhr.abort();
+        };
+        signal?.addEventListener("abort", onAbort, { once: true });
+
+        xhr.upload.addEventListener("progress", (e) => {
+            if (!e.lengthComputable) return;
+            const pct = Math.min(100, Math.round((e.loaded / e.total) * 100));
+            onProgress?.(pct);
+        });
+
+        xhr.addEventListener("load", () => {
+            signal?.removeEventListener("abort", onAbort);
+            if (xhr.status < 200 || xhr.status >= 300) {
+                let msg = `Upload failed (${xhr.status})`;
+                try {
+                    const body = JSON.parse(xhr.responseText) as { message?: string };
+                    if (body?.message) msg = body.message;
+                } catch {
+                    /* non-JSON error body — fall back to status */
+                }
+                reject(new Error(msg));
+                return;
+            }
+            try {
+                const body = JSON.parse(xhr.responseText) as { data: EquipmentKbOut };
+                onProgress?.(100);
+                resolve(body.data);
+            } catch (err) {
+                reject(err instanceof Error ? err : new Error("Malformed upload response"));
+            }
+        });
+
+        xhr.addEventListener("error", () => {
+            signal?.removeEventListener("abort", onAbort);
+            reject(new Error("Network error during upload"));
+        });
+
+        xhr.addEventListener("abort", () => {
+            signal?.removeEventListener("abort", onAbort);
+            reject(new UploadAbortError());
+        });
+
+        const form = new FormData();
+        form.append("file", file, file.name);
+
+        xhr.open("POST", url);
+        xhr.withCredentials = true;
+        xhr.send(form);
+    });
+}
 
 export interface PdfUploadProps {
     /** Cell id the manual is associated with — path param of the upload route. */
@@ -169,7 +249,7 @@ export function PdfUpload({ cellId, onUploaded, className = "" }: PdfUploadProps
         const controller = new AbortController();
         abortRef.current = controller;
         try {
-            const result = await mockUploadPdf({
+            const result = await uploadPdf({
                 cellId,
                 file,
                 onProgress: setProgress,

@@ -113,6 +113,15 @@ async def _check_cell(*, cell_id: int, cell_name: str, window_start: str, window
         log.warning("get_signal_anomalies returned non-JSON for cell %d", cell_id)
         return
 
+    # FastMCP wraps non-Pydantic returns (here: list[dict]) as
+    # ``{"result": [...]}`` in ``structured_content``; the client stringifies
+    # that as-is. Unwrap so ``for breach in breaches`` iterates rows, not dict
+    # keys. Scoped to Sentinel on purpose — a transversal unwrap in
+    # ``aria_mcp.client`` would silently change every other caller's payload
+    # mid-hackathon.
+    if isinstance(breaches, dict) and list(breaches.keys()) == ["result"]:
+        breaches = breaches["result"]
+
     if not breaches:
         return
 

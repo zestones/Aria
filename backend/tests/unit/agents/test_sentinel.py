@@ -429,3 +429,34 @@ async def test_investigator_lazy_import_missing_is_handled(
         sentinel_mod._spawn_investigator(work_order_id=42)
 
     assert any("Investigator not yet implemented" in rec.message for rec in caplog.records)
+
+
+# ---------------------------------------------------------------------------
+# Regression — FastMCP auto-wraps non-Pydantic returns as
+# ``{"result": [...]}``. Sentinel's call_tool payload for
+# ``get_signal_anomalies`` is ``list[dict]``, so the structured_content path
+# in ``aria_mcp.client`` hands back a dict, not a list. Without the unwrap
+# guard, ``for breach in breaches`` iterates dict keys and the tick crashes.
+# (audit #3 / post-M7.4 bundle)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_fastmcp_wrapped_breaches_are_unwrapped(patch_sentinel) -> None:
+    """``{"result": [breach, ...]}`` must be handled like ``[breach, ...]``."""
+    breach = _breach(signal_def_id=10, value=5.0, threshold_value=4.5)
+    wrapped_payload = json.dumps({"result": [breach]})
+    _mcp, ws, conn = patch_sentinel(
+        cells=[{"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True}],
+        mcp_results={2: _ToolResult(content=wrapped_payload)},
+    )
+
+    await sentinel_mod._sentinel_tick()
+
+    # Unwrap must succeed: exactly one WO created, ``anomaly_detected`` frame
+    # carries the row payload — not the dict keys of the wrapper.
+    assert len(conn.created_wo) == 1
+    anomaly_events = [e for e in ws.events if e[0] == "anomaly_detected"]
+    assert len(anomaly_events) == 1
+    assert anomaly_events[0][1]["signal_def_id"] == 10
+    assert anomaly_events[0][1]["value"] == 5.0
