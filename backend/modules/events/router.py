@@ -9,10 +9,9 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-
 from core.security.ws_auth import require_access_cookie
 from core.ws_manager import ws_manager
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 log = logging.getLogger("aria.events.ws")
 

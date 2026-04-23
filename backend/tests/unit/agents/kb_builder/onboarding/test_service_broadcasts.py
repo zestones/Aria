@@ -94,7 +94,7 @@ class _Recorder:
 
 def _patch_broadcast(monkeypatch: pytest.MonkeyPatch) -> _Recorder:
     rec = _Recorder()
-    monkeypatch.setattr(service, "broadcast_stub", rec)
+    monkeypatch.setattr(service.ws_manager, "broadcast", rec)
     return rec
 
 
