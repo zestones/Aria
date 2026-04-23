@@ -5,14 +5,19 @@
  * - `createWsClient<M>({ url, onEvent, ... })`: keyed event bus for
  *   `/api/v1/events` (EventBusMap-style). `onEvent` receives the event
  *   `type` as its first argument and the typed payload as its second.
+ *   This factory is READ-ONLY — no `send` is exposed.
  * - `createChatWsClient<U>({ url, onEvent, ... })`: discriminated-union
  *   stream for `/api/v1/agent/chat` (ChatMap-style). `onEvent` receives
  *   the full message object (whose `type` field discriminates the union).
+ *   Returns a `ChatWsClient` that includes a `send(message)` method for
+ *   driving user prompts back over the socket.
  *
  * Auth is cookie-based (see M5.2) — no token handling here. Reconnect
  * backoff: 500ms, 1500ms, 4500ms (x3 multiplier), cap 3 attempts, counter
  * resets after 30s of stable OPEN connection. No retry on clean close
- * (1000) or going-away (1001). Honors an external `AbortSignal`.
+ * (1000), going-away (1001), or auth-invalid (4401 — backend close code
+ * when the cookie JWT fails validation; retrying would loop forever).
+ * Honors an external `AbortSignal`.
  *
  * Chose a second factory `createChatWsClient` over a typed overload so
  * the union-discriminated ChatMap can stay as-is without needing an
@@ -22,7 +27,7 @@
 
 const RECONNECT_DELAYS_MS = [500, 1500, 4500] as const;
 const STABLE_RESET_MS = 30_000;
-const NO_RETRY_CODES = new Set([1000, 1001]);
+const NO_RETRY_CODES = new Set([1000, 1001, 4401]);
 
 export interface WsClientOptions<M extends Record<string, unknown>> {
     /** Absolute (`ws://` / `wss://`) or relative path (`/api/v1/events`). */
@@ -54,6 +59,20 @@ export interface WsClient {
     readonly readyState: number;
 }
 
+export interface ChatWsClient extends WsClient {
+    /**
+     * Serialize `message` to JSON and send it over the socket.
+     *
+     * Behavior:
+     * - OPEN          → sends synchronously.
+     * - CONNECTING /
+     *   reconnecting  → calls `onError` with a descriptive error. No
+     *                   buffering: the caller decides whether to retry.
+     * - after close() → no-op. The client is explicitly detached.
+     */
+    send(message: unknown): void;
+}
+
 interface InternalOptions {
     url: string;
     dispatch: (raw: string) => void;
@@ -61,6 +80,12 @@ interface InternalOptions {
     onOpen?: () => void;
     onClose?: (code: number, reason: string, wasClean: boolean) => void;
     signal?: AbortSignal;
+}
+
+interface Internal {
+    client: WsClient;
+    sendRaw: (raw: string) => void;
+    isAborted: () => boolean;
 }
 
 function resolveUrl(url: string): string {
@@ -72,7 +97,7 @@ function resolveUrl(url: string): string {
     return `${scheme}//${host}${path}`;
 }
 
-function createInternal(opts: InternalOptions): WsClient {
+function createInternal(opts: InternalOptions): Internal {
     const resolved = resolveUrl(opts.url);
     let socket: WebSocket | null = null;
     let aborted = false;
@@ -176,6 +201,16 @@ function createInternal(opts: InternalOptions): WsClient {
         }
     };
 
+    const sendRaw = (raw: string) => {
+        if (aborted) return;
+        const current = socket;
+        if (!current || current.readyState !== WebSocket.OPEN) {
+            opts.onError?.(new Error("WS: send() called while socket is not OPEN"));
+            return;
+        }
+        current.send(raw);
+    };
+
     if (opts.signal) {
         if (opts.signal.aborted) {
             aborted = true;
@@ -187,11 +222,17 @@ function createInternal(opts: InternalOptions): WsClient {
 
     if (!aborted) connect();
 
-    return {
+    const client: WsClient = {
         close,
         get readyState() {
             return socket?.readyState ?? WebSocket.CLOSED;
         },
+    };
+
+    return {
+        client,
+        sendRaw,
+        isAborted: () => aborted,
     };
 }
 
@@ -246,11 +287,14 @@ function dispatchUnion<U extends { type: string }>(
 /**
  * Create a typed WebSocket client for a keyed event bus (EventBusMap shape).
  * Wire format: each frame is `{ type: string, payload: <typed> }`.
+ *
+ * Read-only: no `send` is exposed. Use `createChatWsClient` for bidirectional
+ * streams.
  */
 export function createWsClient<M extends Record<string, unknown>>(
     options: WsClientOptions<M>,
 ): WsClient {
-    return createInternal({
+    const internal = createInternal({
         url: options.url,
         dispatch: (raw) => dispatchKeyed<M>(raw, options.onEvent, options.onError),
         onError: options.onError,
@@ -258,16 +302,19 @@ export function createWsClient<M extends Record<string, unknown>>(
         onClose: options.onClose,
         signal: options.signal,
     });
+    return internal.client;
 }
 
 /**
  * Create a typed WebSocket client for a discriminated-union stream (ChatMap shape).
  * Wire format: each frame is the serialized union member itself (with `type` field).
+ *
+ * Bidirectional: exposes `send(message)` to post JSON frames back to the server.
  */
 export function createChatWsClient<U extends { type: string }>(
     options: ChatWsClientOptions<U>,
-): WsClient {
-    return createInternal({
+): ChatWsClient {
+    const internal = createInternal({
         url: options.url,
         dispatch: (raw) => dispatchUnion<U>(raw, options.onEvent, options.onError),
         onError: options.onError,
@@ -275,6 +322,22 @@ export function createChatWsClient<U extends { type: string }>(
         onClose: options.onClose,
         signal: options.signal,
     });
+    return {
+        close: internal.client.close,
+        get readyState() {
+            return internal.client.readyState;
+        },
+        send: (message: unknown) => {
+            let raw: string;
+            try {
+                raw = JSON.stringify(message);
+            } catch (err) {
+                options.onError?.(err instanceof Error ? err : new Error(String(err)));
+                return;
+            }
+            internal.sendRaw(raw);
+        },
+    };
 }
 
 export type { ChatMap, EventBusMap } from "./ws.types";

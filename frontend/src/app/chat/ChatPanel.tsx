@@ -68,7 +68,6 @@ function ConnectionIndicator({ status }: { status: string }) {
                 aria-hidden
             />
             <span>{label}</span>
-            <span className="ml-auto font-mono text-[var(--ds-fg-subtle)]">mock</span>
         </div>
     );
 }
