@@ -19,7 +19,6 @@ import pytest
 from fastapi import WebSocketDisconnect
 from modules.chat import router as chat_router
 
-
 # ---------------------------------------------------------------------------
 # Minimal WebSocket fake exposing only the surface the router touches.
 # ---------------------------------------------------------------------------
@@ -109,6 +108,42 @@ async def test_valid_user_frame_invokes_run_turn_with_content(
     # messages list is shared across turns — second call sees the first turn's appends.
     # (fake turn is a no-op so the list stays empty — this just confirms it is the same
     # object passed in, not a fresh list each time).
+
+
+@pytest.mark.asyncio
+async def test_user_frame_emits_agent_start_before_run_turn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Issue #109 — chat socket announces the speaker so the UI badge is truthful."""
+
+    async def allow_cookie(_ws: Any) -> dict[str, Any]:
+        return {"sub": "1"}
+
+    invocation_order: list[str] = []
+
+    async def capturing_turn(**_k: Any) -> None:
+        invocation_order.append("turn")
+
+    monkeypatch.setattr(chat_router, "require_access_cookie", allow_cookie)
+    monkeypatch.setattr(chat_router, "run_qa_turn", capturing_turn)
+
+    ws = _FakeWS(inbound=[{"type": "user", "content": "OEE on P-02?"}])
+
+    # Record send_json relative to the turn invocation.
+    original_send = ws.send_json
+
+    async def tracking_send(data: dict[str, Any]) -> None:
+        invocation_order.append(f"send:{data.get('type')}")
+        await original_send(data)
+
+    ws.send_json = tracking_send  # type: ignore[method-assign]
+
+    await chat_router.agent_chat_ws(ws)  # type: ignore[arg-type]
+
+    assert {"type": "agent_start", "agent": "qa"} in ws.sent
+    # agent_start must precede the run_qa_turn dispatch so the frontend
+    # updates the badge before any streaming frames arrive.
+    assert invocation_order.index("send:agent_start") < invocation_order.index("turn")
 
 
 @pytest.mark.asyncio

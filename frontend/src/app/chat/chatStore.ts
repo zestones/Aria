@@ -139,6 +139,12 @@ export const useChatStore = create<ChatState>((set, get) => {
                 // Dedicated thinking UI lands post-M6.5.
                 break;
             }
+            case "agent_start": {
+                // Issue #109: backend declares the speaker at turn start so
+                // the badge reflects the real agent instead of DEFAULT_AGENT.
+                upsertAgentMessage((msg) => ({ ...msg, agent: message.agent }));
+                break;
+            }
             case "tool_call": {
                 upsertAgentMessage((msg) => {
                     const parts = [...msg.parts];
