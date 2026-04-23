@@ -34,13 +34,39 @@ from agents.work_order_generator import service as wog
 # ---------------------------------------------------------------------------
 
 
+def _apply_dump_kwargs(
+    data: dict[str, Any],
+    *,
+    exclude_none: bool = False,
+    exclude: set[str] | None = None,
+) -> dict[str, Any]:
+    """Mimic ``pydantic.BaseModel.model_dump`` kwargs used by the agent loop."""
+    if exclude_none:
+        data = {k: v for k, v in data.items() if v is not None}
+    if exclude:
+        data = {k: v for k, v in data.items() if k not in exclude}
+    return data
+
+
 @dataclass
 class _FakeTextBlock:
     text: str
     type: str = "text"
+    # SDK v0.96.0 sets a client-only ``parsed_output`` on ``TextBlock`` for
+    # structured outputs. It must NOT round-trip back into ``messages``.
+    parsed_output: Any = None
 
-    def model_dump(self) -> dict[str, Any]:
-        return {"type": "text", "text": self.text}
+    def model_dump(
+        self,
+        *,
+        exclude_none: bool = False,
+        exclude: set[str] | None = None,
+    ) -> dict[str, Any]:
+        return _apply_dump_kwargs(
+            {"type": "text", "text": self.text, "parsed_output": self.parsed_output},
+            exclude_none=exclude_none,
+            exclude=exclude,
+        )
 
 
 @dataclass
@@ -50,8 +76,17 @@ class _FakeToolUseBlock:
     input: dict[str, Any]
     type: str = "tool_use"
 
-    def model_dump(self) -> dict[str, Any]:
-        return {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input}
+    def model_dump(
+        self,
+        *,
+        exclude_none: bool = False,
+        exclude: set[str] | None = None,
+    ) -> dict[str, Any]:
+        return _apply_dump_kwargs(
+            {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input},
+            exclude_none=exclude_none,
+            exclude=exclude,
+        )
 
 
 @dataclass
@@ -439,3 +474,44 @@ def test_submit_work_order_tool_shape() -> None:
     assert "parts_required" not in props
     # Priority enum must match work_order.Priority Literal.
     assert set(props["priority"]["enum"]) == {"low", "medium", "high", "critical"}
+
+
+# ---------------------------------------------------------------------------
+# Regression — SDK v0.96.0 ``parsed_output`` must be stripped before
+# re-POSTing the assistant turn to the API (audit #2 / post-M7.4 bundle).
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_assistant_roundtrip_strips_sdk_only_parsed_output(patch_wog) -> None:
+    """Regression — pin PR #108's pattern on the Work Order Generator loop.
+
+    The Anthropic SDK v0.96.0 sets a client-only ``parsed_output`` on
+    ``TextBlock`` when structured outputs are used. Re-POSTing that
+    field back to ``messages.create`` yields a 400 ``Extra inputs are
+    not permitted``. The WO Gen loop round-trips its assistant content
+    across turns, so the ``model_dump`` must use
+    ``exclude_none=True, exclude={"parsed_output"}``.
+    """
+    kb_call = _FakeToolUseBlock(id="tu_1", name="get_equipment_kb", input={"cell_id": 2})
+    prose = _FakeTextBlock(text="drafting...", parsed_output={"whatever": 1})
+    submit = _FakeToolUseBlock(id="tu_2", name="submit_work_order", input=_full_submit_args())
+    responses = [
+        _FakeMessage(content=[prose, kb_call]),
+        _FakeMessage(content=[submit]),
+    ]
+    mcp_results = {
+        **_wo_loaded(),
+        "get_equipment_kb": _ToolResult(content=json.dumps({"procedures": []})),
+    }
+    antr, _, _ws, _spy = patch_wog(responses=responses, mcp_results=mcp_results)
+
+    await wog.run_work_order_generator(work_order_id=42)
+
+    # Second LLM call is the re-POST carrying the assistant content from turn 1.
+    second_messages = antr.calls[1]["messages"]
+    assistant_msg = next(m for m in second_messages if m["role"] == "assistant")
+    for block in assistant_msg["content"]:
+        assert (
+            "parsed_output" not in block
+        ), "parsed_output must be stripped before round-tripping to the API"
