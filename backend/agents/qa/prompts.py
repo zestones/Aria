@@ -3,8 +3,9 @@
 Two prompts live here:
 
 - :data:`QA_SYSTEM` — the top-level Q&A assistant system prompt. Used by
-  both the Messages API path (``run_qa_turn``) and the Managed Agents
-  path (``run_qa_turn_managed``).
+  the Messages API path (``run_qa_turn``). The M5.4 Managed Agents Q&A
+  path was removed in M5.5 (#103) — see
+  :mod:`agents.qa` for context.
 - :data:`INVESTIGATOR_QA_SYSTEM` — short system prompt for the
   ``ask_investigator`` diagnostic fast path (see
   :func:`agents.qa.investigator_qa.answer_investigator_question`).

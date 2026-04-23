@@ -28,6 +28,7 @@ from typing import Any, cast
 
 from agents.anthropic_client import anthropic, model_for
 from agents.qa import tool_dispatch
+from agents.qa.prompts import QA_SYSTEM
 from agents.qa.schemas import ASK_INVESTIGATOR_TOOL
 from agents.qa.tool_dispatch import safe_send, summarise_tool_result
 from agents.ui_tools import QA_RENDER_TOOLS
@@ -35,8 +36,6 @@ from anthropic.types import ToolUseBlock
 from aria_mcp.client import mcp_client
 from core.ws_manager import current_turn_id, ws_manager
 from fastapi import WebSocket
-
-from agents.qa.prompts import QA_SYSTEM
 
 log = logging.getLogger("aria.qa_agent")
 

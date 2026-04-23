@@ -40,7 +40,10 @@ async def lifespan(app: FastAPI):
     app.state.db = db
     log.info("ARIA backend ready")
     async with mcp_http_app.lifespan(mcp_http_app):
-        log.info("MCP server ready at /mcp")
+        # Do NOT log the full mount path — the path secret is the only auth
+        # when hosted MCP is enabled (#103 / M5.5). Log only that the server
+        # is up.
+        log.info("MCP server ready")
         # Sentinel must start INSIDE the MCP lifespan wrapper — its first
         # `mcp_client.call_tool()` hits 404 otherwise (MCP HTTP app not
         # yet mounted). See #26 audit comment.
@@ -101,7 +104,16 @@ def create_app() -> FastAPI:
         app.include_router(demo_router)
         log.info("Demo endpoints enabled at /api/v1/demo/*")
 
-    app.mount("/mcp", mcp_http_app)
+    # Mount MCP behind a path-secret gate so the tunneled URL carries its own
+    # auth token (hosted MCP does not forward custom headers — see #103).
+    # The legacy unsecured ``/mcp`` mount is only kept when hosted MCP is NOT
+    # in use (no public URL configured). Once the tunnel is up, exposing both
+    # mounts publicly would let callers strip the secret prefix and bypass
+    # the gate entirely. Local dev / MCPClient should target
+    # ``/mcp/<ARIA_MCP_PATH_SECRET>`` in that case.
+    app.mount(f"/mcp/{settings.aria_mcp_path_secret}", mcp_http_app, name="mcp-secret")
+    if not settings.aria_mcp_public_url:
+        app.mount("/mcp", mcp_http_app)
 
     return app
 
