@@ -39,6 +39,7 @@ from typing import Any, cast
 
 from agents.anthropic_client import anthropic, model_for
 from agents.ui_tools import INVESTIGATOR_RENDER_TOOLS
+from agents.work_order_generator import run_work_order_generator
 from anthropic.types import Message, ToolUseBlock
 from aria_mcp.client import mcp_client
 from core.database import db
@@ -544,29 +545,12 @@ async def _fallback_rca(work_order_id: int, reason: str, turn_id: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Work Order Generator spawn (lazy import — #30 not yet merged)
+# Work Order Generator spawn
 # ---------------------------------------------------------------------------
 
 
 def _spawn_work_order_generator(work_order_id: int) -> None:
-    """Kick off the Work Order Generator (#30) in the background.
-
-    Same lazy-import pattern Sentinel (#24) uses for this module —
-    ships the Investigator independently of #30 with a log line
-    instead of a throwaway stub.
-    """
-    try:
-        from agents.work_order_generator import (  # type: ignore[import-not-found]
-            run_work_order_generator,
-        )
-    except ImportError:
-        log.info(
-            "Investigator: Work Order Generator not yet implemented (#30) — "
-            "WO %d left in status=analyzed with rca_summary set",
-            work_order_id,
-        )
-        return
-
+    """Kick off the Work Order Generator (#30) in the background."""
     asyncio.create_task(
         run_work_order_generator(work_order_id),
         name=f"work-order-gen-wo-{work_order_id}",

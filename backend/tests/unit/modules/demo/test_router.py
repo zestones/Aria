@@ -17,7 +17,6 @@ from typing import Any
 import pytest
 from modules.demo import router as demo_router
 
-
 # ---------------------------------------------------------------------------
 # Fake asyncpg.Connection surface — only the methods the handler uses.
 # ---------------------------------------------------------------------------
@@ -129,9 +128,7 @@ async def test_happy_path_orchestrates_all_four_steps() -> None:
 async def test_happy_path_past_failure_row_carries_signal_patterns_jsonb() -> None:
     conn = _FakeConn(cell_row={"id": 2}, sig_row={"id": 55})
 
-    await demo_router.trigger_memory_scene(
-        cell_name="P-02", conn=conn  # type: ignore[arg-type]
-    )
+    await demo_router.trigger_memory_scene(cell_name="P-02", conn=conn)  # type: ignore[arg-type]
 
     insert_calls = [
         (q, args)
@@ -152,9 +149,7 @@ async def test_happy_path_past_failure_row_carries_signal_patterns_jsonb() -> No
 @pytest.mark.asyncio
 async def test_readings_all_above_alert_threshold() -> None:
     conn = _FakeConn(cell_row={"id": 2}, sig_row={"id": 55})
-    await demo_router.trigger_memory_scene(
-        cell_name="P-02", conn=conn  # type: ignore[arg-type]
-    )
+    await demo_router.trigger_memory_scene(cell_name="P-02", conn=conn)  # type: ignore[arg-type]
     # All seeded readings must exceed the P-02 vibration alert (4.5 mm/s)
     # otherwise Sentinel will not open a work_order and the scene dies.
     reading_values = [

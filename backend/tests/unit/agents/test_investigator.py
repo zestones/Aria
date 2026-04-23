@@ -511,22 +511,6 @@ async def test_get_work_order_error_triggers_fallback(patch_inv) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Spawning
-# ---------------------------------------------------------------------------
-
-
-def test_work_order_generator_lazy_import_logs_when_missing(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
-) -> None:
-    import sys
-
-    monkeypatch.setitem(sys.modules, "agents.work_order_generator", None)
-    with caplog.at_level("INFO"):
-        inv._spawn_work_order_generator(work_order_id=42)
-    assert any("Work Order Generator not yet implemented" in rec.message for rec in caplog.records)
-
-
-# ---------------------------------------------------------------------------
 # Tool schema sanity — guards against future drift on the wire contract.
 # ---------------------------------------------------------------------------
 
