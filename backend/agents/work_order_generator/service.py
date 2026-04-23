@@ -1,9 +1,10 @@
-"""Work Order Generator — turns an RCA into an actionable work order.
+"""Work Order Generator loop (#30 / M5.1).
 
-Issue #30 (M5.1). Spawned by the Investigator (#25) as soon as it calls
-``submit_rca`` successfully. Short agent loop — typically 2 tool calls:
-``get_equipment_kb`` to read the equipment's procedures + parts list, then
-``submit_work_order`` to write the final structured work order.
+Turns an RCA into an actionable work order. Spawned by the Investigator
+(#25) as soon as it calls ``submit_rca`` successfully. Short agent loop
+— typically 2 tool calls: ``get_equipment_kb`` to read the equipment's
+procedures + parts list, then ``submit_work_order`` to write the final
+structured work order.
 
 - Safety nets mirror the Investigator (wall-clock timeout, MAX_TURNS,
   outer ``try/except``), with tighter bounds because the loop is expected
@@ -13,11 +14,11 @@ Issue #30 (M5.1). Spawned by the Investigator (#25) as soon as it calls
   blob, no multi-step reasoning benefit.
 - Failure path leaves the work order at ``status='analyzed'`` with its
   existing ``rca_summary`` intact. Operator can hit the "Regenerate" UI
-  action (frontend) to retry — no `work_order_ready` is broadcast on
+  action (frontend) to retry — no ``work_order_ready`` is broadcast on
   failure so the frontend will not render an empty Work Order Card.
 
-Contract with Investigator: Investigator's ``_spawn_work_order_generator``
-lazy-imports ``run_work_order_generator`` from this module, so the moment
+Contract with Investigator: Investigator's ``spawn_work_order_generator``
+imports ``run_work_order_generator`` from this module, so the moment
 this module is importable the pipeline starts routing end-to-end.
 """
 
@@ -33,6 +34,8 @@ from typing import Any, cast
 
 from agents.anthropic_client import anthropic, model_for
 from agents.ui_tools import WORK_ORDER_GEN_RENDER_TOOLS
+from agents.work_order_generator.prompts import WO_GEN_SYSTEM
+from agents.work_order_generator.schemas import SUBMIT_WORK_ORDER_TOOL
 from anthropic.types import ToolUseBlock
 from aria_mcp.client import mcp_client
 from core.database import db
@@ -44,99 +47,6 @@ log = logging.getLogger("aria.work_order_generator")
 MAX_TURNS = 6
 _TIMEOUT_SECONDS = 60.0
 _MAX_TOKENS = 4096
-
-
-# ---------------------------------------------------------------------------
-# Local agent-only tool schemas
-# ---------------------------------------------------------------------------
-
-
-SUBMIT_WORK_ORDER_TOOL: dict[str, Any] = {
-    "name": "submit_work_order",
-    "description": (
-        "Submit the completed work order. Call exactly once when you have "
-        "assembled a title, ordered action steps, required parts, and a "
-        "sensible maintenance window. This ends the agent loop."
-    ),
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "title": {
-                "type": "string",
-                "maxLength": 200,
-                "description": "Short, action-oriented WO title for the technician.",
-            },
-            "description": {
-                "type": "string",
-                "description": "One-paragraph summary for the work order header.",
-            },
-            "recommended_actions": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": "Ordered procedure steps the technician will follow.",
-            },
-            "required_parts": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "ref": {"type": "string"},
-                        "qty": {"type": "integer", "minimum": 1},
-                    },
-                    "required": ["ref", "qty"],
-                },
-                "description": "Parts needed, each with a manufacturer reference and quantity.",
-            },
-            "priority": {
-                "type": "string",
-                "enum": ["low", "medium", "high", "critical"],
-            },
-            "estimated_duration_min": {
-                "type": "integer",
-                "minimum": 1,
-                "description": "Estimated duration of the intervention, in minutes.",
-            },
-            "suggested_window_start": {
-                "type": "string",
-                "format": "date-time",
-                "description": "ISO-8601 with TZ — earliest time the intervention should start.",
-            },
-            "suggested_window_end": {
-                "type": "string",
-                "format": "date-time",
-                "description": "ISO-8601 with TZ — latest time the intervention should complete.",
-            },
-        },
-        "required": [
-            "title",
-            "recommended_actions",
-            "required_parts",
-            "priority",
-        ],
-    },
-}
-
-
-WO_GEN_SYSTEM = """You are the Work Order Generator agent.
-
-An Investigator agent has just completed a root cause analysis on a piece of
-equipment. Your job is to turn that RCA into a concrete, printable work order
-the field technician can execute.
-
-You have access to tools to read the equipment knowledge base (standard
-maintenance procedures, referenced parts, typical durations). Use them to
-pick realistic actions and part references, then call `submit_work_order`
-exactly once with a complete package. Keep it terse — technicians want
-short imperative steps, not prose.
-
-RCA summary from Investigator:
-{rca_summary}
-
-Work order to enrich:
-- id: {work_order_id}
-- cell_id: {cell_id}
-- current title: {current_title}
-"""
 
 
 # ---------------------------------------------------------------------------
@@ -422,11 +332,3 @@ async def _fail_end(turn_id: str, reason: str) -> None:
             "finish_reason": f"error:{reason}",
         },
     )
-
-
-__all__ = [
-    "MAX_TURNS",
-    "SUBMIT_WORK_ORDER_TOOL",
-    "WO_GEN_SYSTEM",
-    "run_work_order_generator",
-]

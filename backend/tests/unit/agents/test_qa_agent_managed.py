@@ -1,4 +1,4 @@
-"""Tests for ``agents.qa_agent_managed`` (issue #33 / M5.4).
+"""Tests for ``agents.qa`` Managed Agents path (issue #33 / M5.4).
 
 Covers the acceptance items testable without a live Anthropic call:
 
@@ -30,8 +30,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import pytest
-from agents import qa_agent as qa
-from agents import qa_agent_managed as qam
+from agents.qa import investigator_qa as qa_investigator
+from agents.qa import managed as qam
+from agents.qa import schemas as qa_schemas
+from agents.qa import tool_dispatch as qa_tool_dispatch
 
 # ---------------------------------------------------------------------------
 # Fake event objects — shape matches anthropic.types.beta.sessions.*
@@ -250,11 +252,12 @@ def patch_qam(monkeypatch: pytest.MonkeyPatch):
         # Skip the trickle sleep so tests run fast.
         monkeypatch.setattr(qam, "_TRICKLE_DELAY_S", 0)
 
-        # Patch the shared helpers in the original module too — they
-        # broadcast on ws_manager and (for ask_investigator) call Anthropic.
-        monkeypatch.setattr(qa, "anthropic", antr)
-        monkeypatch.setattr(qa, "mcp_client", mcp)
-        monkeypatch.setattr(qa, "ws_manager", bus)
+        # Patch the shared tool-dispatch helpers — ``handle_render`` /
+        # ``handle_ask_investigator`` broadcast on ws_manager and call
+        # ``investigator_qa.answer_investigator_question`` (which touches
+        # Anthropic).
+        monkeypatch.setattr(qa_tool_dispatch, "ws_manager", bus)
+        monkeypatch.setattr(qa_investigator, "anthropic", antr)
 
         # Reset the module-level agent/env cache so each test bootstraps
         # fresh against its own fake SDK.
@@ -279,7 +282,7 @@ def test_build_custom_tools_wraps_mcp_ui_and_ask_investigator() -> None:
             "input_schema": {"type": "object", "properties": {}},
         },
     ]
-    result = qam._build_custom_tools(mcp_schemas)
+    result = qa_schemas.build_custom_tools(mcp_schemas)
 
     # Every entry has the Managed-Agents custom envelope.
     for tool in result:

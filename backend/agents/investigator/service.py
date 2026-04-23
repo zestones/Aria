@@ -1,31 +1,15 @@
-"""Investigator — free agent loop that produces a root-cause analysis.
+"""Investigator agent loop (#25 / M4.3).
 
-Issue #25 (M4.3). Spawned by Sentinel (#24) when a new work_order lands in
-``status='detected'``. Investigates using the 14 MCP data tools + a small
-set of local agent-only tools:
-
-- ``render_*`` (M2.9) — generative UI artifacts inline in the chat.
-- ``ask_kb_builder`` (M4.6) — dynamic handoff to the KB Builder handler.
-- ``submit_rca`` — terminal tool that ends the loop, persists the RCA,
-  writes a ``failure_history`` row, and hands off to the Work Order
-  Generator (#30).
-
-Safety nets
------------
-- ``MAX_TURNS`` cap on the loop.
-- Wall-clock ``asyncio.wait_for`` timeout on the whole run.
-- Outer ``try/except`` so a partial failure still leaves the work order
-  in ``status='analyzed'`` with a ``rca_summary`` explaining why — the
-  operator always sees an outcome, the pipeline never hangs.
+:func:`run_investigator` is the entry point — wraps :func:`_run_investigator_body`
+in a wall-clock timeout + try/except so the work order is always left in
+an operator-visible state (``status='analyzed'`` with a populated
+``rca_summary``) even on timeout or crash.
 
 Extended thinking (#27) is enabled here via :func:`_llm_call` which wraps
 ``anthropic.messages.stream()`` with ``thinking={"type": "enabled",
 "budget_tokens": 10000}`` and broadcasts each ``thinking_delta`` chunk
 as a ``thinking_delta`` WebSocket frame. The frontend Agent Inspector
-(M8.5 / #49) renders the live reasoning trace. Signed thinking blocks
-are preserved verbatim by ``response.content[*].model_dump()`` so the
-next API call (the one carrying ``tool_result`` blocks) does not trip
-the ``thinking block signature invalid`` 400 error.
+(M8.5 / #49) renders the live reasoning trace.
 """
 
 from __future__ import annotations
@@ -38,8 +22,10 @@ import uuid
 from typing import Any, cast
 
 from agents.anthropic_client import anthropic, model_for
+from agents.investigator import handoff
+from agents.investigator.prompts import INVESTIGATOR_SYSTEM
+from agents.investigator.schemas import ASK_KB_BUILDER_TOOL, SUBMIT_RCA_TOOL
 from agents.ui_tools import INVESTIGATOR_RENDER_TOOLS
-from agents.work_order_generator import run_work_order_generator
 from anthropic.types import Message, ToolUseBlock
 from aria_mcp.client import mcp_client
 from core.database import db
@@ -56,107 +42,6 @@ _TIMEOUT_SECONDS = 120.0
 # actual text/tool_use output.
 _THINKING_BUDGET = 10000
 _MAX_TOKENS = 16384
-
-
-# ---------------------------------------------------------------------------
-# Local agent-only tool schemas
-# ---------------------------------------------------------------------------
-
-SUBMIT_RCA_TOOL: dict[str, Any] = {
-    "name": "submit_rca",
-    "description": (
-        "Submit a completed root cause analysis. Call this exactly once, "
-        "when you have enough evidence to conclude the investigation. "
-        "This ends the agent loop and spawns the Work Order Generator."
-    ),
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "root_cause": {
-                "type": "string",
-                "description": "Single-sentence conclusion in plain language.",
-            },
-            "failure_mode": {
-                "type": "string",
-                "maxLength": 100,
-                "description": (
-                    "Short machine-friendly classifier for pattern matching "
-                    "(e.g. 'bearing_wear', 'cavitation', 'seal_leak'). Max 100 chars."
-                ),
-            },
-            "confidence": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1,
-                "description": "0.0 to 1.0 — how confident you are in the root cause.",
-            },
-            "contributing_factors": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": "Ordered list, most to least significant.",
-            },
-            "similar_past_failure": {
-                "type": ["string", "null"],
-                "description": (
-                    "Reference a ``failure_history`` entry (id or date label) if "
-                    "the current pattern matches a past failure, otherwise null."
-                ),
-            },
-            "recommended_action": {
-                "type": "string",
-                "description": "What the operator should do next, in one sentence.",
-            },
-        },
-        "required": [
-            "root_cause",
-            "failure_mode",
-            "confidence",
-            "contributing_factors",
-            "recommended_action",
-        ],
-    },
-}
-
-
-ASK_KB_BUILDER_TOOL: dict[str, Any] = {
-    "name": "ask_kb_builder",
-    "description": (
-        "Consult the KB Builder for a manufacturer detail absent from the "
-        "current knowledge base (e.g. max bolt torque, part reference, "
-        "installation spec). Use when the KB lookup you already tried came "
-        "back empty and you need a factual value to reason further."
-    ),
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "question": {"type": "string"},
-            "cell_id": {"type": "integer"},
-        },
-        "required": ["question", "cell_id"],
-    },
-}
-
-
-INVESTIGATOR_SYSTEM = """You are an industrial maintenance expert agent.
-
-An anomaly has been detected on equipment in production. Investigate freely
-using the available tools — you decide what to consult and in what order.
-
-When you have enough evidence, call `submit_rca` with:
-- root_cause: single-sentence conclusion
-- failure_mode: short classifier (e.g. 'bearing_wear', 'cavitation', 'seal_leak')
-- confidence: 0.0-1.0
-- contributing_factors: ordered list, most to least significant
-- similar_past_failure: reference a past failure if the pattern matches, else null
-- recommended_action: one sentence on what the operator should do next
-
-You may also call `render_*` tools to show charts, diagrams and diagnostic
-cards inline in the operator's chat, and `ask_kb_builder` to look up a
-manufacturer detail missing from the current KB.
-
-Past failures context for this cell:
-{past_failures}
-"""
 
 
 # ---------------------------------------------------------------------------
@@ -358,7 +243,7 @@ async def _dispatch_tool_uses(
             if name.startswith("render_"):
                 content, is_error = await _handle_render(name, args, turn_id)
             elif name == "ask_kb_builder":
-                content, is_error = await _handle_ask_kb_builder(args, turn_id)
+                content, is_error = await handoff.handle_ask_kb_builder(args, turn_id)
             elif name == "submit_rca":
                 content, is_error = await _handle_submit_rca(
                     args=args, work_order_id=work_order_id, cell_id=cell_id, turn_id=turn_id
@@ -415,59 +300,6 @@ async def _handle_render(name: str, args: dict[str, Any], turn_id: str) -> tuple
     return "rendered", False
 
 
-async def _handle_ask_kb_builder(args: dict[str, Any], parent_turn_id: str) -> tuple[str, bool]:
-    """Dynamic handoff to ``answer_kb_question`` (M3.5, issue #21).
-
-    Broadcasts ``agent_handoff`` + ``agent_start`` (child turn) +
-    ``agent_end`` so the frontend Activity Feed / Agent Inspector shows
-    the delegation as a visible sub-turn.
-    """
-    from agents.kb_builder import answer_kb_question
-
-    question = str(args.get("question", ""))
-    try:
-        cell_id = int(args.get("cell_id"))  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return (
-            json.dumps({"answer": "cell_id missing or invalid", "source": None, "confidence": 0.0}),
-            True,
-        )
-
-    await ws_manager.broadcast(
-        "agent_handoff",
-        {
-            "from_agent": "investigator",
-            "to_agent": "kb_builder",
-            "reason": question,
-            "turn_id": parent_turn_id,
-        },
-    )
-    child_turn_id = uuid.uuid4().hex
-    await ws_manager.broadcast("agent_start", {"agent": "kb_builder", "turn_id": child_turn_id})
-    try:
-        answer = await answer_kb_question(cell_id, question)
-        is_error = False
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 — answer_kb_question is never-raising per its contract; defense in depth
-        log.warning("ask_kb_builder handoff failed: %s", exc)
-        answer = {
-            "answer": f"handoff failed: {type(exc).__name__}",
-            "source": None,
-            "confidence": 0.0,
-        }
-        is_error = True
-    await ws_manager.broadcast(
-        "agent_end",
-        {
-            "agent": "kb_builder",
-            "turn_id": child_turn_id,
-            "finish_reason": "answered" if not is_error else "error",
-        },
-    )
-    return json.dumps(answer), is_error
-
-
 async def _handle_submit_rca(
     *, args: dict[str, Any], work_order_id: int, cell_id: int, turn_id: str
 ) -> tuple[str, bool]:
@@ -504,7 +336,7 @@ async def _handle_submit_rca(
             "turn_id": turn_id,
         },
     )
-    _spawn_work_order_generator(work_order_id)
+    handoff.spawn_work_order_generator(work_order_id)
     return "rca submitted", False
 
 
@@ -545,19 +377,6 @@ async def _fallback_rca(work_order_id: int, reason: str, turn_id: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Work Order Generator spawn
-# ---------------------------------------------------------------------------
-
-
-def _spawn_work_order_generator(work_order_id: int) -> None:
-    """Kick off the Work Order Generator (#30) in the background."""
-    asyncio.create_task(
-        run_work_order_generator(work_order_id),
-        name=f"work-order-gen-wo-{work_order_id}",
-    )
-
-
-# ---------------------------------------------------------------------------
 # Small helpers kept private so tests can monkeypatch them.
 # ---------------------------------------------------------------------------
 
@@ -566,12 +385,3 @@ def _utcnow():
     from datetime import datetime, timezone
 
     return datetime.now(timezone.utc)
-
-
-__all__ = [
-    "ASK_KB_BUILDER_TOOL",
-    "INVESTIGATOR_SYSTEM",
-    "MAX_TURNS",
-    "SUBMIT_RCA_TOOL",
-    "run_investigator",
-]

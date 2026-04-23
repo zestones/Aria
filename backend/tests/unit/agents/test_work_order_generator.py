@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import pytest
-from agents import work_order_generator as wog
+from agents.work_order_generator import service as wog
 
 
 # ---------------------------------------------------------------------------

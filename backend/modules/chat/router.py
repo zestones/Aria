@@ -10,10 +10,10 @@ Issue #31 (M5.2) + #33 (M5.4). Thin WebSocket router that:
    cached). Branching happens once per connection on the
    ``use_managed_agents`` setting.
 3. For every inbound ``{"type": "user", "content": str}`` frame, delegates
-   to either :func:`agents.qa_agent.run_qa_turn` (Messages API, M5.2) or
-   :func:`agents.qa_agent_managed.run_qa_turn_managed` (Managed Agents,
-   M5.4). Both drive one agent turn to completion and stream frames back
-   through the same socket — identical wire contract.
+   to either :func:`agents.qa.run_qa_turn` (Messages API, M5.2) or
+   :func:`agents.qa.run_qa_turn_managed` (Managed Agents, M5.4). Both
+   drive one agent turn to completion and stream frames back through
+   the same socket — identical wire contract.
 """
 
 from __future__ import annotations
@@ -21,8 +21,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from agents.qa_agent import run_qa_turn
-from agents.qa_agent_managed import run_qa_turn_managed
+from agents.qa import run_qa_turn, run_qa_turn_managed
 from core.config import get_settings
 from core.security.ws_auth import require_access_cookie
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
