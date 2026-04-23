@@ -34,6 +34,10 @@ import pytest
 from agents.investigator import handoff as inv_handoff
 from agents.investigator import managed as inv_managed
 from agents.investigator import service as inv_service
+from agents.investigator.managed import bootstrap as inv_managed_bootstrap
+from agents.investigator.managed import events as inv_managed_events
+from agents.investigator.managed import service as inv_managed_service
+from agents.investigator.managed import tool_dispatch as inv_managed_tool_dispatch
 
 # ---------------------------------------------------------------------------
 # Fake event objects — shape matches the anthropic Managed Agents SDK surface.
@@ -293,14 +297,20 @@ def patch_managed(monkeypatch: pytest.MonkeyPatch):
         mcp = _FakeMCP(results=mcp_results or _wo_loaded())
         bus = _FakeBusWS()
 
-        # Patch the managed driver.
-        monkeypatch.setattr(inv_managed, "anthropic", antr)
-        monkeypatch.setattr(inv_managed, "mcp_client", mcp)
-        monkeypatch.setattr(inv_managed, "ws_manager", bus)
+        # Patch the managed subpackage — each submodule imports its own
+        # ``anthropic`` / ``mcp_client`` / ``ws_manager``, so monkeypatching
+        # at the package level wouldn't reach them.
+        monkeypatch.setattr(inv_managed_bootstrap, "anthropic", antr)
+        monkeypatch.setattr(inv_managed_events, "anthropic", antr)
+        monkeypatch.setattr(inv_managed_events, "ws_manager", bus)
+        monkeypatch.setattr(inv_managed_tool_dispatch, "anthropic", antr)
+        monkeypatch.setattr(inv_managed_tool_dispatch, "ws_manager", bus)
+        monkeypatch.setattr(inv_managed_service, "mcp_client", mcp)
+        monkeypatch.setattr(inv_managed_service, "ws_manager", bus)
         # Reset the process-wide bootstrap cache so each test bootstraps
         # fresh against its own fake SDK.
-        monkeypatch.setattr(inv_managed, "_agent_id", None)
-        monkeypatch.setattr(inv_managed, "_environment_id", None)
+        monkeypatch.setattr(inv_managed_bootstrap, "_agent_id", None)
+        monkeypatch.setattr(inv_managed_bootstrap, "_environment_id", None)
 
         # Patch service helpers (handle_submit_rca + handle_render + fallback_rca).
         monkeypatch.setattr(inv_service, "ws_manager", bus)
