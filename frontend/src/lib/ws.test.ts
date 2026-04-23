@@ -221,4 +221,70 @@ describe("createChatWsClient (ChatMap)", () => {
         });
         expect(onEvent).toHaveBeenNthCalledWith(3, "done", { type: "done" });
     });
+    it("sends JSON-serialized message over the socket after OPEN", () => {
+        const client = createChatWsClient<ChatMap>({
+            url: "ws://localhost/api/v1/agent/chat",
+            onEvent: vi.fn(),
+        });
+        MockWebSocket.last.simulateOpen();
+
+        client.send({ type: "user", content: "hello" });
+
+        expect(MockWebSocket.last.sent).toEqual([
+            JSON.stringify({ type: "user", content: "hello" }),
+        ]);
+    });
+
+    it("calls onError when send() is invoked before OPEN", () => {
+        const onError = vi.fn();
+        const client = createChatWsClient<ChatMap>({
+            url: "ws://localhost/api/v1/agent/chat",
+            onEvent: vi.fn(),
+            onError,
+        });
+        // Still CONNECTING — no simulateOpen yet.
+
+        client.send({ type: "user", content: "too early" });
+
+        expect(onError).toHaveBeenCalledWith(
+            expect.objectContaining({ message: expect.stringContaining("not OPEN") }),
+        );
+        expect(MockWebSocket.last.sent).toEqual([]);
+    });
+
+    it("no-ops silently when send() is called after close()", () => {
+        const onError = vi.fn();
+        const client = createChatWsClient<ChatMap>({
+            url: "ws://localhost/api/v1/agent/chat",
+            onEvent: vi.fn(),
+            onError,
+        });
+        MockWebSocket.last.simulateOpen();
+
+        client.close();
+
+        expect(() => {
+            client.send({ type: "user", content: "post-close" });
+        }).not.toThrow();
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    it("does not reconnect on close code 4401 (auth invalid)", () => {
+        const onClose = vi.fn();
+        const onError = vi.fn();
+        createChatWsClient<ChatMap>({
+            url: "ws://localhost/api/v1/agent/chat",
+            onEvent: vi.fn(),
+            onClose,
+            onError,
+        });
+        MockWebSocket.last.simulateOpen();
+
+        MockWebSocket.last.simulateClose(4401, "cookie invalid");
+        vi.advanceTimersByTime(10_000);
+
+        expect(MockWebSocket.instances).toHaveLength(1);
+        expect(onClose).toHaveBeenCalledWith(4401, "cookie invalid", false);
+        expect(onError).not.toHaveBeenCalled();
+    });
 });
