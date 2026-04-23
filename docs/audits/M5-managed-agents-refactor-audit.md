@@ -19,7 +19,7 @@
 | Tool dispatch code in our backend      | `_dispatch_custom_tool` for every MCP tool + render_* + ask_investigator | Only render_* + submit_rca + ask_kb_builder               |
 | Agent-loop boilerplate (Investigator)  | ~140 lines (`_run_investigator_body` + `_dispatch_tool_uses`: 74 + 64)   | ~80 lines (event consumer + 3 custom tool handlers)       |
 | Session persistence                    | Dies with the WebSocket (Q&A) / dies on submit_rca (Investigator)        | `session_id` persisted on `work_order` row                |
-| Cloud container (`bash`, `web_fetch`)  | Unused                                                                   | Used for trend analysis + datasheet lookups (optional)    |
+| Cloud container (`bash`, `web_fetch`)  | Unused                                                                   | Python signal diagnostics (trend / SPC / FFT / correlation) + datasheet lookups — optional, equipment-type agnostic |
 | Streaming `thinking_delta` in frontend | Per-chunk deltas (M4.5)                                                  | Block-level via `agent.thinking` events (one frame/block) |
 
 **What's strong in the current code.** Session-per-WebSocket with lazy bootstrap and a process-wide lock; correct event lifecycle (`agent.message` → buffer; `agent.custom_tool_use` → buffer by id; `session.status_idle` → branch on `stop_reason.type`); fallback flag (`use_managed_agents`) so the M5.2 path comes back in <5 min. Test coverage in [test_qa_agent_managed.py](backend/tests/unit/agents/test_qa_agent_managed.py) is solid.
@@ -215,36 +215,46 @@ That maps directly to the prize blurb: *"the team that leveraged the Claude plat
 
 **Risk.** Tied to the 30-day checkpoint TTL (§7 risk #6). Pitch wording must say *"reopen until checkpoint expires"*, not *"reopen indefinitely"*. For the demo itself, the gap is minutes — not at risk.
 
-### Add-on B — `bash` + Python FFT on bearing vibration
+### Add-on B — `bash` + Python for in-sandbox signal diagnostics
 
-**The capability.** When Investigator suspects bearing wear (it sees vibration breaches and a low MTBF on the bearing assembly), it writes a short Python script inside the cloud container that:
+> [!NOTE]
+> **Framing.** The ARIA schema is equipment-agnostic: `equipment.equipment_type` is a free string, thresholds are keyed by signal name, and the signal catalogue covers 13 types (vibration, temperature, pressure, flow, voltage, current, power, torque, speed, force, cycle_time, score, level) — any rotating, fluid, thermal, or electrical asset. The capability below is **"run Python diagnostics on raw signal data inside Anthropic's container,"** not "compute FFTs on pump bearings." FFT-on-vibration is one concrete instance; the same pattern applies to trend fits, rate-of-change, SPC control limits, cross-signal correlation, or degradation-to-end-of-life regression on any signal the equipment produces.
 
-1. Pulls the raw vibration signal CSV for the breach window (via MCP → our backend, or via `bash curl <signed_url>` if we expose one).
-2. Runs an FFT (`numpy.fft.rfft`).
-3. Identifies the dominant frequency.
-4. Compares against the bearing manufacturer's BPFO/BPFI/BSF/FTF formulas (known constants from the KB or computed from `n_balls`, `pitch_diameter`, `ball_diameter`, shaft RPM).
-5. Returns *"dominant frequency 142 Hz matches BPFO at 1480 RPM → outer race fault, confidence 0.87"* and feeds that into `submit_rca`.
+**The capability.** Investigator writes a short Python script inside the cloud container to compute something the model cannot compute in tokens. The script pulls raw signal data for the breach window, runs domain-appropriate math, and returns a conclusion with numerical evidence into `submit_rca`.
 
-**Why this is differentiated.** This is **diagnostic computation the model cannot do in tokens**. M4.5 with Messages API physically cannot offer it (no shell, no Python runtime). It is the textbook *"capability that didn't exist without the platform"*. It also matches a real industrial workflow — condition-monitoring engineers do this analysis by hand today.
+**What the agent can actually compute** (menu, not mandate):
 
-**Demo line (30 s clip).** *"The agent suspects bearing wear. It writes a Python script in its sandbox, runs an FFT on the raw vibration signal, identifies the dominant frequency at 142 Hz, matches it against the bearing's outer-race fault frequency at 1480 RPM, and concludes outer-race spalling. None of that math happens in tokens — it runs as actual Python in Anthropic's container."*
+| Signal type              | Diagnostic technique                                                  | Asset examples               |
+|--------------------------|-----------------------------------------------------------------------|------------------------------|
+| Any time-series          | Rolling mean / median, linear or exponential trend fit, rate-of-change | All equipment                |
+| Any time-series          | SPC control limits (±3σ), CUSUM drift detection                       | All equipment                |
+| Multi-signal             | Cross-correlation (e.g. current vs temperature rise)                  | Motors, compressors, HVAC    |
+| Vibration / current      | FFT + spectral peak detection                                         | Rotating equipment, VFD-driven motors |
+| Vibration on rolling kit | Bearing fault frequencies (BPFO/BPFI/BSF/FTF) if KB has geometry      | Pumps, fans, gearboxes with known bearing specs |
+| Temperature / pressure   | Degradation fit → projected time-to-threshold                         | Heat exchangers, seals, filters |
+
+The agent picks the technique based on the breached signal and the KB's `failure_patterns.signal_signature`. None of it is hardcoded in our backend.
+
+**Why this is differentiated.** It is **diagnostic computation the model cannot do in tokens**. M4.5 with Messages API physically cannot offer it (no shell, no Python runtime). It is the textbook *"capability that didn't exist without the platform"*, and it matches a real industrial workflow — condition-monitoring and reliability engineers do this analysis by hand today, across every asset class.
+
+**Demo scenario (concrete, because P-02 is what's seeded).** The current seed is a Grundfos centrifugal pump with vibration breaches in its failure-mode catalogue, so the demo reads: *"The agent suspects bearing wear. It writes a Python script in its sandbox, runs an FFT on the raw vibration signal, compares the dominant frequency against the bearing's outer-race fault frequency, and concludes outer-race spalling with 0.87 confidence. None of that math happens in tokens — it runs as actual Python in Anthropic's container."* If the demo equipment changes (e.g. we add a motor or heat exchanger cell before Friday), the script changes but the capability — and the pitch line — do not.
 
 **Implementation sketch.**
 
-| Layer       | Change                                                                                                                                                                                                                                                                                      |
-|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Prompt      | Add a section to `INVESTIGATOR_SYSTEM`: *"For vibration anomalies on rotating equipment, you may write Python in `bash` to compute FFTs and bearing fault frequencies. Numpy is available."* + a worked-example block.                                                                      |
-| Environment | When creating the environment, declare `pip` dependencies: `numpy`, `pandas`. Per docs, environments allow pre-installed packages.                                                                                                                                                          |
+| Layer       | Change                                                                                                                                                                                                                                                                                    |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Prompt      | Add a section to `INVESTIGATOR_SYSTEM`: *"For numerical anomalies, you may write Python in `bash` to compute trends, statistics, frequency content, or cross-correlations on raw signals. Numpy, scipy, and pandas are available."* + one worked-example block per technique family.      |
+| Environment | When creating the environment, declare `pip` dependencies: `numpy`, `pandas`, `scipy`. Per docs, environments allow pre-installed packages.                                                                                                                                               |
 | Data access | Either (a) `bash curl http://<tunnel>/api/v1/signal/{id}/csv?start=...&end=...` (path-secret auth as in §3), **or** (b) extend the MCP `get_signal_window` tool to return a CSV-formatted string the agent then writes to a file. Option (a) is simpler and avoids inflating MCP responses. |
-| KB          | Bearing geometry (n_balls, pitch_diameter, ball_diameter) needs to live in `equipment_kb` for the chosen demo cell. KB Builder onboarding may need a one-time entry; do not block the prize add-on on a generic schema change. Hardcode for the P-02 bearing if needed.                     |
-| Tests       | Unit test: assert the prompt includes the FFT guidance. Integration test: skip if `bash` tool not available in the test fake; the real check is the demo trace.                                                                                                                             |
+| KB          | The `equipment_kb.failure_patterns[*].signal_signature` dict already keys by signal name — the agent reads geometry / thresholds / reference values directly from there. No schema change. For rotating kit you need n_balls / pitch_diameter / ball_diameter if FFT-to-BPFO is in scope; for thermal kit you need design temperature ranges; in all cases the agent fetches what it needs from the KB, we don't hardcode. |
+| Tests       | Unit test: assert the prompt includes the diagnostic-computation guidance. Integration test: skip if `bash` tool not available in the test fake; the real check is the demo trace.                                                                                                         |
 
-**Effort.** ~4 h — prompt update + environment dependencies + signal-CSV endpoint + one demo-cell KB entry. The agent itself does the FFT — we don't write the analysis code.
+**Effort.** ~4 h — prompt update + environment dependencies + signal-CSV endpoint. The agent itself does the analysis — we don't write the analysis code.
 
 **Risk.**
 
-- The agent might fall back to *"I would compute an FFT but I'm not sure how"* prose instead of actually running `bash`. Mitigation: explicit example in the system prompt and one test trace before the demo to confirm.
-- `numpy` install latency on first container boot. Mitigation: declare in the environment config so it's pre-installed (per docs); measure cold-start (§7 item 4).
+- The agent might fall back to *"I would compute a trend but I'm not sure how"* prose instead of actually running `bash`. Mitigation: explicit examples in the system prompt (at least two different techniques on two different signal types) and one test trace per asset class before the demo.
+- `numpy`/`scipy` install latency on first container boot. Mitigation: declare in the environment config so it's pre-installed (per docs); measure cold-start (§7 item 4).
 - The CSV-fetch endpoint is a new public surface. Reuse the same path-secret pattern as the MCP mount.
 
 ### Sequencing relative to §5
@@ -255,7 +265,7 @@ Both add-ons sit on top of the base migration:
 2. **Add-on A first** — it reuses code already written (WS frame contract, session id persistence). 3 h, low risk.
 3. **Add-on B second** — only if A landed cleanly and time permits. 4 h, demo-defining payoff.
 
-If only one ships, ship **B**. The FFT-in-container clip is the more memorable 30-second demo moment; A is more *"useful"* but less visually striking on stage.
+If only one ships, ship **B**. The Python-in-container clip (on whatever diagnostic technique fits the demo cell) is the more memorable 30-second moment; A is more *"useful"* but less visually striking on stage.
 
 ---
 
@@ -263,7 +273,7 @@ If only one ships, ship **B**. The FFT-in-container clip is the more memorable 3
 
 1. ~~**Does `sessions.events.stream` expose `thinking_delta`?**~~ ✅ **Answered 2026-04-23 (docs).** No per-chunk thinking deltas on the sessions stream. Full event list: `agent.message`, `agent.thinking`, `agent.tool_use`, `agent.tool_result`, `agent.mcp_tool_use`, `agent.mcp_tool_result`, `agent.custom_tool_use`, plus thread-context events. `agent.thinking` is emitted per reasoning block — map each to one `thinking_delta` WS frame (see §4).
 2. ~~**Does hosted MCP support per-request bearer auth headers?**~~ ❌ **Answered 2026-04-23 (docs).** Not supported. The `mcp_servers` config is `{"type": "url", "name": "...", "url": "..."}` only; the docs explicitly state *"No auth tokens are provided at this stage."* Auth is **OAuth-only via vaults** (`vault_ids=[...]` at session creation). Use path-secret URL (see §3) for the hackathon; revisit OAuth+vaults if the project continues post-hackathon.
-3. **Cloud container usage (`bash`, `web_fetch`)** is in the value pitch but not in the migration scope above. **Treat as stretch goal**, not a blocker for the prize. Confirmed tool set: `bash`, `read`, `write`, `edit`, `glob`, `grep`, `web_search`, `web_fetch` (8 tools in `agent_toolset_20260401`, all on by default). **No separate `code_exec` tool — run Python via `bash`.** If we add it: have Investigator run a 5-line Python script for a rolling-mean over the breach window and `web_fetch` a manufacturer datasheet when the KB lookup is empty.
+3. **Cloud container usage (`bash`, `web_fetch`)** is in the value pitch but not in the migration scope above. **Treat as stretch goal**, not a blocker for the prize. Confirmed tool set: `bash`, `read`, `write`, `edit`, `glob`, `grep`, `web_search`, `web_fetch` (8 tools in `agent_toolset_20260401`, all on by default). **No separate `code_exec` tool — run Python via `bash`.** If we add it: see §6.5 add-on B — the capability is generic signal diagnostics (trend / SPC / FFT / correlation) on any signal the cell produces; `web_fetch` for manufacturer datasheets when the KB lookup is empty is a cheap complement.
 4. **Bootstrap cost on cold start.** First Investigator run after a restart pays env + agent + session creation latency we don't pay today. Pre-warm in `lifespan` startup if measured >2 s. **Unverified — must measure empirically.**
 5. **Cost.** ⚠️ **Not publicly documented.** The Managed Agents docs expose `session.usage.*` for token tracking but do **not** publish per-session / per-event / per-container-second pricing. The previous "negligible for demo volume" claim was unsourced. Treat as unknown; measure usage during the demo dry-run and budget accordingly. Check [anthropic.com/pricing](https://www.anthropic.com/pricing) or contact sales if the project continues post-hackathon.
 6. **Session TTL — 30-day checkpoint window.** Per docs: *"Checkpoints are only preserved for 30 days after the session's last activity."* If the demo pitches "re-open the same investigation weeks later," either exercise it within 30 days or frame it as "we persist the session id — reopen works until the checkpoint TTL expires." Honesty in the pitch; don't claim indefinite persistence.
@@ -289,11 +299,11 @@ If only one ships, ship **B**. The FFT-in-container clip is the more memorable 3
 - [ ] **Add-on A.** `POST /api/v1/work_order/{id}/continue_investigation` endpoint that resumes `sessions.events.stream(session_id)`.
 - [ ] **Add-on A.** *"Continue investigation"* button on WO detail page, gated on `investigator_session_id IS NOT NULL` and within 30-day TTL.
 - [ ] **Add-on A.** Test: second WS call to a known `session_id` hits the existing session instead of creating a new one (mirror `test_second_turn_reuses_cached_session`).
-- [ ] **Add-on B.** Add `numpy`, `pandas` to the Managed Agents environment package list.
-- [ ] **Add-on B.** Extend `INVESTIGATOR_SYSTEM` with FFT-via-`bash` guidance + one worked example.
+- [ ] **Add-on B.** Add `numpy`, `pandas`, `scipy` to the Managed Agents environment package list.
+- [ ] **Add-on B.** Extend `INVESTIGATOR_SYSTEM` with signal-diagnostics-via-`bash` guidance + worked examples for at least two technique families (e.g. one time-series trend + one frequency / cross-signal example that matches the demo cell's signature signals).
 - [ ] **Add-on B.** Expose `GET /api/v1/signal/{id}/csv?start=&end=` behind the same path-secret as `/mcp` for `bash curl` access.
-- [ ] **Add-on B.** Seed bearing geometry (`n_balls`, `pitch_diameter`, `ball_diameter`, RPM) on the demo cell's `equipment_kb` row.
-- [ ] **Add-on B.** Dry-run the demo scenario once and confirm the agent actually invokes `bash` for the FFT (not just describes it in prose).
+- [ ] **Add-on B.** Ensure the demo cell's `equipment_kb.failure_patterns[*].signal_signature` carries the reference values the diagnostic technique needs (e.g. bearing geometry on rotating kit; design temperature band on thermal kit; control-limit history on any SPC-amenable signal).
+- [ ] **Add-on B.** Dry-run the demo scenario once and confirm the agent actually invokes `bash` for the chosen diagnostic (not just describes it in prose).
 
 ---
 
@@ -328,3 +338,14 @@ Open questions in §7 cross-checked against the [Managed Agents docs](https://pl
 - §1 — full event type enumeration from the docs; explicit `agent_toolset_20260401` list (8 tools, no `code_exec`); OAuth-only MCP auth model.
 - §7 — open question on cost marked as **not publicly documented** (previous "negligible" claim was unsourced); added 30-day checkpoint TTL as a risk item for the "re-open investigation" pitch.
 - §8 — action item list re-synced with the plan above.
+
+### 2026-04-23 — Add-on B scope generalised from "pump bearing FFT" to "equipment-agnostic signal diagnostics"
+
+The initial Add-on B framed the cloud-container capability as *"FFT on bearing vibration."* That is **too narrow**: ARIA's schema is equipment-agnostic (`equipment_type` is a free string, 13 signal types in the catalogue, thresholds keyed by signal name, not equipment class), and the only pump-specific thing is the current seed (P-02 Grundfos centrifugal pump). The pitch needs to read as *"Python signal diagnostics inside Anthropic's container"* — a generic industrial-maintenance capability — with P-02 vibration + FFT as one concrete demo instance, not the defining scope.
+
+Rewrites applied:
+- §6.5 Add-on B — retitled *"`bash` + Python for in-sandbox signal diagnostics"*. Added a framing callout noting ARIA's schema is equipment-agnostic. Added a menu table of diagnostic techniques covering trend fits, SPC, cross-correlation, FFT, bearing fault frequencies, and degradation regression — mapped to asset classes. Demo scenario still uses the P-02 FFT clip (because that's what's seeded) but explicitly framed as *"if the demo equipment changes, the script changes but the capability doesn't."*
+- §0 table — "trend analysis + datasheet lookups" row expanded to *"Python signal diagnostics (trend / SPC / FFT / correlation) + datasheet lookups — equipment-type agnostic"*.
+- §7 risk 3 — narrow "rolling-mean + datasheet" example replaced with a pointer to §6.5.
+- §8 action items — prompt-update action no longer specifies "FFT guidance"; now requires worked examples across at least two technique families matched to the demo cell's signals. KB-seeding action no longer hardcodes bearing geometry; generalised to *"whatever the diagnostic technique needs (bearing geometry on rotating kit; design temperature band on thermal kit; control-limit history on any SPC-amenable signal)."* Environment dependency list adds `scipy`.
+- §6.5 "if only one ships" line — retitled from "FFT-in-container clip" to "Python-in-container clip."
