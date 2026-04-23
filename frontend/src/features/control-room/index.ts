@@ -8,8 +8,14 @@ export type {
     EquipmentStatus,
 } from "./EquipmentNode";
 export { EquipmentNode } from "./EquipmentNode";
+export type { KpiBarProps } from "./KpiBar";
+export { KpiBar } from "./KpiBar";
+export type { SparklineProps } from "./Sparkline";
+export { Sparkline } from "./Sparkline";
 export type { EquipmentEntry, UseEquipmentListResult } from "./useEquipmentList";
 export { useEquipmentList } from "./useEquipmentList";
+export type { KpiSnapshot } from "./useKpiData";
+export { useKpiData } from "./useKpiData";
 
 // NOTE: `FlowEdge` and `PidDiagram` were removed in the M7.1 refactor (#40).
 // The grid is data-driven and node-only; reintroducing edges should be driven
