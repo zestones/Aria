@@ -170,7 +170,7 @@ async def _handle_breach(*, cell_id: int, cell_name: str, breach: dict[str, Any]
                     "priority": "high",
                     "title": f"Anomaly detected — {breach['display_name']}",
                     "generated_by_agent": True,
-                    "trigger_anomaly_time": datetime.fromisoformat(breach["time"]),
+                    "trigger_anomaly_time": datetime.fromisoformat(breach["breach_start"]),
                     "triggered_by_signal_def_id": signal_def_id,
                 }
             ),
@@ -190,10 +190,10 @@ async def _handle_breach(*, cell_id: int, cell_name: str, breach: dict[str, Any]
         {
             "cell_id": cell_id,
             "signal_def_id": signal_def_id,
-            "value": breach["value"],
+            "value": breach["peak_value"],
             "threshold": breach["threshold_value"],
             "work_order_id": wo_id,
-            "time": breach["time"],
+            "time": breach["breach_start"],
             "severity": breach["severity"],
             "direction": breach["direction"],
         },
@@ -207,7 +207,7 @@ async def _handle_breach(*, cell_id: int, cell_name: str, breach: dict[str, Any]
                 "cell_id": cell_id,
                 "severity": breach["severity"],
                 "message": (
-                    f"{cell_name}: {breach['display_name']} = {breach['value']} "
+                    f"{cell_name}: {breach['display_name']} = {breach['peak_value']} "
                     f"({breach['threshold_field']} {breach['threshold_value']})"
                 ),
                 "anomaly_id": wo_id,
@@ -228,7 +228,8 @@ def _spawn_investigator(work_order_id: int) -> None:
     simply stays in ``status='detected'`` with no RCA attached.
     """
     try:
-        from agents.investigator import run_investigator  # type: ignore[import-not-found]
+        from agents.investigator import \
+            run_investigator  # type: ignore[import-not-found]
     except ImportError:
         log.info(
             "Sentinel: Investigator not yet implemented (#25) — WO %d left in status=detected",
@@ -239,4 +240,5 @@ def _spawn_investigator(work_order_id: int) -> None:
     asyncio.create_task(
         run_investigator(work_order_id),
         name=f"investigator-wo-{work_order_id}",
+    )
     )
