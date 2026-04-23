@@ -32,8 +32,11 @@ log = logging.getLogger("aria.anthropic")
 _settings = get_settings()
 
 # Singleton — safe to share across coroutines (httpx.AsyncClient under the hood).
+# When ANTHROPIC_API_KEY is unset we still build the client with a placeholder
+# so the backend boots; any call site will fail-fast at request time with a
+# 401 from the Anthropic API. Agent helpers should guard on the setting.
 anthropic = AsyncAnthropic(
-    api_key=_settings.anthropic_api_key,
+    api_key=_settings.anthropic_api_key or "sk-ant-placeholder-not-configured",
     timeout=60.0,
     max_retries=2,
 )

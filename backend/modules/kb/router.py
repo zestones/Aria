@@ -2,16 +2,29 @@
 
 from __future__ import annotations
 
-import asyncpg
-from fastapi import APIRouter, Depends, Query
+import asyncio
+import logging
 
+import asyncpg
+from agents.kb_builder import bootstrap_thresholds, extract_from_pdf
+from aria_mcp.client import mcp_client
 from core.api_response import created, ok
 from core.database import get_db
 from core.exceptions import NotFoundError
 from core.json_fields import decode_record
 from core.security import Role, get_current_user, require_role
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from modules.kb.repository import JSON_FIELDS, KbRepository
 from modules.kb.schemas import EquipmentKbOut, EquipmentKbUpsert, FailureHistoryOut
+
+log = logging.getLogger("aria.kb.router")
+
+# Per-cell upload serialisation. Two operators uploading to the same cell
+# concurrently would otherwise race on the kb_meta.version bump and the
+# calibration_log append. The lock dict is process-local — fine for a single
+# uvicorn worker (M3.2 acceptance criterion). Multi-worker deployments would
+# need a Postgres advisory lock instead.
+_upload_locks: dict[int, asyncio.Lock] = {}
 
 router = APIRouter(
     prefix="/api/v1/kb",
@@ -52,6 +65,78 @@ async def upsert_kb(
     return created(_ser_kb(rec))
 
 
+@router.post("/equipment/{cell_id}/upload")
+async def upload_pdf(
+    cell_id: int,
+    file: UploadFile,
+    _user=Depends(require_role(Role.ADMIN, Role.OPERATOR)),
+    conn: asyncpg.Connection = Depends(get_db),
+):
+    """Extract a KB from a PDF manual and write it via the MCP tool.
+
+    Pipeline (mirrors issue #18 §6 + §7):
+
+    1. Validate content type + serialise per-cell uploads (`_upload_locks`).
+    2. ``extract_from_pdf`` — Opus vision with 1 retry on parse failure.
+    3. ``bootstrap_thresholds`` — fill missing ``kb_threshold_key`` entries
+       with null-alert stubs so the repository guard does not 422.
+    4. ``mcp_client.call_tool("update_equipment_kb", ...)`` — the only
+       sanctioned write path; bumps version, appends calibration_log,
+       recomputes completeness.
+    5. Re-read and serialise via ``EquipmentKbOut``.
+
+    Phase log lines stand in for live progress events until M4.1 (#23) lands
+    the websocket manager — see issue #18 §7.
+    """
+    if file.content_type not in ("application/pdf", "application/octet-stream"):
+        raise HTTPException(400, "File must be a PDF")
+
+    lock = _upload_locks.setdefault(cell_id, asyncio.Lock())
+    async with lock:
+        log.info("kb_upload[cell=%d] phase=Validating PDF", cell_id)
+        pdf_bytes = await file.read()
+        if not pdf_bytes:
+            raise HTTPException(400, "Uploaded file is empty")
+
+        log.info("kb_upload[cell=%d] phase=Reading pages with Opus vision", cell_id)
+        try:
+            log.info("kb_upload[cell=%d] phase=Extracting thresholds", cell_id)
+            kb, raw_markdown = await extract_from_pdf(pdf_bytes, cell_id)
+        except ValueError as e:
+            # ValidationError is a subclass of ValueError, so this single
+            # branch covers both the page-count guard and the post-retry parse
+            # failure. Page-count message starts with "PDF has N pages" \u2014
+            # map that to 413, otherwise 422.
+            msg = str(e)
+            if msg.startswith("PDF has "):
+                raise HTTPException(413, msg) from e
+            raise HTTPException(422, f"Extraction failed after retry: {msg}") from e
+
+        log.info("kb_upload[cell=%d] phase=Validating schema", cell_id)
+        kb_dict = kb.model_dump(exclude={"kb_meta"})
+        kb_dict = await bootstrap_thresholds(cell_id, kb_dict)
+
+        log.info("kb_upload[cell=%d] phase=Saving knowledge base", cell_id)
+        result = await mcp_client.call_tool(
+            "update_equipment_kb",
+            {
+                "cell_id": cell_id,
+                "structured_data_patch": kb_dict,
+                "source": "pdf_extraction",
+                "calibrated_by": "kb_builder_agent",
+                "raw_markdown": raw_markdown,
+            },
+        )
+        if result.is_error:
+            raise HTTPException(500, f"KB write failed: {result.content}")
+
+        rec = await KbRepository(conn).get_by_cell(cell_id)
+        if rec is None:
+            # Should be impossible — update_equipment_kb just returned success.
+            raise NotFoundError(f"No equipment KB entry for cell {cell_id} after upload")
+        return ok(_ser_kb(rec))
+
+
 @router.get("/failures")
 async def list_failures(
     cell_id: int | None = Query(None),
@@ -59,4 +144,5 @@ async def list_failures(
     conn: asyncpg.Connection = Depends(get_db),
 ):
     rows = await KbRepository(conn).list_failures(cell_id, limit)
+    return ok([_ser_failure(r) for r in rows])
     return ok([_ser_failure(r) for r in rows])

@@ -55,7 +55,7 @@ install.frontend: ## Install frontend npm deps locally (so VS Code can resolve t
 # ============================================================
 # Dev — Docker stack with hot reload
 # ============================================================
-.PHONY: up up.backend up.frontend down restart logs ps build rebuild
+.PHONY: up up.backend up.frontend down restart logs ps build rebuild doctor doctor.backend doctor.frontend
 
 up: ## Start all services (db, migrate, simulator, backend, frontend) — hot reload enabled
 	$(COMPOSE) up -d --build
@@ -86,6 +86,55 @@ build: ## Build all docker images
 
 rebuild: ## Force rebuild without cache
 	$(COMPOSE) build --no-cache
+
+# ---- Doctor — detect dependency drift between manifests and running containers ----
+doctor: doctor.backend doctor.frontend ## Check both containers for dependency drift
+
+doctor.backend: ## Compare backend/requirements.txt against pip freeze inside aria-backend
+	@printf "$(C_CYAN)→ Backend drift check (requirements.txt vs aria-backend)$(C_RESET)\n"
+	@if ! docker ps --format '{{.Names}}' | grep -qx aria-backend; then \
+		printf "  $(C_YELLOW)! aria-backend not running — start with: make up$(C_RESET)\n"; exit 1; \
+	fi
+	@docker exec aria-backend pip freeze 2>/dev/null > /tmp/aria_doctor_pip.txt
+	@drift=0; missing=0; \
+	while IFS= read -r line; do \
+		case "$$line" in ''|\#*) continue;; esac; \
+		pkg=$$(echo "$$line" | sed -E 's/[[:space:]]*#.*$$//' | tr -d '[:space:]'); \
+		[ -z "$$pkg" ] && continue; \
+		name=$$(echo "$$pkg" | sed -E 's/([A-Za-z0-9._-]+).*/\1/'); \
+		want=$$(echo "$$pkg" | sed -nE 's/^[A-Za-z0-9._-]+==(.+)$$/\1/p'); \
+		got=$$(grep -iE "^$$name==" /tmp/aria_doctor_pip.txt 2>/dev/null | head -1 | sed -E 's/^[^=]+==//' || true); \
+		if [ -z "$$got" ]; then \
+			printf "  $(C_RED)✗ MISSING$(C_RESET)  %-30s (required: %s)\n" "$$name" "$${want:-any}"; \
+			missing=$$((missing+1)); \
+		elif [ -n "$$want" ] && [ "$$want" != "$$got" ]; then \
+			printf "  $(C_YELLOW)~ DRIFT$(C_RESET)    %-30s want=%s  got=%s\n" "$$name" "$$want" "$$got"; \
+			drift=$$((drift+1)); \
+		fi; \
+	done < $(BACKEND_DIR)/requirements.txt; \
+	rm -f /tmp/aria_doctor_pip.txt; \
+	if [ $$missing -gt 0 ]; then \
+		printf "  $(C_RED)✗ $$missing missing package(s) — run: make up (rebuilds image)$(C_RESET)\n"; exit 1; \
+	elif [ $$drift -gt 0 ]; then \
+		printf "  $(C_YELLOW)! $$drift version drift(s) — run: $(COMPOSE) build --no-cache backend && make up$(C_RESET)\n"; exit 1; \
+	else \
+		printf "  $(C_GREEN)✓ Backend deps in sync$(C_RESET)\n"; \
+	fi
+
+doctor.frontend: ## Compare frontend/package.json against installed node_modules in aria-frontend
+	@printf "$(C_CYAN)→ Frontend drift check (package.json vs aria-frontend)$(C_RESET)\n"
+	@if ! docker ps --format '{{.Names}}' | grep -qx aria-frontend; then \
+		printf "  $(C_YELLOW)! aria-frontend not running — start with: make up$(C_RESET)\n"; exit 1; \
+	fi
+	@out=$$(docker exec aria-frontend sh -c 'cd /app && npm ls --depth=0 --all 2>&1' || true); \
+	missing=$$(echo "$$out" | grep -cE 'UNMET|missing:|invalid:' || true); \
+	if [ "$$missing" -gt 0 ]; then \
+		echo "$$out" | grep -E 'UNMET|missing:|invalid:' | sed 's/^/  /'; \
+		printf "  $(C_RED)✗ $$missing drift/missing entr(ies) — run: docker compose exec frontend npm install$(C_RESET)\n"; \
+		exit 1; \
+	else \
+		printf "  $(C_GREEN)✓ Frontend deps in sync$(C_RESET)\n"; \
+	fi
 
 # ============================================================
 # Database
@@ -156,7 +205,7 @@ frontend.build: ## Production build (vite)
 # ============================================================
 # Combined targets
 # ============================================================
-.PHONY: format lint typecheck check test e2e clean backend.smoke.mcp
+.PHONY: format lint typecheck check test e2e clean backend.smoke.mcp backend.smoke.kb_upload
 
 format: backend.format frontend.format ## Auto-format both backend and frontend
 
@@ -177,6 +226,9 @@ backend.smoke.mcp: ## Run MCP server E2E smoke (requires stack + canonical KB; s
 
 backend.smoke.tools: ## Run per-tool MCPClient isolation smoke on P-02 (issue #15; requires stack + canonical KB)
 	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/integration/aria_mcp/tools_p02_isolation.py
+
+backend.smoke.kb_upload: ## M3.2: PDF upload + Opus vision smoke (requires stack + ANTHROPIC_API_KEY; skips if key missing)
+	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/e2e/kb_upload_smoke.py
 
 clean: ## Remove caches and build artifacts
 	@find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
