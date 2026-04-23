@@ -89,6 +89,23 @@ class KbRepository:
         JOIN cell c ON fh.cell_id = c.id
     """
 
+    async def create_failure(self, fields: dict[str, Any]):
+        """Insert a ``failure_history`` row.
+
+        Investigator (#25) writes one entry here every time ``submit_rca``
+        succeeds, so the memory-flex scene (#29) can match current anomalies
+        against past patterns via ``failure_mode`` and ``signal_patterns``.
+        """
+        f = encode_fields(fields, JSON_FIELDS)
+        cols = list(f.keys())
+        placeholders = ", ".join(f"${i + 1}" for i in range(len(cols)))
+        sql = (
+            f"INSERT INTO failure_history ({', '.join(cols)}) "
+            f"VALUES ({placeholders}) RETURNING id"
+        )
+        row = await self.conn.fetchrow(sql, *f.values())
+        return row
+
     async def list_failures(self, cell_id: int | None, limit: int):
         if cell_id is not None:
             return await self.conn.fetch(
