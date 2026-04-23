@@ -76,8 +76,8 @@ up.backend: ## Start only db + migrate + backend (no simulator/frontend)
 up.frontend: ## Start only the frontend container
 	$(COMPOSE) up -d --build frontend
 
-down: ## Stop all services
-	$(COMPOSE) down
+down: ## Stop all services (including tunnel if running)
+	$(COMPOSE) --profile tunnel down
 
 restart: ## Restart all services
 	$(COMPOSE) restart
