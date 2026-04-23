@@ -37,13 +37,40 @@ from agents.investigator import service as inv
 # ---------------------------------------------------------------------------
 
 
+def _apply_dump_kwargs(
+    data: dict[str, Any],
+    *,
+    exclude_none: bool = False,
+    exclude: set[str] | None = None,
+) -> dict[str, Any]:
+    """Mimic the ``pydantic.BaseModel.model_dump`` kwargs the agent uses."""
+    if exclude_none:
+        data = {k: v for k, v in data.items() if v is not None}
+    if exclude:
+        data = {k: v for k, v in data.items() if k not in exclude}
+    return data
+
+
 @dataclass
 class _FakeTextBlock:
     text: str
     type: str = "text"
+    # SDK v0.96.0 adds a client-only ``parsed_output`` attribute on text
+    # blocks for structured outputs. It must NOT round-trip back to the
+    # API (issue #110). Kept here so tests exercise the real block shape.
+    parsed_output: Any = None
 
-    def model_dump(self) -> dict[str, Any]:
-        return {"type": "text", "text": self.text}
+    def model_dump(
+        self,
+        *,
+        exclude_none: bool = False,
+        exclude: set[str] | None = None,
+    ) -> dict[str, Any]:
+        return _apply_dump_kwargs(
+            {"type": "text", "text": self.text, "parsed_output": self.parsed_output},
+            exclude_none=exclude_none,
+            exclude=exclude,
+        )
 
 
 @dataclass
@@ -53,8 +80,17 @@ class _FakeToolUseBlock:
     input: dict[str, Any]
     type: str = "tool_use"
 
-    def model_dump(self) -> dict[str, Any]:
-        return {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input}
+    def model_dump(
+        self,
+        *,
+        exclude_none: bool = False,
+        exclude: set[str] | None = None,
+    ) -> dict[str, Any]:
+        return _apply_dump_kwargs(
+            {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input},
+            exclude_none=exclude_none,
+            exclude=exclude,
+        )
 
 
 @dataclass
@@ -716,3 +752,51 @@ async def test_llm_call_skips_empty_thinking_chunk(
     await inv._llm_call(system="s", messages=[], tools=[], turn_id="t")
 
     assert [t for t, _ in ws.events if t == "thinking_delta"] == []
+
+
+@pytest.mark.asyncio
+async def test_assistant_roundtrip_strips_sdk_only_parsed_output(patch_inv) -> None:
+    """Regression for #110 — SDK v0.96.0 sets a client-only ``parsed_output``
+    on ``TextBlock``. It must NOT be re-POSTed to the API on turn 2, or the
+    server rejects the request with ``Extra inputs are not permitted``.
+
+    Mirrors ``test_qa_agent.py::test_assistant_roundtrip_strips_sdk_only_parsed_output``
+    (#108 fix) on the Messages API fallback path of the Investigator
+    (``INVESTIGATOR_USE_MANAGED=false``).
+    """
+    # Turn 1 — assistant emits a text block carrying parsed_output plus a
+    # tool_use that forces a turn 2 round-trip.
+    prose = _FakeTextBlock(text="thinking...", parsed_output={"whatever": 1})
+    fetch = _FakeToolUseBlock(id="tu_1", name="get_current_signals", input={"cell_id": 2})
+    # Turn 2 — submit_rca to terminate the loop cleanly.
+    submit = _FakeToolUseBlock(
+        id="tu_2",
+        name="submit_rca",
+        input={
+            "root_cause": "x",
+            "failure_mode": "x",
+            "confidence": 0.5,
+            "contributing_factors": [],
+            "recommended_action": "x",
+        },
+    )
+    responses = [
+        _FakeMessage(content=[prose, fetch]),
+        _FakeMessage(content=[submit]),
+    ]
+    mcp_results = {
+        **_wo_loaded(),
+        "get_current_signals": _ToolResult(content=json.dumps([{"signal_def_id": 10}])),
+    }
+    antr, _, _, _ = patch_inv(responses=responses, mcp_results=mcp_results)
+
+    await inv.run_investigator(work_order_id=42)
+
+    # Second LLM call carries the assistant content from turn 1 — the
+    # parsed_output key must have been stripped before re-POST.
+    second_messages = antr.calls[1]["messages"]
+    assistant_msg = next(m for m in second_messages if m["role"] == "assistant")
+    for block in assistant_msg["content"]:
+        assert (
+            "parsed_output" not in block
+        ), "parsed_output must be stripped before round-tripping to the API"
