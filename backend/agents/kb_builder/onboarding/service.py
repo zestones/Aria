@@ -18,6 +18,7 @@ import logging
 import uuid
 from typing import Any
 
+from agents.kb_builder._ws_stub import broadcast_stub
 from agents.kb_builder.onboarding import session_store
 from agents.kb_builder.onboarding.extraction import extract_patch
 from agents.kb_builder.onboarding.questions import QUESTIONS
@@ -196,6 +197,35 @@ async def submit_onboarding_message(session_id: str, answer: str) -> dict[str, A
     )
     session.question_index += 1
 
+    # M3.6 — emit per-question progress AFTER the MCP write completes
+    # (issue #22 acceptance #5: "All events are emitted AFTER the
+    # corresponding MCP write completes (not before)"). Will become
+    # ``ws_manager.broadcast`` once M4.1 (#23) lands.
+    await broadcast_stub(
+        "ui_render",
+        {
+            "agent": "kb_builder",
+            "component": "kb_progress",
+            "props": {
+                "cell_id": session.cell_id,
+                "steps": [
+                    {
+                        "label": f"Question {q['index'] + 1}/{len(QUESTIONS)}",
+                        "status": (
+                            "done"
+                            if q["index"] < session.question_index
+                            else (
+                                "in_progress" if q["index"] == session.question_index else "pending"
+                            )
+                        ),
+                    }
+                    for q in QUESTIONS
+                ],
+            },
+            "turn_id": None,  # set by orchestrator ContextVar after M4.1 (#23)
+        },
+    )
+
     if is_final:
         # Re-read the row through the repository so the response shape matches
         # ``EquipmentKbOut`` (the router serialises it for the client).
@@ -206,6 +236,24 @@ async def submit_onboarding_message(session_id: str, answer: str) -> dict[str, A
         if rec is None:
             # Should be impossible — update_equipment_kb just returned success.
             raise NotFoundError(f"No equipment_kb row for cell {session.cell_id} after onboarding")
+        # M3.6 — final card AFTER the DB re-read so the frontend's re-fetch
+        # via ``GET /api/v1/kb/equipment/{cell_id}`` (M8.2) sees the
+        # post-onboarding KB. Will become ``ws_manager.broadcast`` after M4.1.
+        await broadcast_stub(
+            "ui_render",
+            {
+                "agent": "kb_builder",
+                "component": "equipment_kb_card",
+                "props": {
+                    "cell_id": session.cell_id,
+                    "highlight_fields": [
+                        "thresholds.vibration_mm_s",
+                        "failure_patterns",
+                    ],
+                },
+                "turn_id": None,  # set by orchestrator ContextVar after M4.1 (#23)
+            },
+        )
         return {
             "session_id": session_id,
             "complete": True,
