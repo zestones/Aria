@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Badge, Icons } from "../../design-system";
+import { Badge, Icons, StatusDot } from "../../design-system";
 import type { AgentMessage, AgentPart, UserMessage } from "./chatStore";
 import { Markdown } from "./Markdown";
 
@@ -125,10 +125,7 @@ function AgentRow({ message, now }: AgentRowProps) {
                     {formatRelativeTime(message.createdAt, now)}
                 </span>
                 {message.streaming && (
-                    <span
-                        aria-hidden
-                        className="inline-block size-1.5 flex-none animate-pulse rounded-full bg-[var(--ds-accent)]"
-                    />
+                    <StatusDot status="warning" size={6} pulse aria-hidden />
                 )}
             </div>
             <div className="flex flex-col gap-2">
