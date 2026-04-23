@@ -55,13 +55,20 @@ install.frontend: ## Install frontend npm deps locally (so VS Code can resolve t
 # ============================================================
 # Dev — Docker stack with hot reload
 # ============================================================
-.PHONY: up up.backend up.frontend down restart logs ps build rebuild doctor doctor.backend doctor.frontend
+.PHONY: up up.backend up.frontend up.tunnel deploy down restart logs ps build rebuild doctor doctor.backend doctor.frontend
 
 up: ## Start all services (db, migrate, simulator, backend, frontend) — hot reload enabled
 	$(COMPOSE) up -d --build
 	@printf "\n$(C_GREEN)✓ Stack up$(C_RESET)\n"
 	@printf "  • Frontend  $(C_CYAN)http://localhost:5173$(C_RESET)\n"
 	@printf "  • Backend   $(C_CYAN)http://localhost:8000$(C_RESET)  (docs: /docs)\n"
+
+up.tunnel: ## Start the Cloudflare tunnel (profile: tunnel) — exposes /mcp/<secret> for hosted-MCP (#103)
+	$(COMPOSE) --profile tunnel up -d tunnel
+	@printf "\n$(C_GREEN)✓ Tunnel up$(C_RESET) — $(C_CYAN)https://aria.vgtray.fr$(C_RESET) → backend:8000\n"
+	@printf "  Check: $(C_CYAN)docker logs aria-cloudflared --tail 20$(C_RESET)\n"
+
+deploy: up up.tunnel ## Start full stack + Cloudflare tunnel (all services + hosted-MCP exposure)
 
 up.backend: ## Start only db + migrate + backend (no simulator/frontend)
 	$(COMPOSE) up -d --build timescaledb migrate backend
