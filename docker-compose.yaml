@@ -80,6 +80,7 @@ services:
       JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-7}
       MCP_API_KEY: ${MCP_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      USE_MANAGED_AGENTS: ${USE_MANAGED_AGENTS:-false}
       ARIA_MODEL: ${ARIA_MODEL:-sonnet}
       CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000","http://localhost:8000"]'
     ports:
