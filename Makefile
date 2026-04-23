@@ -65,7 +65,8 @@ up: ## Start all services (db, migrate, simulator, backend, frontend) — hot re
 
 up.tunnel: ## Start the Cloudflare tunnel (profile: tunnel) — exposes /mcp/<secret> for hosted-MCP (#103)
 	$(COMPOSE) --profile tunnel up -d tunnel
-	@printf "\n$(C_GREEN)✓ Tunnel up$(C_RESET) — $(C_CYAN)https://aria.vgtray.fr$(C_RESET) → backend:8000\n"
+	@printf "\n$(C_GREEN)✓ Tunnel up$(C_RESET) — $(C_CYAN)https://aria.vgtray.fr$(C_RESET) → frontend:5173\n"
+	@printf "\n$(C_GREEN)✓ Tunnel up$(C_RESET) — $(C_CYAN)https://aria-backend.vgtray.fr$(C_RESET) → backend:8000\n"
 	@printf "  Check: $(C_CYAN)docker logs aria-cloudflared --tail 20$(C_RESET)\n"
 
 deploy: up up.tunnel ## Start full stack + Cloudflare tunnel (all services + hosted-MCP exposure)
