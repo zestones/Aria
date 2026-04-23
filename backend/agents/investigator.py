@@ -556,7 +556,7 @@ def _spawn_work_order_generator(work_order_id: int) -> None:
     instead of a throwaway stub.
     """
     try:
-        from agents.work_order_generator import ( # type: ignore[import-not-found]
+        from agents.work_order_generator import (  # type: ignore[import-not-found]
             run_work_order_generator,
         )
     except ImportError:

@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     # `model_for()` currently ignores this and routes per use case.
     aria_model: str = "sonnet"  # "sonnet" | "opus"
 
+    # Mounts `modules.demo.router` when true — off by default so production
+    # deployments do not expose `/api/v1/demo/trigger-memory-scene`. See #29.
+    aria_demo_enabled: bool = False
+
     @property
     def database_dsn(self) -> str:
         return (
