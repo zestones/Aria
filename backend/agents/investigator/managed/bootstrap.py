@@ -88,7 +88,18 @@ async def ensure_agent_and_env() -> tuple[str, str]:
             # references them". Append one toolset per server name.
             existing_tools = list(agent_kwargs["tools"])
             for server in mcp_servers:
-                existing_tools.append({"type": "mcp_toolset", "mcp_server_name": server["name"]})
+                existing_tools.append(
+                    {
+                        "type": "mcp_toolset",
+                        "mcp_server_name": server["name"],
+                        # Auto-approve all MCP tool calls — without this the default
+                        # permission_policy is ``always_ask``, which pauses the agent
+                        # loop waiting for a human confirmation that never arrives.
+                        "default_config": {
+                            "permission_policy": {"type": "always_allow"},
+                        },
+                    }
+                )
             agent_kwargs["tools"] = cast(Any, existing_tools)
 
         agent = await anthropic.beta.agents.create(**agent_kwargs)
