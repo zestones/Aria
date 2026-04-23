@@ -1,4 +1,4 @@
-"""Tests for ``agents.qa_agent`` (issue #31 / M5.2).
+"""Tests for ``agents.qa`` Messages API path (issue #31 / M5.2).
 
 Covers the acceptance items that are testable without a live Anthropic
 call, live MCP, or live database:
@@ -27,7 +27,10 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from agents import qa_agent as qa
+from agents import qa
+from agents.qa import investigator_qa as qa_investigator
+from agents.qa import messages_api as qa_messages_api
+from agents.qa import tool_dispatch as qa_tool_dispatch
 
 
 # ---------------------------------------------------------------------------
@@ -195,11 +198,15 @@ def patch_qa(monkeypatch: pytest.MonkeyPatch):
         antr = _FakeAnthropic(stream_plans=stream_plans)
         mcp = _FakeMCP(results=mcp_results)
         bus = _FakeBusWS()
-        monkeypatch.setattr(qa, "anthropic", antr)
-        monkeypatch.setattr(qa, "mcp_client", mcp)
-        monkeypatch.setattr(qa, "ws_manager", bus)
-        # Swap ToolUseBlock so isinstance() recognises our fakes.
-        monkeypatch.setattr(qa, "ToolUseBlock", _FakeToolUseBlock)
+        # ``anthropic``, ``mcp_client``, ``ws_manager``, ``ToolUseBlock``
+        # are imported separately by each submodule in the ``agents.qa``
+        # subpackage — patch them everywhere the agent loop reaches.
+        monkeypatch.setattr(qa_messages_api, "anthropic", antr)
+        monkeypatch.setattr(qa_messages_api, "mcp_client", mcp)
+        monkeypatch.setattr(qa_messages_api, "ws_manager", bus)
+        monkeypatch.setattr(qa_messages_api, "ToolUseBlock", _FakeToolUseBlock)
+        monkeypatch.setattr(qa_tool_dispatch, "ws_manager", bus)
+        monkeypatch.setattr(qa_investigator, "anthropic", antr)
         return antr, mcp, bus
 
     return _install
@@ -377,7 +384,7 @@ async def test_ask_investigator_dual_channel_handoff(
             "confidence": 0.8,
         }
 
-    monkeypatch.setattr(qa, "answer_investigator_question", fake_answer)
+    monkeypatch.setattr(qa_investigator, "answer_investigator_question", fake_answer)
 
     ask = _FakeToolUseBlock(
         id="tu_1",
@@ -458,7 +465,7 @@ async def test_crash_during_turn_emits_agent_end_and_done_error(
     async def raising_stream(**_kwargs: Any) -> tuple[list[Any], list[Any]]:
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(qa, "_stream_one_turn", raising_stream)
+    monkeypatch.setattr(qa_messages_api, "_stream_one_turn", raising_stream)
     patch_qa(stream_plans=[])
     ws = _FakeClientWS()
     _antr, _mcp, bus = patch_qa(stream_plans=[])
@@ -478,19 +485,19 @@ async def test_crash_during_turn_emits_agent_end_and_done_error(
 
 def test_summarise_tool_result_handles_list_dict_scalar_error() -> None:
     # list
-    s = qa._summarise_tool_result("get_foo", json.dumps([1, 2, 3]), False)
+    s = qa_tool_dispatch.summarise_tool_result("get_foo", json.dumps([1, 2, 3]), False)
     assert s == "get_foo returned 3 row(s)"
     # dict
-    s = qa._summarise_tool_result("get_kb", json.dumps({"a": 1, "b": 2}), False)
+    s = qa_tool_dispatch.summarise_tool_result("get_kb", json.dumps({"a": 1, "b": 2}), False)
     assert "a" in s and "b" in s and s.startswith("get_kb returned")
     # bare string
-    s = qa._summarise_tool_result("get_x", "hello world", False)
+    s = qa_tool_dispatch.summarise_tool_result("get_x", "hello world", False)
     assert s == "hello world"
     # error
-    s = qa._summarise_tool_result("get_x", "anything", True)
+    s = qa_tool_dispatch.summarise_tool_result("get_x", "anything", True)
     assert s == "get_x failed"
     # empty content
-    s = qa._summarise_tool_result("get_x", "", False)
+    s = qa_tool_dispatch.summarise_tool_result("get_x", "", False)
     assert "no content" in s
 
 
@@ -517,7 +524,7 @@ async def test_answer_investigator_question_returns_fallback_on_db_error(
     async def boom(_cell_id: int) -> dict[str, Any]:
         raise RuntimeError("no db")
 
-    monkeypatch.setattr(qa, "_collect_diagnostic_context", boom)
+    monkeypatch.setattr(qa_investigator, "_collect_diagnostic_context", boom)
     out = await qa.answer_investigator_question(cell_id=2, question="why?")
     assert out["answer"].startswith("Diagnostic context unavailable")
     assert out["confidence"] == 0.0
@@ -539,8 +546,8 @@ async def test_answer_investigator_question_returns_fallback_on_llm_error(
 
         messages = _Messages()
 
-    monkeypatch.setattr(qa, "_collect_diagnostic_context", ok_context)
-    monkeypatch.setattr(qa, "anthropic", _BoomAnthropic())
+    monkeypatch.setattr(qa_investigator, "_collect_diagnostic_context", ok_context)
+    monkeypatch.setattr(qa_investigator, "anthropic", _BoomAnthropic())
     out = await qa.answer_investigator_question(cell_id=2, question="why?")
     assert out["answer"].startswith("Diagnostic query failed")
     assert out["confidence"] == 0.0
@@ -586,8 +593,8 @@ async def test_answer_investigator_question_happy_path(
 
         messages = _Messages()
 
-    monkeypatch.setattr(qa, "_collect_diagnostic_context", ok_context)
-    monkeypatch.setattr(qa, "anthropic", _Fake())
+    monkeypatch.setattr(qa_investigator, "_collect_diagnostic_context", ok_context)
+    monkeypatch.setattr(qa_investigator, "anthropic", _Fake())
     out = await qa.answer_investigator_question(cell_id=2, question="why?")
     assert out["answer"].startswith("Recurring bearing wear")
     assert out["cited_work_order_ids"] == [12]

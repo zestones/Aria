@@ -29,7 +29,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import pytest
-from agents import investigator as inv
+from agents.investigator import handoff as inv_handoff
+from agents.investigator import service as inv
 
 # ---------------------------------------------------------------------------
 # Lightweight stand-ins for the Anthropic response shape.
@@ -202,6 +203,9 @@ def patch_inv(monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(inv, "KbRepository", lambda _c: _FakeKBR(spy))
         # Swap ToolUseBlock so isinstance() recognises our fake blocks.
         monkeypatch.setattr(inv, "ToolUseBlock", _FakeToolUseBlock)
+        # The handoff submodule broadcasts ``agent_handoff`` / ``agent_start``
+        # / ``agent_end`` on its own ``ws_manager`` reference (M5.5 split).
+        monkeypatch.setattr(inv_handoff, "ws_manager", ws)
         return antr, mcp, ws, spy
 
     return _install

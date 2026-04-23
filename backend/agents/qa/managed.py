@@ -1,10 +1,9 @@
-"""Q&A agent — Claude **Managed Agents** path (issue #33 / M5.4).
+"""Q&A Managed Agents driver (#33 / M5.4).
 
-Mirrors :func:`agents.qa_agent.run_qa_turn` in wire contract (same
-``ChatMap`` frames to the WebSocket client, same events-bus broadcasts)
-but drives the turn through ``client.beta.sessions.events.stream`` on a
-server-side session maintained by Anthropic, instead of the manual
-Messages API agent loop from M5.2.
+Mirrors :func:`agents.qa.messages_api.run_qa_turn` in wire contract
+(same ``ChatMap`` frames, same events-bus broadcasts) but drives the
+turn through ``client.beta.sessions.events.stream`` on a server-side
+session maintained by Anthropic.
 
 Why this module exists
 ----------------------
@@ -12,10 +11,9 @@ Why this module exists
   least one agent in the hackathon to use the Managed Agents pattern.
   Q&A is the chosen agent (interactive, stateful, long-running).
 - M5.2 is kept as the fallback — the router picks between
-  :func:`run_qa_turn_managed` and :func:`agents.qa_agent.run_qa_turn`
-  on the ``USE_MANAGED_AGENTS`` flag. If the managed path misbehaves
-  during the demo, flipping the flag in ``.env`` restores M5.2 in <5
-  min (acceptance item #2 on #33).
+  :func:`run_qa_turn_managed` and
+  :func:`agents.qa.messages_api.run_qa_turn` on the ``USE_MANAGED_AGENTS``
+  flag.
 
 Event flow (per user turn)
 --------------------------
@@ -28,28 +26,11 @@ Event flow (per user turn)
    - ``agent.custom_tool_use`` → accumulate until the session idles.
 4. On ``session.status_idle``:
    - ``stop_reason.type == "requires_action"`` → dispatch each pending
-     tool (``_handle_render`` / ``_handle_ask_investigator`` / MCP),
+     tool (``handle_render`` / ``handle_ask_investigator`` / MCP),
      send back ``user.custom_tool_result`` events. Continue iterating.
    - ``stop_reason.type == "end_turn"`` → turn done; break.
 5. ``done`` frame to the client (with ``error`` field if the loop
    raised).
-
-Tool schema strategy — **custom tools, not hosted MCP**
--------------------------------------------------------
-Each MCP tool schema, each ``render_*`` schema, and the
-``ask_investigator`` schema is wrapped as a Managed-Agents custom tool
-(``{"type": "custom", ...}``). The execution handler lives in this
-process and reuses the exact dispatch helpers from :mod:`agents.qa_agent`
-— so M5.2 and M5.4 run the same tool code. Hosted MCP was rejected
-because it would require publicly exposing the ``/mcp`` endpoint to
-Anthropic for zero prize value.
-
-Bootstrap
----------
-Agent + environment are created lazily on the first turn and cached
-process-wide. A session is created per WebSocket connection on the
-first user message and reused across turns, so the multi-turn history
-lives in the Managed Agents server instead of a local ``messages: list``.
 """
 
 from __future__ import annotations
@@ -62,15 +43,10 @@ import uuid
 from typing import Any, cast
 
 from agents.anthropic_client import anthropic, model_for
-from agents.qa_agent import (
-    ASK_INVESTIGATOR_TOOL,
-    QA_SYSTEM,
-    _handle_ask_investigator,
-    _handle_render,
-    _safe_send,
-    _summarise_tool_result,
-)
-from agents.ui_tools import QA_RENDER_TOOLS
+from agents.qa import tool_dispatch
+from agents.qa.prompts import QA_SYSTEM
+from agents.qa.schemas import build_custom_tools
+from agents.qa.tool_dispatch import safe_send, summarise_tool_result
 from aria_mcp.client import mcp_client
 from core.config import get_settings
 from core.ws_manager import current_turn_id, ws_manager
@@ -110,12 +86,12 @@ async def run_qa_turn_managed(
     first call so subsequent turns reuse the same Anthropic session and
     therefore the same conversation history (server-side).
 
-    Matches :func:`agents.qa_agent.run_qa_turn` in wire contract: same
-    ``ChatMap`` frames, same ``agent_start`` / ``agent_end`` broadcasts,
-    same final ``done`` frame (with ``error`` on crash).
+    Matches :func:`agents.qa.messages_api.run_qa_turn` in wire contract:
+    same ``ChatMap`` frames, same ``agent_start`` / ``agent_end``
+    broadcasts, same final ``done`` frame (with ``error`` on crash).
     """
     if not user_content.strip():
-        await _safe_send(ws, {"type": "done", "error": "empty message"})
+        await safe_send(ws, {"type": "done", "error": "empty message"})
         return
 
     turn_id = uuid.uuid4().hex
@@ -143,7 +119,7 @@ async def run_qa_turn_managed(
     done_frame: dict[str, Any] = {"type": "done"}
     if error is not None:
         done_frame["error"] = error
-    await _safe_send(ws, done_frame)
+    await safe_send(ws, done_frame)
 
 
 # ---------------------------------------------------------------------------
@@ -190,32 +166,12 @@ async def _ensure_agent_and_env() -> tuple[str, str]:
             name=_AGENT_NAME,
             model=cast(Any, model_for("chat")),
             system=QA_SYSTEM,
-            tools=cast(Any, _build_custom_tools(mcp_schemas)),
+            tools=cast(Any, build_custom_tools(mcp_schemas)),
             betas=cast(Any, [beta]),
         )
         _agent_id = agent.id
         log.info("bootstrapped managed agent %s in environment %s", agent.id, env.id)
         return _agent_id, _environment_id
-
-
-def _build_custom_tools(mcp_schemas: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Wrap every tool schema as a Managed-Agents ``custom`` tool.
-
-    Each input schema must have been declared locally (MCP / ui_tools /
-    ASK_INVESTIGATOR_TOOL); we only relabel the outer envelope.
-    """
-    schemas: list[dict[str, Any]] = list(mcp_schemas)
-    schemas.extend(QA_RENDER_TOOLS)
-    schemas.append(ASK_INVESTIGATOR_TOOL)
-    return [
-        {
-            "type": "custom",
-            "name": s["name"],
-            "description": s["description"],
-            "input_schema": s["input_schema"],
-        }
-        for s in schemas
-    ]
 
 
 # ---------------------------------------------------------------------------
@@ -412,14 +368,14 @@ async def _dispatch_custom_tool(
         "tool_call_started",
         {"agent": "qa", "tool_name": name, "args": args, "turn_id": turn_id},
     )
-    await _safe_send(ws, {"type": "tool_call", "name": name, "args": args})
+    await safe_send(ws, {"type": "tool_call", "name": name, "args": args})
     t0 = time.monotonic()
 
     try:
         if name.startswith("render_"):
-            content, is_error = await _handle_render(ws, name, args, turn_id)
+            content, is_error = await tool_dispatch.handle_render(ws, name, args, turn_id)
         elif name == "ask_investigator":
-            content, is_error = await _handle_ask_investigator(ws, args, turn_id)
+            content, is_error = await tool_dispatch.handle_ask_investigator(ws, args, turn_id)
         else:
             result = await mcp_client.call_tool(name, args)
             content, is_error = result.content, result.is_error
@@ -445,22 +401,14 @@ async def _dispatch_custom_tool(
             content = json.dumps(content)
         except TypeError:
             content = str(content)
-    summary = _summarise_tool_result(name, content, is_error)
-    await _safe_send(ws, {"type": "tool_result", "name": name, "summary": summary})
+    summary = summarise_tool_result(name, content, is_error)
+    await safe_send(ws, {"type": "tool_result", "name": name, "summary": summary})
     return content, is_error
-
-
-# ---------------------------------------------------------------------------
-# Text trickle — re-chunks agent.message blocks into text_delta frames
-# ---------------------------------------------------------------------------
 
 
 async def _trickle_text(ws: WebSocket, text: str) -> None:
     """Emit ``text_delta`` frames in small slices so the UI fills smoothly."""
     for i in range(0, len(text), _TRICKLE_CHUNK):
-        await _safe_send(ws, {"type": "text_delta", "content": text[i : i + _TRICKLE_CHUNK]})
+        await safe_send(ws, {"type": "text_delta", "content": text[i : i + _TRICKLE_CHUNK]})
         if _TRICKLE_DELAY_S:
             await asyncio.sleep(_TRICKLE_DELAY_S)
-
-
-__all__ = ["run_qa_turn_managed"]

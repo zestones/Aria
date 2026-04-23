@@ -1,7 +1,7 @@
 """Tests for ``modules.chat.router`` (issue #31 / M5.2).
 
 The router is thin — auth handshake, receive-loop, delegate each ``user``
-frame to :func:`agents.qa_agent.run_qa_turn`. Tests exercise:
+frame to :func:`agents.qa.run_qa_turn`. Tests exercise:
 
 - Unauthenticated handshake closes before ``accept()`` and never calls
   ``run_qa_turn``.
