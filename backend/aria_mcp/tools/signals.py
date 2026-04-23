@@ -7,12 +7,16 @@ not via fuzzy matching.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from aria_mcp._common import parse_aggregation, with_conn
 from aria_mcp.server import mcp
 from core.datetime_helpers import parse_tz_aware
 from core.thresholds import evaluate_threshold
 from modules.kb.kb_schema import EquipmentKB
 from modules.signal.repository import SignalRepository
+
+_TRENDS_MAX_ROWS = 500  # ~50 KB ceiling; prompt the agent to narrow if exceeded
 
 
 @mcp.tool()
@@ -31,17 +35,22 @@ async def get_signal_trends(
         window_start: ISO-8601 with TZ offset.
         window_end: ISO-8601 with TZ offset (exclusive).
         aggregation: Bucket size — one of ``10s, 30s, 1m, 5m, 15m, 1h, 1d``.
+            For windows > 1h, prefer ``5m`` or ``15m`` to stay within the
+            500-row response limit.
 
     Returns:
         List of ``{time: iso_str, signal_def_id: int, avg: float,
         min: float, max: float}`` ordered by ``(time, signal_def_id)``.
+        When the result is truncated a sentinel ``{"_truncated": true,
+        "hint": "..."}`` dict is appended — narrow the window or use a
+        coarser aggregation and retry.
     """
     ws = parse_tz_aware(window_start)
     we = parse_tz_aware(window_end)
     bucket = parse_aggregation(aggregation)
     async with with_conn() as conn:
         rows = await SignalRepository(conn).signal_data_bucketed(signal_def_ids, ws, we, bucket)
-    return [
+    result = [
         {
             "time": r["bucket"].isoformat(),
             "signal_def_id": r["signal_def_id"],
@@ -51,6 +60,19 @@ async def get_signal_trends(
         }
         for r in rows
     ]
+    if len(result) > _TRENDS_MAX_ROWS:
+        result = result[:_TRENDS_MAX_ROWS]
+        result.append(
+            {
+                "_truncated": True,
+                "hint": (
+                    f"Response capped at {_TRENDS_MAX_ROWS} rows. "
+                    "Retry with a coarser aggregation (e.g. '5m' or '15m') "
+                    "or a shorter window to see the full period."
+                ),
+            }
+        )
+    return result
 
 
 @mcp.tool()
@@ -144,27 +166,66 @@ async def get_signal_anomalies(
             we,
         )
 
-    out: list[dict] = []
+    # Group consecutive breach samples into windows instead of returning one
+    # dict per raw sample. A bearing-failure scenario produces 10k+ breach
+    # rows over a 3h window — this collapses them to a handful of windows,
+    # keeping the MCP response well under the ~50 KB token budget.
+    windows: list[dict] = []
+    # Keyed by (signal_def_id, threshold_field) so simultaneous multi-severity
+    # breaches on the same signal are tracked separately.
+    open_window: dict[tuple, dict] = {}
+
     for row in data_rows:
         sig_id = row["signal_def_id"]
         kb_key = sig_to_kb[sig_id]
         result = evaluate_threshold(kb.thresholds[kb_key], float(row["raw_value"]))
-        if not result["breached"]:
-            continue
-        out.append(
-            {
-                "signal_def_id": sig_id,
-                "display_name": sig_to_name[sig_id],
-                "kb_key": kb_key,
-                "time": row["time"].isoformat(),
-                "value": float(row["raw_value"]),
-                "threshold_field": result["threshold_field"],
-                "threshold_value": result["threshold_value"],
-                "severity": result["severity"],
-                "direction": result["direction"],
-            }
-        )
-    return out
+        ts = row["time"]
+        val = float(row["raw_value"])
+        key = (sig_id, result["threshold_field"] if result["breached"] else None)
+
+        if result["breached"]:
+            bkey = (sig_id, result["threshold_field"])
+            if bkey not in open_window:
+                # Start a new breach window
+                open_window[bkey] = {
+                    "signal_def_id": sig_id,
+                    "display_name": sig_to_name[sig_id],
+                    "kb_key": kb_key,
+                    "breach_start": ts.isoformat(),
+                    "breach_end": ts.isoformat(),
+                    "threshold_field": result["threshold_field"],
+                    "threshold_value": result["threshold_value"],
+                    "severity": result["severity"],
+                    "direction": result["direction"],
+                    "peak_value": val,
+                    "sample_count": 1,
+                }
+            else:
+                # Extend the open window
+                w = open_window[bkey]
+                w["breach_end"] = ts.isoformat()
+                w["sample_count"] += 1
+                if result["direction"] == "high":
+                    w["peak_value"] = max(w["peak_value"], val)
+                else:
+                    w["peak_value"] = min(w["peak_value"], val)
+        else:
+            # Close any open window for this signal
+            for bkey in [k for k in open_window if k[0] == sig_id]:
+                w = open_window.pop(bkey)
+                start = datetime.fromisoformat(w["breach_start"])
+                end = datetime.fromisoformat(w["breach_end"])
+                w["duration_seconds"] = int((end - start).total_seconds())
+                windows.append(w)
+
+    # Close any windows still open at the end of the query range
+    for w in open_window.values():
+        start = datetime.fromisoformat(w["breach_start"])
+        end = datetime.fromisoformat(w["breach_end"])
+        w["duration_seconds"] = int((end - start).total_seconds())
+        windows.append(w)
+
+    return sorted(windows, key=lambda x: x["breach_start"])
 
 
 @mcp.tool()
