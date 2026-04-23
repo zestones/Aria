@@ -62,3 +62,13 @@ class FailureHistoryOut(_Base):
     work_order_id: Optional[int] = None
     signal_patterns: Optional[Any] = None
     created_at: datetime
+
+
+# ── M3.3 onboarding ──────────────────────────────────────────────────────────
+
+
+class OnboardingMessageIn(BaseModel):
+    """Body for ``POST /kb/equipment/{cell_id}/onboarding/message``."""
+
+    session_id: str
+    answer: str
