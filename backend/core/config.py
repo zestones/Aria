@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     mcp_api_key: str = "change-me-mcp-api-key"
 
+    # ── Anthropic ───────────────────────────────────────
+    # ANTHROPIC_API_KEY is required at startup — Pydantic raises if missing.
+    anthropic_api_key: str
+    # Advisory toggle reserved for the final-day demo polish.
+    # `model_for()` currently ignores this and routes per use case.
+    aria_model: str = "sonnet"  # "sonnet" | "opus"
+
     @property
     def database_dsn(self) -> str:
         return (
