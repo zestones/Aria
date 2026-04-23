@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { ArtifactRenderer } from "../../artifacts";
 import { Badge, Icons, StatusDot } from "../../design-system";
 import type { AgentMessage, AgentPart, UserMessage } from "./chatStore";
 import { Markdown } from "./Markdown";
@@ -135,6 +136,15 @@ function AgentRow({ message, now }: AgentRowProps) {
                 {message.parts.map((part) => {
                     if (part.kind === "tool_call") return <ToolCallRow key={part.id} part={part} />;
                     if (part.kind === "handoff") return <HandoffRow key={part.id} part={part} />;
+                    if (part.kind === "artifact") {
+                        return (
+                            <ArtifactRenderer
+                                key={part.id}
+                                component={part.component}
+                                props={part.props}
+                            />
+                        );
+                    }
                     return (
                         <div key={part.id} className="max-w-full text-[var(--ds-fg-primary)]">
                             <Markdown>{part.content}</Markdown>
