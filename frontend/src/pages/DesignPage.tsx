@@ -364,8 +364,6 @@ export default function DesignPage() {
                     <SectionHeader label="Motion" size="md" marker="§6" />
                     <div className="grid grid-cols-3 gap-3">
                         <MotionDemo label="fadeInUp" variants={Motion.fadeInUp} />
-                        <MotionDemo label="artifactReveal" variants={Motion.artifactReveal} />
-                        <MotionDemo label="handoffSweep" variants={Motion.handoffSweep} />
                     </div>
                 </section>
 
