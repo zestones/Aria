@@ -27,8 +27,10 @@ class Settings(BaseSettings):
     mcp_api_key: str = "change-me-mcp-api-key"
 
     # ── Anthropic ───────────────────────────────────────
-    # ANTHROPIC_API_KEY is required at startup — Pydantic raises if missing.
-    anthropic_api_key: str
+    # Optional at startup so the backend boots without a key. Agent code
+    # that actually calls Claude (extract_from_pdf, investigator, etc.)
+    # must guard on truthiness and raise a clear error when invoked.
+    anthropic_api_key: str = ""
     # Advisory toggle reserved for the final-day demo polish.
     # `model_for()` currently ignores this and routes per use case.
     aria_model: str = "sonnet"  # "sonnet" | "opus"
