@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from modules.auth.router import router as auth_router
 from modules.auth.user_router import router as user_router
+from modules.chat.router import router as chat_router
 from modules.events.router import router as events_router
 from modules.hierarchy.router import router as hierarchy_router
 from modules.kb.router import router as kb_router
@@ -90,6 +91,7 @@ def create_app() -> FastAPI:
     app.include_router(work_order_router)
     app.include_router(kb_router)
     app.include_router(events_router)
+    app.include_router(chat_router)
 
     if settings.aria_demo_enabled:
         # Demo-only routes (#29 memory-flex scene). Mounted behind a flag
