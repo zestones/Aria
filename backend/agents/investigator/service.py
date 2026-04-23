@@ -212,8 +212,13 @@ async def _run_investigator_body(work_order_id: int, turn_id: str) -> None:
         )
         # Preserve the full assistant content verbatim — required for
         # signed `thinking` blocks the moment #27 enables thinking. Safe
-        # and correct right now too.
-        assistant_content = [b.model_dump() for b in response.content]
+        # and correct right now too. ``exclude={"parsed_output"}`` strips
+        # the SDK v0.96.0 client-only attribute that the API rejects on
+        # round-trip with ``Extra inputs are not permitted`` (issue #110,
+        # mirrors the #108 QA fix).
+        assistant_content = [
+            b.model_dump(exclude_none=True, exclude={"parsed_output"}) for b in response.content
+        ]
         messages.append({"role": "assistant", "content": assistant_content})
 
         tool_uses: list[ToolUseBlock] = [b for b in response.content if isinstance(b, ToolUseBlock)]
