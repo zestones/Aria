@@ -3,6 +3,7 @@ import { Hairline, SectionHeader } from "../design-system";
 import {
     EquipmentGrid,
     EquipmentInspector,
+    INSPECTOR_DRAWER_WIDTH,
     type InspectorNode,
     useEquipmentList,
 } from "../features/control-room";
@@ -43,10 +44,15 @@ export default function ControlRoomPage() {
         if (!selectedNodeId) return null;
         const match = entries.find((e) => e.id === selectedNodeId);
         if (!match) return null;
-        // `kind` is preserved on `InspectorNode` for backwards compatibility
-        // with the inspector's caption — we pass a generic `cell` tag since
-        // we no longer differentiate by equipment type.
-        return { id: match.id, kind: "cell", label: match.label };
+        // `kind` is preserved on `InspectorNode` for backwards compatibility;
+        // we no longer differentiate by equipment type, so pass a generic
+        // `cell` tag. `subLabel` surfaces the parent line name in the header.
+        return {
+            id: match.id,
+            kind: "cell",
+            label: match.label,
+            subLabel: match.sublabel,
+        };
     }, [selectedNodeId, entries]);
 
     const scopeLabel = selection?.lineName ?? "All lines";
@@ -60,12 +66,20 @@ export default function ControlRoomPage() {
             />
             <Hairline />
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]">
-                <EquipmentGrid
-                    entries={entries}
-                    selectedNodeId={selectedNodeId}
-                    onSelectNode={setSelectedNodeId}
-                    isLoading={isLoading}
-                />
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        paddingLeft: selectedNode ? `${INSPECTOR_DRAWER_WIDTH}px` : "0px",
+                        transition: "padding-left var(--ds-motion-base) var(--ds-ease-out)",
+                    }}
+                >
+                    <EquipmentGrid
+                        entries={entries}
+                        selectedNodeId={selectedNodeId}
+                        onSelectNode={setSelectedNodeId}
+                        isLoading={isLoading}
+                    />
+                </div>
                 <EquipmentInspector
                     open={selectedNode !== null}
                     node={selectedNode}

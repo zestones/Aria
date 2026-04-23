@@ -4,12 +4,18 @@ import { Card, Hairline, Icons, SectionHeader } from "../../design-system";
 
 /**
  * Minimal node descriptor surfaced by the diagram when a node is clicked.
- * Live signals / KB / WO data lands in M7.1b — this is the shell only.
+ * Live signals / KB / WO data lands in M8.x — this is the shell only.
  */
 export interface InspectorNode {
     id: string;
     kind: string;
     label: string;
+    /**
+     * Optional human-readable caption shown under the label (e.g. parent line
+     * name). When absent, no caption is rendered — we deliberately avoid the
+     * `kind · id` fallback which reads as "cell · cell:3" for generic cells.
+     */
+    subLabel?: string;
 }
 
 export interface EquipmentInspectorProps {
@@ -18,7 +24,7 @@ export interface EquipmentInspectorProps {
     onClose: () => void;
 }
 
-const DRAWER_WIDTH = 320;
+export const INSPECTOR_DRAWER_WIDTH = 320;
 
 /**
  * Left-docked inspector drawer. Positioned `absolute` inside the diagram
@@ -26,8 +32,8 @@ const DRAWER_WIDTH = 320;
  * existing `drawerSlide` motion variant family — we mirror its easing and
  * duration for consistency, but the x translation is left-handed.
  *
- * M7.1a: content is placeholder cards — "Live data lands in M7.1b." Each
- * section corresponds to a later slot (signals, KB badge, recent work orders).
+ * Content is placeholder cards until M8.x wires live data. Each section
+ * corresponds to a later slot (signals, KB badge, recent work orders).
  */
 export function EquipmentInspector({ open, node, onClose }: EquipmentInspectorProps) {
     useEffect(() => {
@@ -48,7 +54,7 @@ export function EquipmentInspector({ open, node, onClose }: EquipmentInspectorPr
                     role="dialog"
                     aria-label={`${node.label} inspector`}
                     className="absolute left-0 top-0 bottom-0 z-20 flex flex-col border-r border-[var(--ds-border)] bg-[var(--ds-bg-surface)]"
-                    style={{ width: `${DRAWER_WIDTH}px` }}
+                    style={{ width: `${INSPECTOR_DRAWER_WIDTH}px` }}
                     variants={drawerSlideLeft}
                     initial="hidden"
                     animate="visible"
@@ -57,12 +63,15 @@ export function EquipmentInspector({ open, node, onClose }: EquipmentInspectorPr
                     <header className="flex items-start justify-between gap-3 border-b border-[var(--ds-border)] px-4 py-3">
                         <div className="min-w-0">
                             <SectionHeader label={node.label} size="sm" />
-                            <p
-                                className="mt-1 text-[var(--ds-text-xs)]"
-                                style={{ color: "var(--ds-fg-subtle)" }}
-                            >
-                                {captionFor(node.kind)} · {node.id}
-                            </p>
+                            {node.subLabel && (
+                                <p
+                                    className="mt-1 truncate text-[var(--ds-text-xs)]"
+                                    style={{ color: "var(--ds-fg-subtle)" }}
+                                    title={node.subLabel}
+                                >
+                                    {node.subLabel}
+                                </p>
+                            )}
                         </div>
                         <button
                             type="button"
@@ -75,15 +84,15 @@ export function EquipmentInspector({ open, node, onClose }: EquipmentInspectorPr
                     </header>
                     <div className="flex flex-1 flex-col gap-3 overflow-auto p-4">
                         <InspectorSection label="Signals (last 10)">
-                            Live data lands in M7.1b.
+                            Live data coming in M8.
                         </InspectorSection>
                         <Hairline />
                         <InspectorSection label="Knowledge base">
-                            Live data lands in M7.1b.
+                            Live data coming in M8.
                         </InspectorSection>
                         <Hairline />
                         <InspectorSection label="Recent work orders">
-                            Live data lands in M7.1b.
+                            Live data coming in M8.
                         </InspectorSection>
                     </div>
                 </motion.aside>
@@ -103,21 +112,6 @@ const drawerSlideLeft = {
         transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
     },
 };
-
-function captionFor(kind: string): string {
-    switch (kind) {
-        case "tank":
-            return "Tank";
-        case "pump":
-            return "Pump";
-        case "valve":
-            return "Valve";
-        case "outlet":
-            return "Outlet";
-        default:
-            return kind;
-    }
-}
 
 interface InspectorSectionProps {
     label: string;

@@ -3,7 +3,7 @@ export { AnomalyBanner } from "./AnomalyBanner";
 export type { EquipmentGridProps } from "./EquipmentGrid";
 export { EquipmentGrid } from "./EquipmentGrid";
 export type { EquipmentInspectorProps, InspectorNode } from "./EquipmentInspector";
-export { EquipmentInspector } from "./EquipmentInspector";
+export { EquipmentInspector, INSPECTOR_DRAWER_WIDTH } from "./EquipmentInspector";
 export type {
     EquipmentKind,
     EquipmentNodeProps,
