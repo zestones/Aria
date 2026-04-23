@@ -60,6 +60,13 @@ async def agent_chat_ws(ws: WebSocket) -> None:
                 await ws.send_json({"type": "done", "error": "content must be a string"})
                 continue
 
+            # Emit agent identity at turn start so the UI badge reflects the
+            # real speaker instead of the chatStore's "sentinel" placeholder
+            # (issue #109). Mirrors EventBusMap.agent_start but on the chat
+            # socket — the event bus broadcast is unaffected. The router only
+            # dispatches Q&A today; revisit when KB Builder onboarding lands.
+            await ws.send_json({"type": "agent_start", "agent": "qa"})
+
             await run_qa_turn(ws=ws, messages=messages, user_content=content)
     except WebSocketDisconnect:
         pass
