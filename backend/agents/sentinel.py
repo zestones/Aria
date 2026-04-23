@@ -94,9 +94,7 @@ async def _sentinel_tick() -> None:
         )
 
 
-async def _check_cell(
-    *, cell_id: int, cell_name: str, window_start: str, window_end: str
-) -> None:
+async def _check_cell(*, cell_id: int, cell_name: str, window_start: str, window_end: str) -> None:
     """Check one cell for breaches and handle each unique-signal breach."""
     result = await mcp_client.call_tool(
         "get_signal_anomalies",
@@ -230,8 +228,7 @@ def _spawn_investigator(work_order_id: int) -> None:
     simply stays in ``status='detected'`` with no RCA attached.
     """
     try:
-        from agents.investigator import \
-            run_investigator  # type: ignore[import-not-found]
+        from agents.investigator import run_investigator  # type: ignore[import-not-found]
     except ImportError:
         log.info(
             "Sentinel: Investigator not yet implemented (#25) — WO %d left in status=detected",
@@ -242,5 +239,4 @@ def _spawn_investigator(work_order_id: int) -> None:
     asyncio.create_task(
         run_investigator(work_order_id),
         name=f"investigator-wo-{work_order_id}",
-    )
     )
