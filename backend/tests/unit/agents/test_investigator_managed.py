@@ -597,7 +597,9 @@ async def test_bootstrap_registers_mcp_server_and_custom_tools(patch_managed) ->
     ]
 
     # Only the custom escape-hatch tools: submit_rca + ask_kb_builder + 3 render_*.
-    tool_names = [t["name"] for t in agent_kwargs["tools"]]
+    # (tools also contains mcp_toolset entries which have no "name" key)
+    custom_tools = [t for t in agent_kwargs["tools"] if t["type"] == "custom"]
+    tool_names = [t["name"] for t in custom_tools]
     assert set(tool_names) == {
         "submit_rca",
         "ask_kb_builder",
@@ -605,5 +607,7 @@ async def test_bootstrap_registers_mcp_server_and_custom_tools(patch_managed) ->
         "render_diagnostic_card",
         "render_pattern_match",
     }
-    for tool in agent_kwargs["tools"]:
-        assert tool["type"] == "custom"
+    # mcp_toolset entries are present alongside the custom tools
+    mcp_toolset_entries = [t for t in agent_kwargs["tools"] if t["type"] == "mcp_toolset"]
+    assert len(mcp_toolset_entries) == len(agent_kwargs["mcp_servers"])
+    assert len(mcp_toolset_entries) == len(agent_kwargs["mcp_servers"])
