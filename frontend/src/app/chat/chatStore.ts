@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { createMockChatClient, type MockChatHandle } from "../../lib/mockChat";
+import { type ChatWsClient, createChatWsClient } from "../../lib/ws";
 import type { ChatMap } from "../../lib/ws.types";
 
 export type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
@@ -69,9 +69,11 @@ export interface ChatState {
 }
 
 const DEFAULT_AGENT: AgentId = "sentinel";
+const CHAT_WS_URL = "/api/v1/agent/chat";
+const AUTH_EXPIRED_MESSAGE = "Session expired — please sign in again.";
 
 interface InternalState {
-    handle: MockChatHandle | null;
+    handle: ChatWsClient | null;
     currentAgentMessageId: string | null;
     idCounter: number;
 }
@@ -207,10 +209,16 @@ export const useChatStore = create<ChatState>((set, get) => {
     const ensureConnected = () => {
         if (internal.handle) return;
         set({ status: "connecting", error: null });
-        internal.handle = createMockChatClient({
-            url: "/api/v1/agent/chat",
+        internal.handle = createChatWsClient<ChatMap>({
+            url: CHAT_WS_URL,
             onOpen: () => set({ status: "open", error: null }),
-            onClose: () => set({ status: "closed" }),
+            onClose: (code) => {
+                if (code === 4401) {
+                    set({ status: "error", error: AUTH_EXPIRED_MESSAGE });
+                    return;
+                }
+                set({ status: "closed" });
+            },
             onError: (err) => set({ status: "error", error: err.message }),
             onEvent: handleEvent,
         });
@@ -255,13 +263,20 @@ export const useChatStore = create<ChatState>((set, get) => {
 
             set((state) => ({ messages: [...state.messages, userMsg, agentMsg] }));
 
-            // Drain after OPEN — mock opens on next microtask; guard with a tiny retry.
+            // Drain after OPEN — socket may still be connecting on first send.
+            // Guard with a microtask retry until we hit OPEN or the store
+            // transitions to an error state (cookie rejected, exhausted
+            // reconnect attempts, etc.).
             const dispatch = () => {
-                if (internal.handle && get().status === "open") {
-                    internal.handle.sendMock(trimmed);
-                } else {
-                    queueMicrotask(dispatch);
+                const handle = internal.handle;
+                if (!handle) return;
+                const status = get().status;
+                if (status === "open") {
+                    handle.send({ type: "user", content: trimmed });
+                    return;
                 }
+                if (status === "error" || status === "closed") return;
+                queueMicrotask(dispatch);
             };
             dispatch();
         },
