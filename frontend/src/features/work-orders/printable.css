@@ -28,8 +28,11 @@
     }
 
     .printable-work-order {
-        position: absolute;
-        inset: 0;
+        /* `position: static` keeps the article in normal flow so the
+           browser's print engine can paginate naturally across A4 pages.
+           Absolute positioning clipped the content to the on-screen
+           viewport (issue #51 follow-up). */
+        position: static;
         display: block;
         width: 100%;
         padding: 0;
