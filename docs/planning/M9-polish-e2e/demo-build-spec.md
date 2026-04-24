@@ -1,7 +1,10 @@
 # Demo Build Spec
 
 > [!NOTE]
-> Companion to [demo-plant-design.md](./demo-plant-design.md). **Story doc says WHAT. This doc says HOW.** It is a living checklist — the single source of truth for what is shipped, what is pending, the exact contract of each pending piece, the dry-run observations that define "done", and the time-indexed cuts of the 3-minute video. Use this doc during build, rehearsal, and recording. Written 2026-04-24 (post #105 dry-run).
+> Companion to [demo-plant-design.md](./demo-plant-design.md). **Story doc says WHAT. This doc says HOW.** It is a living checklist — the single source of truth for what is shipped, what is pending, the exact contract of each pending piece, the dry-run observations that define "done", and the time-indexed cuts of the 3-minute video. Use this doc during build, rehearsal, and recording.
+
+> [!IMPORTANT]
+> **Schema, migrations, and seed data are user-owned and out of scope for this spec.** The user maintains their own SQL migrations and seed files. The DB can be nuked and reseeded at will — no demo state is precious. This doc covers only the **demo-logic layer**: the endpoints that trigger scenes, the frontend control strip that fires them, and the dry-run / video plan that uses them. When the spec refers to "the plant" it describes what the user's seed is expected to produce (a named cell with a vibration signal, etc.), not something I will generate.
 
 ---
 
@@ -10,11 +13,10 @@
 0. [How to read / use this doc](#0-how-to-read--use-this-doc)
 1. [Capability × trigger × observable × status matrix](#1-capability--trigger--observable--status-matrix)
 2. [Pending work — contracts](#2-pending-work--contracts)
-    - 2.1 [Naming migration `010_demo_plant_rename.sql`](#21-naming-migration-010_demo_plant_renamesql)
-    - 2.2 [Seed script `seeds/demo/`](#22-seed-script-seedsdemo)
-    - 2.3 [Demo endpoints](#23-demo-endpoints)
-    - 2.4 [Frontend `DemoControlStrip`](#24-frontend-democontrolstrip)
-    - 2.5 [Env + rollout tasks](#25-env--rollout-tasks)
+    - 2.1 [Seed data expectations (contract from the endpoints' POV)](#21-seed-data-expectations-contract-from-the-endpoints-pov)
+    - 2.2 [Demo endpoints](#22-demo-endpoints)
+    - 2.3 [Frontend `DemoControlStrip`](#23-frontend-democontrolstrip)
+    - 2.4 [Env + rollout tasks](#24-env--rollout-tasks)
 3. [Dry-run checklist](#3-dry-run-checklist)
 4. [3-minute video storyboard](#4-3-minute-video-storyboard)
 5. [Risk-of-regression notes](#5-risk-of-regression-notes)
@@ -28,11 +30,12 @@
 - **During recording**: each §4 beat has a time range, an on-screen target, and a spoken line.
 - **When something ships**: flip its row status from `pending` to `shipped`, paste the verification timestamp, add an inline note if you hit a gotcha.
 
-Status vocabulary (three values, one meaning each):
+Status vocabulary (four values, one meaning each):
 
 - `shipped+verified` — code merged *and* end-to-end observed working against the live stack. Cite the verification run.
 - `shipped+untested` — code merged, tests pass, **not yet** exercised end-to-end on the live stack.
 - `pending` — not started / partially started / broken.
+- `user-owned` — provided by the user's seed + migrations; out of this spec's scope but listed for completeness so the dry-run checklist is exhaustive.
 
 ---
 
@@ -42,7 +45,7 @@ Ordered by narration-beat priority (scene 0 → scene 7).
 
 | #  | Capability                             | Trigger (how to fire it)                                                                            | Observable (what the judge sees)                                                                                                                 | Status                                                                                                                                         |
 |----|----------------------------------------|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1  | Plant reads as a real plant            | Land on `/control-room` after stack up                                                              | Grid of 5 tiles with human-readable machine names (Source Pump, UV Sterilizer, Bottle Filler, Bottle Capper, Bottle Labeler) + populated KPI bar | `pending` — stack currently shows "P-02" single tile; naming migration (§2.1) + seed (§2.2) required                                           |
+| 1  | Plant reads as a real plant            | Land on `/control-room` after stack up                                                              | Grid of 5 tiles with human-readable machine names (Source Pump, UV Sterilizer, Bottle Filler, Bottle Capper, Bottle Labeler) + populated KPI bar | `user-owned` — the user's seed + migrations provide the cells, KB rows, signal definitions, and 7-day history. This spec treats it as a precondition (see §2.1).      |
 | 2  | Agent Constellation wow-open           | Hotkey `A` on any page                                                                              | Full-screen overlay: 5 agents, live handoff particles, tool-call rail                                                                            | `shipped+verified` — from the M9 plan, previously live                                                                                         |
 | 3  | New machine onboarding                 | Click Bottle Labeler tile → upload Grundfos NB-G PDF                                                | Wizard: `KbProgress` 5 phases → `MultiTurnDialog` 3-4 questions → `EquipmentKbCard` reveal                                                       | `shipped+untested` on the new cell name; untested since the rename lands. Wizard itself was dry-run on P-02 previously.                        |
 | 4  | Predictive forecast (cool banner)      | `POST /api/v1/demo/scene/seed-forecast` with `{target:"Bottle Filler"}`                             | `AnomalyBanner` appears in accent-arc tone within ≤ 60 s: *"forecast to breach alert (4.1 → 4.5) in ~2.3h · 92% confidence"*                     | `shipped+untested` (forecast-watch loop) / `pending` (demo endpoint that guarantees the firing)                                                |
