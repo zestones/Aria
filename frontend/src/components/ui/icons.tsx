@@ -24,9 +24,12 @@ import {
     Layers as RawLayers,
     LogOut as RawLogOut,
     MapPin as RawMapPin,
+    MessageCircle as RawMessageCircle,
     MessageSquare as RawMessageSquare,
     Monitor as RawMonitor,
     MoreHorizontal as RawMoreHorizontal,
+    PanelLeftClose as RawPanelLeftClose,
+    PanelLeftOpen as RawPanelLeftOpen,
     PanelRightClose as RawPanelRightClose,
     PanelRightOpen as RawPanelRightOpen,
     Play as RawPlay,
@@ -35,6 +38,7 @@ import {
     RefreshCw as RawRefreshCw,
     Search as RawSearch,
     Settings as RawSettings,
+    Sparkles as RawSparkles,
     Upload as RawUpload,
     User as RawUser,
     Users as RawUsers,
@@ -82,9 +86,12 @@ export const GitBranch = styled(RawGitBranch, "GitBranch");
 export const Layers = styled(RawLayers, "Layers");
 export const LogOut = styled(RawLogOut, "LogOut");
 export const MapPin = styled(RawMapPin, "MapPin");
+export const MessageCircle = styled(RawMessageCircle, "MessageCircle");
 export const MessageSquare = styled(RawMessageSquare, "MessageSquare");
 export const Monitor = styled(RawMonitor, "Monitor");
 export const MoreHorizontal = styled(RawMoreHorizontal, "MoreHorizontal");
+export const PanelLeftClose = styled(RawPanelLeftClose, "PanelLeftClose");
+export const PanelLeftOpen = styled(RawPanelLeftOpen, "PanelLeftOpen");
 export const PanelRightClose = styled(RawPanelRightClose, "PanelRightClose");
 export const PanelRightOpen = styled(RawPanelRightOpen, "PanelRightOpen");
 export const Play = styled(RawPlay, "Play");
@@ -93,6 +100,7 @@ export const Printer = styled(RawPrinter, "Printer");
 export const RefreshCw = styled(RawRefreshCw, "RefreshCw");
 export const Search = styled(RawSearch, "Search");
 export const Settings = styled(RawSettings, "Settings");
+export const Sparkles = styled(RawSparkles, "Sparkles");
 export const Upload = styled(RawUpload, "Upload");
 export const User = styled(RawUser, "User");
 export const Users = styled(RawUsers, "Users");

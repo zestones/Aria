@@ -6,7 +6,6 @@ import {
     useId,
     useRef,
 } from "react";
-import { Hairline, Icons, SectionHeader } from "../ui";
 
 export const DRAWER_MIN_WIDTH = 360;
 export const DRAWER_MAX_WIDTH = 640;
@@ -16,7 +15,6 @@ const KEYBOARD_STEP = 10;
 export interface DrawerProps {
     open: boolean;
     width: number;
-    onToggle: () => void;
     onWidthChange: (width: number) => void;
     children?: ReactNode;
     /** DOM id used by the topbar toggle `aria-controls`. */
@@ -28,10 +26,11 @@ function clampWidth(width: number) {
 }
 
 /**
- * Docked, resizable chat drawer. Sits inside the app-shell grid — not overlay.
- * The primitive `design-system/Drawer` remains for modal contexts.
+ * Docked, resizable chat drawer. The drawer is intentionally chrome-less —
+ * it contributes only the resize handle and the left hairline. The `ChatPanel`
+ * inside owns its own single header so we don't stack two title bars.
  */
-export function Drawer({ open, width, onToggle, onWidthChange, children, id }: DrawerProps) {
+export function Drawer({ open, width, onWidthChange, children, id }: DrawerProps) {
     const generatedId = useId();
     const drawerId = id ?? `chat-drawer-${generatedId}`;
     const asideRef = useRef<HTMLElement>(null);
@@ -127,27 +126,7 @@ export function Drawer({ open, width, onToggle, onWidthChange, children, id }: D
             )}
             {open && (
                 <div className="flex h-full w-full flex-col" style={{ width: `${width}px` }}>
-                    <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
-                        <SectionHeader label="Chat" size="sm" />
-                        <button
-                            type="button"
-                            onClick={onToggle}
-                            aria-label="Collapse chat drawer"
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                            <Icons.PanelRightClose className="size-4" />
-                        </button>
-                    </header>
-                    {children ? (
-                        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-                    ) : (
-                        <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
-                            <Hairline label="Awaiting wire" />
-                            <p className="text-sm text-muted-foreground">
-                                Chat shell mounts here in M6.5.
-                            </p>
-                        </div>
-                    )}
+                    {children}
                 </div>
             )}
         </aside>

@@ -75,13 +75,22 @@ export function MessageList({ messages }: MessageListProps) {
 
 function EmptyState() {
     return (
-        <div className="flex h-full flex-col items-start gap-3 pt-8">
-            <p className="text-sm font-medium text-foreground">
-                Ask the operator console anything.
-            </p>
-            <p className="text-sm text-muted-foreground">
-                Try “show WO table”, “query_kb for turbidity RCAs”, or “handoff to investigator”.
-            </p>
+        <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+            <div
+                className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary"
+                aria-hidden
+            >
+                <Icons.Sparkles className="size-4" />
+            </div>
+            <div className="flex flex-col gap-1">
+                <p className="text-sm font-medium tracking-[-0.01em] text-foreground">
+                    Ask the operator console anything
+                </p>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                    Try “show WO table”, “query_kb for turbidity RCAs”, or “handoff to
+                    investigator”.
+                </p>
+            </div>
         </div>
     );
 }

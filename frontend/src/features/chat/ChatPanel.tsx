@@ -1,15 +1,19 @@
 import { useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { Icons, type Status, StatusDot } from "../../components/ui";
-import { ActivityFeed } from "../../features/agents";
-import { useLocalStorage } from "../../lib/useLocalStorage";
+import { type Status, StatusDot } from "../../components/ui";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import { useChatStore } from "./chatStore";
 import { MessageList } from "./MessageList";
 import { useThrottledMessages } from "./useThrottledMessages";
 
-const ACTIVITY_PANEL_KEY = "aria.activityPanelOpen";
-
+/**
+ * Chat panel — conversation surface only.
+ *
+ * Header is a single quiet strip: product label + connection dot. No close
+ * button (the TopBar chat toggle is the canonical control), no Activity
+ * toggle (agent observability lives in `AgentInspector`, not stuffed into
+ * the chat). Body is just message history → input.
+ */
 export function ChatPanel() {
     const messages = useThrottledMessages();
     const { status, sendMessage, connect, focusRequestId } = useChatStore(
@@ -20,7 +24,6 @@ export function ChatPanel() {
             focusRequestId: s.focusRequestId,
         })),
     );
-    const [activityOpen, setActivityOpen] = useLocalStorage<boolean>(ACTIVITY_PANEL_KEY, true);
 
     const inputRef = useRef<ChatInputHandle>(null);
 
@@ -34,66 +37,37 @@ export function ChatPanel() {
         }
     }, [focusRequestId]);
 
+    const dotStatus = statusToDot(status);
+    const statusLabel = statusToLabel(status);
+
     return (
         <div className="flex h-full min-h-0 flex-col bg-card">
-            <div className="flex flex-none items-center justify-between border-b border-border px-4 py-2">
-                <ConnectionIndicator status={status} />
-                <button
-                    type="button"
-                    onClick={() => setActivityOpen(!activityOpen)}
-                    aria-expanded={activityOpen}
-                    aria-controls="aria-activity-panel"
-                    aria-label={activityOpen ? "Collapse activity feed" : "Expand activity feed"}
-                    className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-[11px] text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                    <Icons.Activity className="size-3.5" aria-hidden />
-                    <span>Activity</span>
-                    {activityOpen ? (
-                        <Icons.ChevronDown className="size-3" aria-hidden />
-                    ) : (
-                        <Icons.ChevronUp className="size-3" aria-hidden />
-                    )}
-                </button>
-            </div>
+            <header className="flex h-14 flex-none items-center gap-2 border-b border-border px-4">
+                <h2 className="text-sm font-medium tracking-[-0.01em] text-foreground">
+                    ARIA copilot
+                </h2>
+                <StatusDot status={dotStatus} size={6} aria-hidden />
+                <span className="sr-only">{statusLabel}</span>
+            </header>
+
             <MessageList messages={messages} />
-            {activityOpen && (
-                <div
-                    id="aria-activity-panel"
-                    className="flex h-[38%] min-h-[160px] max-h-[320px] flex-none flex-col border-t border-border"
-                >
-                    <ActivityFeed />
-                </div>
-            )}
+
             <ChatInput ref={inputRef} onSubmit={sendMessage} disabled={status === "error"} />
         </div>
     );
 }
 
-function ConnectionIndicator({ status }: { status: string }) {
-    const label =
-        status === "open"
-            ? "Connected"
-            : status === "connecting"
-              ? "Connecting…"
-              : status === "error"
-                ? "Connection error"
-                : status === "closed"
-                  ? "Disconnected"
-                  : "Idle";
+function statusToDot(status: string): Status {
+    if (status === "open") return "nominal";
+    if (status === "error") return "critical";
+    if (status === "connecting") return "warning";
+    return "unknown";
+}
 
-    const dotStatus: Status =
-        status === "open"
-            ? "nominal"
-            : status === "error"
-              ? "critical"
-              : status === "connecting"
-                ? "warning"
-                : "unknown";
-
-    return (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <StatusDot status={dotStatus} size={6} aria-hidden />
-            <span>{label}</span>
-        </div>
-    );
+function statusToLabel(status: string): string {
+    if (status === "open") return "Connected";
+    if (status === "connecting") return "Connecting…";
+    if (status === "error") return "Connection error";
+    if (status === "closed") return "Disconnected";
+    return "Idle";
 }

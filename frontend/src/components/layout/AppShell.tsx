@@ -103,6 +103,8 @@ export function AppShell() {
                     drawerOpen={safeDrawer.open}
                     drawerControlsId={drawerId}
                     onDrawerToggle={toggleDrawer}
+                    sidebarCollapsed={safeSidebar.collapsed}
+                    onSidebarToggle={toggleSidebar}
                     kpiSlot={<KpiBar selection={selection} />}
                 />
                 <AnomalyBanner />
@@ -132,7 +134,6 @@ export function AppShell() {
                         id={drawerId}
                         open={safeDrawer.open}
                         width={safeDrawer.width}
-                        onToggle={toggleDrawer}
                         onWidthChange={setDrawerWidth}
                     >
                         <ChatPanel />
