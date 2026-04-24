@@ -13,6 +13,7 @@ import { PrintableWorkOrder } from "./PrintableWorkOrder";
 import type { WorkOrder } from "./types";
 import { useWorkOrder } from "./useWorkOrders";
 import { useWorkOrdersStream } from "./useWorkOrdersStream";
+import { parseList } from "./utils";
 
 function formatDateTime(ts: string | null | undefined): string {
     if (!ts) return "—";
@@ -39,48 +40,6 @@ function statusToDotStatus(status: string): "nominal" | "warning" | "critical" |
     if (status === "in_progress" || status === "open") return "nominal";
     if (status === "cancelled") return "warning";
     return "critical";
-}
-
-function parseList(value: unknown): string[] {
-    if (Array.isArray(value)) {
-        return value
-            .map((v) => {
-                if (v === null || v === undefined) return "";
-                if (typeof v === "object") {
-                    return Object.values(v as Record<string, unknown>)
-                        .filter((x) => x !== undefined && x !== null && x !== "")
-                        .map((x) => String(x))
-                        .join(" · ");
-                }
-                return String(v);
-            })
-            .filter(Boolean);
-    }
-    if (typeof value === "string") {
-        try {
-            const parsed = JSON.parse(value);
-            if (Array.isArray(parsed)) return parsed.map((v) => String(v)).filter(Boolean);
-        } catch {
-            // not JSON — treat as comma-separated
-        }
-        return value
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
-    }
-    if (value && typeof value === "object") {
-        // Structured objects (e.g. [{sku, quantity}]) flattened to "sku × quantity"
-        const arr = value as Array<Record<string, unknown>>;
-        return arr
-            .map((it) => {
-                const parts = Object.values(it)
-                    .filter((v) => v !== undefined && v !== null)
-                    .map((v) => String(v));
-                return parts.join(" · ");
-            })
-            .filter(Boolean);
-    }
-    return [];
 }
 
 export default function WorkOrderDetail() {

@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from "react";
 import type { WorkOrder } from "./types";
+import { parseList } from "./utils";
 
 interface PrintableWorkOrderProps {
     wo: WorkOrder;
@@ -29,47 +30,6 @@ function formatLongDateTime(ts: string | null | undefined): string {
         hour: "2-digit",
         minute: "2-digit",
     });
-}
-
-function parseList(value: unknown): string[] {
-    if (Array.isArray(value)) {
-        return value
-            .map((v) => {
-                if (v === null || v === undefined) return "";
-                if (typeof v === "object") {
-                    return Object.values(v as Record<string, unknown>)
-                        .filter((x) => x !== undefined && x !== null && x !== "")
-                        .map((x) => String(x))
-                        .join(" · ");
-                }
-                return String(v);
-            })
-            .filter(Boolean);
-    }
-    if (typeof value === "string") {
-        try {
-            const parsed = JSON.parse(value);
-            if (Array.isArray(parsed)) return parsed.map((v) => String(v)).filter(Boolean);
-        } catch {
-            // fallthrough
-        }
-        return value
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
-    }
-    if (value && typeof value === "object") {
-        const arr = value as Array<Record<string, unknown>>;
-        return arr
-            .map((it) =>
-                Object.values(it)
-                    .filter((v) => v !== undefined && v !== null)
-                    .map((v) => String(v))
-                    .join(" · "),
-            )
-            .filter(Boolean);
-    }
-    return [];
 }
 
 function useQrDataUrl(value: string): string | null {
