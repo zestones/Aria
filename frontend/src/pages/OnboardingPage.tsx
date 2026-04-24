@@ -9,15 +9,7 @@
 
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-    AriaMark,
-    Badge,
-    Button,
-    Hairline,
-    Icons,
-    SectionHeader,
-    ThemeToggle,
-} from "../components/ui";
+import { Badge, Button, Hairline, Icons, SectionHeader } from "../components/ui";
 import { type EquipmentKbOut, PdfUpload } from "../features/onboarding";
 
 const DEFAULT_CELL_ID = 2;
@@ -44,28 +36,6 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-full flex flex-col bg-background">
-            <header className="flex items-center justify-between border-b border-border px-6 py-4">
-                <div className="flex items-center gap-2.5">
-                    <AriaMark size={20} />
-                    <span className="text-base font-semibold tracking-[-0.01em] text-foreground">
-                        ARIA
-                    </span>
-                    <span className="text-sm text-muted-foreground">Onboarding</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <ThemeToggle />
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate("/control-room")}
-                    >
-                        <Icons.ArrowRight className="size-4" aria-hidden="true" />
-                        Skip to control room
-                    </Button>
-                </div>
-            </header>
-
             <main className="flex flex-1 items-start justify-center px-4 py-10">
                 <div className="w-full max-w-2xl space-y-6">
                     {sessionId ? (

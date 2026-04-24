@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { ActivityFeed } from "../../features/agents";
 import { EquipmentPicker } from "../../features/control-room";
 import type { EquipmentSelection } from "../../lib/hierarchy";
@@ -58,13 +59,27 @@ export function TopBar({
     const [activityOpen, setActivityOpen] = useState(false);
     const SidebarIcon = sidebarCollapsed ? Icons.PanelLeftOpen : Icons.PanelLeftClose;
 
+    // Auto-dismiss the Activity overlay on route change. TopBar is mounted
+    // once at the AppShell level (see [routes.tsx](../../routes/routes.tsx))
+    // so without this the overlay would persist across navigations and
+    // intercept clicks on the sidebar toggle on the next page — the user
+    // would otherwise need two clicks (one to dismiss, one to toggle).
+    const { pathname } = useLocation();
+    useEffect(() => {
+        // pathname is referenced so the effect actually re-runs per route
+        void pathname;
+        setActivityOpen(false);
+    }, [pathname]);
+
     return (
         <>
             <header className="sticky top-0 z-30 flex h-14 flex-none items-center gap-3 border-b border-sidebar-border/40 bg-sidebar pl-2 pr-3">
                 {/* Left chrome — sidebar toggle + context */}
                 <button
                     type="button"
-                    onClick={onSidebarToggle}
+                    onClick={() => {
+                        onSidebarToggle();
+                    }}
                     aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     aria-pressed={!sidebarCollapsed}
                     title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -99,7 +114,9 @@ export function TopBar({
                 </button>
                 <CopilotToggle
                     open={drawerOpen}
-                    onClick={onDrawerToggle}
+                    onClick={() => {
+                        onDrawerToggle();
+                    }}
                     controlsId={drawerControlsId}
                 />
             </header>

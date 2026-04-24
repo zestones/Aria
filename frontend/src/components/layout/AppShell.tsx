@@ -79,12 +79,14 @@ export function AppShell() {
     const drawerId = useId();
 
     const toggleDrawer = useCallback(() => {
-        setDrawer((prev) => ({ ...sanitizeDrawer(prev), open: !prev.open }));
-    }, [setDrawer]);
+        const next = { ...safeDrawer, open: !safeDrawer.open };
+        setDrawer(next);
+    }, [setDrawer, safeDrawer]);
 
     const toggleSidebar = useCallback(() => {
-        setSidebar((prev) => ({ collapsed: !sanitizeSidebar(prev).collapsed }));
-    }, [setSidebar]);
+        const next = { collapsed: !safeSidebar.collapsed };
+        setSidebar(next);
+    }, [setSidebar, safeSidebar.collapsed]);
 
     const setDrawerWidth = useCallback(
         (width: number) => {
