@@ -417,21 +417,35 @@ def test_alert_banner_schema_is_imported() -> None:
 
 
 @pytest.mark.asyncio
-async def test_investigator_lazy_import_missing_is_handled(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+async def test_spawn_investigator_creates_background_task(
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Without ``agents.investigator`` on the path (#25 not yet merged), the
-    spawn helper must log an INFO line and return — not raise.
+    """Spawn helper must fire-and-forget the Investigator via ``create_task``.
+
+    Replaces the pre-M5 ``test_investigator_lazy_import_missing_is_handled``
+    which covered a defensive ``ImportError`` branch that was removed in
+    commit ``3b541b5`` (``refactor(sentinel): remove redundant import
+    handling for run_investigator``). The new contract is: given a valid
+    ``work_order_id``, ``_spawn_investigator`` schedules the coroutine on
+    the running loop with a deterministic task name and returns
+    synchronously without awaiting it.
     """
-    import sys
 
-    # Ensure the lazy import raises ImportError deterministically.
-    monkeypatch.setitem(sys.modules, "agents.investigator", None)
+    spawned: list[int] = []
 
-    with caplog.at_level("INFO"):
-        sentinel_mod._spawn_investigator(work_order_id=42)
+    async def fake_run_investigator(work_order_id: int) -> None:
+        spawned.append(work_order_id)
 
-    assert any("Investigator not yet implemented" in rec.message for rec in caplog.records)
+    monkeypatch.setattr(sentinel_mod, "run_investigator", fake_run_investigator)
+
+    sentinel_mod._spawn_investigator(work_order_id=42)
+
+    # Find our freshly-scheduled task by name and await it so the test does
+    # not leak a pending task into the loop's teardown.
+    tasks = [t for t in asyncio.all_tasks() if t.get_name() == "investigator-wo-42"]
+    assert len(tasks) == 1
+    await tasks[0]
+    assert spawned == [42]
 
 
 # ---------------------------------------------------------------------------
@@ -463,3 +477,317 @@ async def test_fastmcp_wrapped_breaches_are_unwrapped(patch_sentinel) -> None:
     assert len(anomaly_events) == 1
     assert anomaly_events[0][1]["signal_def_id"] == 10
     assert anomaly_events[0][1]["value"] == 5.0
+
+
+# ---------------------------------------------------------------------------
+# Forecast-watch (M9 predictive-alerting loop)
+#
+# These tests exercise :func:`sentinel._forecast_watch_tick` with fake DB rows
+# in the same style as the Sentinel tests above. They cover:
+#  - Unit math of ``_ordinary_least_squares`` on clean rising series.
+#  - ``_pick_first_breach`` picks the smallest positive ETA among reachable
+#    thresholds and rejects thresholds the series is drifting away from.
+#  - ``_parse_thresholds`` handles the three input shapes we see in the KB
+#    (dict / JSON string / None).
+#  - End-to-end: a rising series under a forecast tick emits one
+#    ``forecast_warning`` with the expected fields; a flat / noisy / too-short
+#    series emits nothing.
+#  - Debounce: emitting twice within the debounce window is suppressed.
+# ---------------------------------------------------------------------------
+
+
+def _make_rising_series(
+    *,
+    count: int = 60,
+    slope_per_hour: float = 1.0,
+    start_value: float = 10.0,
+    window_minutes: int = 6 * 60,
+) -> list[dict[str, Any]]:
+    """Return ``count`` samples rising linearly at ``slope_per_hour`` units/h.
+
+    The sample timestamps are evenly spread over ``window_minutes`` so the
+    regression has a realistic spread of x-values.
+    """
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    start = now - timedelta(minutes=window_minutes)
+    step_hours = window_minutes / 60.0 / max(1, count - 1)
+    samples = []
+    for i in range(count):
+        t = start + timedelta(hours=step_hours * i)
+        value = start_value + slope_per_hour * (step_hours * i)
+        samples.append({"time": t, "raw_value": value})
+    return samples
+
+
+def test_ols_recovers_clean_slope() -> None:
+    """Clean rising series → slope matches generator, r² ≈ 1.0."""
+    samples = _make_rising_series(count=60, slope_per_hour=2.0, start_value=10.0)
+    result = sentinel_mod._ordinary_least_squares(samples)
+    assert result is not None
+    slope, _intercept, r_squared, _last_x, last_value = result
+    assert abs(slope - 2.0) < 1e-6
+    assert r_squared > 0.999
+    assert abs(last_value - samples[-1]["raw_value"]) < 1e-9
+
+
+def test_ols_rejects_constant_series() -> None:
+    """All-constant series → no drift to regress; helper returns None."""
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    samples = [{"time": now - timedelta(minutes=i), "raw_value": 7.0} for i in range(30)]
+    assert sentinel_mod._ordinary_least_squares(samples) is None
+
+
+def test_pick_first_breach_returns_nearest_reachable() -> None:
+    """With two reachable thresholds, pick the one crossed first."""
+    # Value at 10, slope +1/h → alert=15 reached in 5h, trip=25 reached in 15h.
+    pick = sentinel_mod._pick_first_breach(
+        thresholds={"alert": 15.0, "trip": 25.0},
+        last_value=10.0,
+        slope=1.0,
+        horizon_hours=20.0,
+    )
+    assert pick is not None
+    threshold_value, threshold_field, eta = pick
+    assert threshold_value == 15.0
+    assert threshold_field == "alert"
+    assert abs(eta - 5.0) < 1e-9
+
+
+def test_pick_first_breach_rejects_drift_away() -> None:
+    """Rising slope, threshold below current → unreachable."""
+    pick = sentinel_mod._pick_first_breach(
+        thresholds={"low_alert": 5.0},
+        last_value=10.0,
+        slope=1.0,
+        horizon_hours=20.0,
+    )
+    assert pick is None
+
+
+def test_pick_first_breach_rejects_beyond_horizon() -> None:
+    """Reachable threshold but ETA past the horizon window → no forecast."""
+    pick = sentinel_mod._pick_first_breach(
+        thresholds={"alert": 100.0},
+        last_value=10.0,
+        slope=1.0,
+        horizon_hours=12.0,
+    )
+    assert pick is None  # 90 h / 1 h = 90 h > 12 h horizon
+
+
+def test_parse_thresholds_accepts_dict_and_json_and_none() -> None:
+    assert sentinel_mod._parse_thresholds({"alert": 1.0, "trip": 2.0, "note": "x"}) == {
+        "alert": 1.0,
+        "trip": 2.0,
+    }
+    assert sentinel_mod._parse_thresholds('{"alert": 3.5}') == {"alert": 3.5}
+    assert sentinel_mod._parse_thresholds(None) == {}
+    # Booleans are numbers in Python but meaningless as thresholds — skipped.
+    assert sentinel_mod._parse_thresholds({"alert": True}) == {}
+
+
+# -- End-to-end forecast tick -------------------------------------------------
+
+
+class _ForecastFakeConn:
+    """Fake asyncpg connection for ``_forecast_watch_tick`` + friends.
+
+    Two fetch paths:
+      - SELECT ... FROM process_signal_definition JOIN equipment_kb ... → rows
+      - SELECT time, raw_value FROM process_signal_data → samples
+    """
+
+    def __init__(
+        self,
+        *,
+        signals: list[dict[str, Any]],
+        samples_by_signal: dict[int, list[dict[str, Any]]],
+    ) -> None:
+        self._signals = signals
+        self._samples = samples_by_signal
+
+    async def fetch(self, query: str, *args: Any) -> list[dict[str, Any]]:
+        if "FROM process_signal_definition" in query:
+            return list(self._signals)
+        if "FROM process_signal_data" in query:
+            signal_def_id = args[0]
+            return list(self._samples.get(signal_def_id, []))
+        return []
+
+
+@dataclass
+class _ForecastFakePool:
+    conn: _ForecastFakeConn
+
+    def acquire(self) -> "_ForecastFakeCtx":
+        return _ForecastFakeCtx(self.conn)
+
+
+@dataclass
+class _ForecastFakeCtx:
+    conn: _ForecastFakeConn
+
+    async def __aenter__(self) -> _ForecastFakeConn:
+        return self.conn
+
+    async def __aexit__(self, *a: Any) -> None:
+        return None
+
+
+@dataclass
+class _ForecastFakeDB:
+    pool: _ForecastFakePool
+
+
+@pytest.fixture
+def patch_forecast(monkeypatch: pytest.MonkeyPatch):
+    """Inject a fake DB and WS into ``sentinel`` for forecast-watch tests.
+
+    Also clears the module-level debounce dict so each test starts fresh.
+    """
+
+    def _install(
+        *,
+        signals: list[dict[str, Any]],
+        samples_by_signal: dict[int, list[dict[str, Any]]],
+    ) -> tuple[_FakeWS, _ForecastFakeConn]:
+        conn = _ForecastFakeConn(signals=signals, samples_by_signal=samples_by_signal)
+        db_fake = _ForecastFakeDB(pool=_ForecastFakePool(conn))
+        ws = _FakeWS()
+        monkeypatch.setattr(sentinel_mod, "db", db_fake)
+        monkeypatch.setattr(sentinel_mod, "ws_manager", ws)
+        sentinel_mod._forecast_last_emit.clear()
+        return ws, conn
+
+    return _install
+
+
+@pytest.mark.asyncio
+async def test_forecast_tick_emits_warning_on_rising_drift(patch_forecast) -> None:
+    """Rising signal heading toward its alert threshold → one forecast_warning."""
+    # Vibration rising at 0.5 units/h; current ~13; alert=15 → ETA ~4h.
+    samples = _make_rising_series(
+        count=80, slope_per_hour=0.5, start_value=10.0, window_minutes=6 * 60
+    )
+    signals = [
+        {
+            "signal_def_id": 10,
+            "cell_id": 2,
+            "display_name": "Vibration",
+            "kb_threshold_key": "vibration_mm_s",
+            "cell_name": "P-02",
+            "thresholds_json": {"alert": 15.0, "trip": 25.0},
+        }
+    ]
+    ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: samples})
+
+    await sentinel_mod._forecast_watch_tick()
+
+    forecast_events = [e for e in ws.events if e[0] == "forecast_warning"]
+    assert len(forecast_events) == 1
+    _, payload = forecast_events[0]
+    assert payload["cell_id"] == 2
+    assert payload["signal_def_id"] == 10
+    assert payload["signal_name"] == "Vibration"
+    assert payload["threshold_value"] == 15.0
+    assert payload["threshold_field"] == "alert"
+    assert payload["trend"] == "rising"
+    # ETA should be in a sensible band: ~4h, never > horizon.
+    assert 1.0 < payload["eta_hours"] < 12.0
+    assert payload["confidence"] > 0.35
+    assert "projected_breach_at" in payload
+    assert payload["severity"] in {"alert", "trip"}
+
+
+@pytest.mark.asyncio
+async def test_forecast_tick_skips_when_too_few_samples(patch_forecast) -> None:
+    """A signal with < _FORECAST_MIN_SAMPLES rows emits nothing."""
+    short = _make_rising_series(count=5, slope_per_hour=1.0, start_value=10.0)
+    signals = [
+        {
+            "signal_def_id": 10,
+            "cell_id": 2,
+            "display_name": "Vibration",
+            "kb_threshold_key": "vibration_mm_s",
+            "cell_name": "P-02",
+            "thresholds_json": {"alert": 15.0},
+        }
+    ]
+    ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: short})
+
+    await sentinel_mod._forecast_watch_tick()
+    assert [e for e in ws.events if e[0] == "forecast_warning"] == []
+
+
+@pytest.mark.asyncio
+async def test_forecast_tick_skips_flat_series(patch_forecast) -> None:
+    """A constant series has no drift → no forecast, no crash."""
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    flat = [
+        {"time": now - timedelta(minutes=i), "raw_value": 10.0}
+        for i in range(60, 0, -1)
+    ]
+    signals = [
+        {
+            "signal_def_id": 10,
+            "cell_id": 2,
+            "display_name": "Vibration",
+            "kb_threshold_key": "vibration_mm_s",
+            "cell_name": "P-02",
+            "thresholds_json": {"alert": 15.0},
+        }
+    ]
+    ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: flat})
+
+    await sentinel_mod._forecast_watch_tick()
+    assert [e for e in ws.events if e[0] == "forecast_warning"] == []
+
+
+@pytest.mark.asyncio
+async def test_forecast_tick_skips_when_threshold_unreachable(patch_forecast) -> None:
+    """Rising series, but alert threshold is below current value → skip."""
+    samples = _make_rising_series(count=60, slope_per_hour=0.5, start_value=30.0)
+    signals = [
+        {
+            "signal_def_id": 10,
+            "cell_id": 2,
+            "display_name": "Vibration",
+            "kb_threshold_key": "vibration_mm_s",
+            "cell_name": "P-02",
+            # Only a low_alert — the rising series is drifting AWAY from it.
+            "thresholds_json": {"low_alert": 5.0},
+        }
+    ]
+    ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: samples})
+
+    await sentinel_mod._forecast_watch_tick()
+    assert [e for e in ws.events if e[0] == "forecast_warning"] == []
+
+
+@pytest.mark.asyncio
+async def test_forecast_tick_debounces_second_emission(patch_forecast) -> None:
+    """Two back-to-back ticks emit only one forecast_warning per signal."""
+    samples = _make_rising_series(count=80, slope_per_hour=0.5, start_value=10.0)
+    signals = [
+        {
+            "signal_def_id": 10,
+            "cell_id": 2,
+            "display_name": "Vibration",
+            "kb_threshold_key": "vibration_mm_s",
+            "cell_name": "P-02",
+            "thresholds_json": {"alert": 15.0},
+        }
+    ]
+    ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: samples})
+
+    await sentinel_mod._forecast_watch_tick()
+    await sentinel_mod._forecast_watch_tick()
+
+    forecast_events = [e for e in ws.events if e[0] == "forecast_warning"]
+    assert len(forecast_events) == 1

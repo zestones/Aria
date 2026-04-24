@@ -6,7 +6,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from agents.sentinel import sentinel_loop
+from agents.sentinel import forecast_watch_loop, sentinel_loop
 from aria_mcp.server import http_app as mcp_http_app
 from core.config import get_settings
 from core.database import db
@@ -48,15 +48,21 @@ async def lifespan(app: FastAPI):
         # `mcp_client.call_tool()` hits 404 otherwise (MCP HTTP app not
         # yet mounted). See #26 audit comment.
         sentinel_task = asyncio.create_task(sentinel_loop(), name="sentinel")
+        # M9 predictive-alerting loop — sibling to Sentinel. Runs in parallel
+        # and emits ``forecast_warning`` events on projected threshold
+        # breaches within the horizon. See ``agents.sentinel.forecast_watch_loop``.
+        forecast_task = asyncio.create_task(forecast_watch_loop(), name="forecast-watch")
         try:
             yield
         finally:
-            sentinel_task.cancel()
-            try:
-                await sentinel_task
-            except asyncio.CancelledError:
-                pass
-            log.info("Sentinel cancelled")
+            for task in (sentinel_task, forecast_task):
+                task.cancel()
+            for task in (sentinel_task, forecast_task):
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+            log.info("Sentinel + forecast-watch cancelled")
             await db.disconnect()
 
 

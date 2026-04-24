@@ -321,20 +321,138 @@ async def handle_render(name: str, args: dict[str, Any], turn_id: str) -> tuple[
 
     The component name passed to the frontend is the tool name minus the
     ``render_`` prefix (e.g. ``render_signal_chart`` -> ``signal_chart``).
-    Zero DB or side-effect. Public so :mod:`agents.investigator.managed`
-    can reuse it when dispatching ``requires_action`` custom tools.
+    Zero DB or side-effect *except* a best-effort enrichment pass that adds
+    predictive fields (``predicted_mttf_hours`` / ``recommended_action`` /
+    ``past_event_date`` for pattern-match cards) when the LLM has not
+    supplied them. Enrichment is swallowed on error so a misshapen KB row
+    never breaks the broadcast path.
+
+    Public so :mod:`agents.investigator.managed` can reuse it when
+    dispatching ``requires_action`` custom tools.
     """
     component = name.removeprefix("render_")
+    enriched = await _enrich_render_args(component, dict(args))
     await ws_manager.broadcast(
         "ui_render",
         {
             "agent": "investigator",
             "component": component,
-            "props": args,
+            "props": enriched,
             "turn_id": turn_id,
         },
     )
     return "rendered", False
+
+
+def _pattern_match_needs_enrichment(args: dict[str, Any]) -> bool:
+    """Return True when any predictive field on the pattern-match is absent."""
+    if args.get("predicted_mttf_hours") is None:
+        return True
+    if not isinstance(args.get("recommended_action"), str) or not args.get("recommended_action"):
+        return True
+    if not isinstance(args.get("past_event_date"), str) or not args.get("past_event_date"):
+        return True
+    return False
+
+
+async def _fetch_latest_failure(cell_id: int) -> Any:
+    """Best-effort lookup of the most recent ``failure_history`` row for a cell.
+
+    Returns ``None`` on any failure (missing KB, SQL error, connection
+    drop). The UI frame must render whether this succeeds or not.
+    """
+    try:
+        async with db.pool.acquire() as conn:
+            return await conn.fetchrow(
+                """
+                SELECT failure_time, resolved_time, resolution, failure_mode
+                FROM failure_history
+                WHERE cell_id = $1
+                ORDER BY failure_time DESC
+                LIMIT 1
+                """,
+                cell_id,
+            )
+    except Exception:  # noqa: BLE001 — enrichment is best-effort
+        log.exception("pattern_match enrichment lookup failed for cell=%s", cell_id)
+        return None
+
+
+def _compute_mttf_hours(row: Any) -> float | None:
+    """Derive ``predicted_mttf_hours`` from a failure_history row.
+
+    Prefer ``resolved_time - failure_time`` when we have both; otherwise
+    fall back to a conservative 24h default so the card always reads as a
+    forecast, not a bare recognition.
+    """
+    failed_at = row["failure_time"]
+    if failed_at is None:
+        return None
+    resolved_at = row["resolved_time"]
+    if resolved_at is not None and resolved_at > failed_at:
+        delta_hours = (resolved_at - failed_at).total_seconds() / 3600.0
+        if delta_hours > 0:
+            return round(delta_hours, 1)
+    return 24.0
+
+
+def _compose_recommended_action(row: Any) -> str | None:
+    """Build a one-line preventive action from the past incident's resolution."""
+    resolution = row["resolution"]
+    if isinstance(resolution, str) and resolution.strip():
+        first = resolution.strip().split(".")[0].strip()
+        if first:
+            return (first[:160] + "…") if len(first) > 160 else first
+    mode = row["failure_mode"] if isinstance(row["failure_mode"], str) else ""
+    if mode:
+        return f"Inspect for {mode.lower()} before the predicted window closes."
+    return None
+
+
+async def _enrich_pattern_match(args: dict[str, Any]) -> dict[str, Any]:
+    """Populate missing predictive fields on a ``render_pattern_match`` payload.
+
+    Safe to call when all fields are already set — the needs-check exits
+    early and avoids the DB round-trip.
+    """
+    cell_id = args.get("cell_id")
+    if not isinstance(cell_id, int):
+        return args
+    if not _pattern_match_needs_enrichment(args):
+        return args
+
+    row = await _fetch_latest_failure(cell_id)
+    if row is None:
+        return args
+
+    if (
+        not isinstance(args.get("past_event_date"), str) or not args.get("past_event_date")
+    ) and row["failure_time"] is not None:
+        args["past_event_date"] = row["failure_time"].isoformat()
+
+    if args.get("predicted_mttf_hours") is None:
+        mttf = _compute_mttf_hours(row)
+        if mttf is not None:
+            args["predicted_mttf_hours"] = mttf
+
+    if not isinstance(args.get("recommended_action"), str) or not args.get("recommended_action"):
+        action = _compose_recommended_action(row)
+        if action:
+            args["recommended_action"] = action
+
+    return args
+
+
+async def _enrich_render_args(component: str, args: dict[str, Any]) -> dict[str, Any]:
+    """Inject predictive fields derived from ``failure_history`` when absent.
+
+    Currently only touches ``pattern_match`` cards; adding hooks here is
+    the right place for future server-side enrichment of other render_*
+    payloads (e.g. ``signal_chart`` ETA).
+    """
+    if component == "pattern_match":
+        return await _enrich_pattern_match(args)
+    return args
 
 
 async def handle_submit_rca(

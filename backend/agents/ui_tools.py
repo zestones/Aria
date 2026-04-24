@@ -102,9 +102,32 @@ RENDER_SIGNAL_CHART: dict[str, Any] = {
                 "type": "number",
                 "description": "Optional alert threshold to render as a horizontal rule.",
             },
+            "predicted_breach_hours": {
+                "type": "number",
+                "description": (
+                    "Optional server-computed hours until the signal is forecast to "
+                    "cross its threshold at the current drift rate. Populated by "
+                    "the orchestrator from the forecast-watch regression; the "
+                    "frontend also computes a local projection but will defer to "
+                    "this value if provided."
+                ),
+            },
+            "trend": {
+                "type": "string",
+                "enum": ["rising", "falling", "flat", "unknown"],
+                "description": (
+                    "Optional server-computed trend direction of the recent tail. "
+                    "The frontend uses it as the trend caption instead of its "
+                    "local estimate when present."
+                ),
+            },
         },
         "required": ["cell_id", "signal_def_id"],
-        "additionalProperties": False,
+        # Permit server-side enrichment fields (``predicted_breach_hours``,
+        # ``trend``) that the orchestrator injects after the LLM tool call.
+        # See :func:`agents.investigator.service.handle_render` and
+        # :func:`agents.qa.tool_dispatch.handle_render`.
+        "additionalProperties": True,
     },
 }
 
@@ -212,7 +235,10 @@ RENDER_PATTERN_MATCH: dict[str, Any] = {
     "description": (
         "Render a side-by-side comparison of the current anomaly event against "
         "a similar historical event. Use this when a past failure pattern "
-        "strongly matches the current situation to support the diagnosis."
+        "strongly matches the current situation to support the diagnosis. "
+        "The orchestrator will server-side enrich the call with predictive "
+        "fields (``predicted_mttf_hours``, ``recommended_action``, "
+        "``past_event_date``) derived from ``failure_history`` if absent."
     ),
     "input_schema": {
         "type": "object",
@@ -235,9 +261,37 @@ RENDER_PATTERN_MATCH: dict[str, Any] = {
                 "maximum": 1,
                 "description": "Similarity score between 0 and 1.",
             },
+            "predicted_mttf_hours": {
+                "type": "number",
+                "description": (
+                    "Optional estimated hours to failure based on the matched past "
+                    "incident's time-to-resolution. Populated by the orchestrator "
+                    "if absent."
+                ),
+            },
+            "recommended_action": {
+                "type": "string",
+                "description": (
+                    "Optional one-line preventive action the operator should take "
+                    "now. Populated by the orchestrator from the past incident's "
+                    "resolution if absent."
+                ),
+            },
+            "past_event_date": {
+                "type": "string",
+                "format": "date-time",
+                "description": (
+                    "Optional ISO-8601 timestamp of the past incident. Populated "
+                    "by the orchestrator from ``failure_history.failure_time`` if "
+                    "absent."
+                ),
+            },
         },
         "required": ["cell_id", "current_event", "past_event_ref", "similarity"],
-        "additionalProperties": False,
+        # Permit server-side enrichment fields injected by the orchestrator
+        # after the LLM tool call. See :func:`enrich_render_args` in
+        # :mod:`agents.investigator.service`.
+        "additionalProperties": True,
     },
 }
 

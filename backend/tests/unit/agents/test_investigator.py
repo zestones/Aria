@@ -699,14 +699,17 @@ async def test_llm_call_enables_thinking_and_streams_thinking_delta(
     # Final message returned verbatim (signed-thinking-block preservation).
     assert result is final
 
-    # Extended thinking enabled with the documented budget.
+    # Extended thinking enabled in adaptive + summarized mode (#62fd942).
+    # The Investigator switched from the fixed-budget ``{type:"enabled",
+    # budget_tokens:N}`` shape to ``{type:"adaptive", display:"summarized"}``
+    # so Opus 4.7 controls the think-budget dynamically; the test tracks the
+    # production config rather than a stale budget constant.
     assert stream.kwargs["thinking"] == {
-        "type": "enabled",
-        "budget_tokens": inv._THINKING_BUDGET,
+        "type": "adaptive",
+        "display": "summarized",
     }
-    # max_tokens leaves room above the thinking budget (Anthropic requires
-    # max_tokens > thinking.budget_tokens).
-    assert stream.kwargs["max_tokens"] > inv._THINKING_BUDGET
+    # max_tokens still leaves headroom for thinking output.
+    assert stream.kwargs["max_tokens"] >= inv._THINKING_BUDGET
 
     # Exactly two thinking_delta frames broadcast — text_delta does NOT fan out.
     deltas = [(t, p) for t, p in ws.events if t == "thinking_delta"]
