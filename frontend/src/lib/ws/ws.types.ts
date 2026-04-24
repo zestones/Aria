@@ -17,6 +17,32 @@ export type EventBusMap = {
         severity: "alert" | "trip";
         direction: "high" | "low";
     };
+    /**
+     * M9 predictive-alerting loop. Emitted by `agents.sentinel.forecast_watch_loop`
+     * when a linear regression on the last 6h of a monitored signal projects
+     * the signal to cross its threshold within 12h at the current drift rate.
+     *
+     * Unlike `anomaly_detected`, no work order is opened — the warning is
+     * advisory. The frontend surfaces it in the same banner as a real anomaly
+     * but with a "forecast" tone to keep the two semantically distinct.
+     */
+    forecast_warning: {
+        cell_id: number;
+        cell_name: string;
+        signal_def_id: number;
+        signal_name: string;
+        current_value: number;
+        threshold_value: number;
+        threshold_field: string;
+        slope_per_hour: number;
+        confidence: number;
+        eta_hours: number;
+        trend: "rising" | "falling";
+        severity: "alert" | "trip";
+        projected_breach_at: string;
+        detected_at: string;
+        turn_id?: string;
+    };
     tool_call_started: {
         agent: string;
         tool_name: string;
