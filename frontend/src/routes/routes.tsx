@@ -4,8 +4,6 @@ import { WorkOrderDetail, WorkOrderList } from "../features/work-orders";
 import {
     AnomaliesPage,
     ControlRoomPage,
-    DataPage,
-    DesignPage,
     LogbookPage,
     LoginPage,
     OnboardingPage,
@@ -18,7 +16,6 @@ export function AppRoutes() {
     return (
         <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/design" element={<DesignPage />} />
             <Route
                 path="/workspace"
                 element={
@@ -41,7 +38,6 @@ export function AppRoutes() {
                 <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
                 <Route path="/logbook" element={<LogbookPage />} />
                 <Route path="/shifts" element={<ShiftsPage />} />
-                <Route path="/data" element={<DataPage />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/onboarding/:session_id" element={<OnboardingPage />} />
             </Route>

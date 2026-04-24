@@ -53,14 +53,6 @@ const NAV_GROUPS: NavGroup[] = [
             { to: "/onboarding", label: "Onboarding", icon: Icons.Upload },
         ],
     },
-    {
-        id: "internal",
-        label: "Internal",
-        items: [
-            { to: "/data", label: "Data inspector", icon: Icons.Database, devOnly: true },
-            { to: "/design", label: "Design system", icon: Icons.Layers, devOnly: true },
-        ],
-    },
 ];
 
 export interface SidebarProps {

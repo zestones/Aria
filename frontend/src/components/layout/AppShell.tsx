@@ -14,7 +14,6 @@ import {
     KpiBar,
     validateEquipmentSelection,
 } from "../../features/control-room";
-import { DemoReplayButton } from "../../features/demo";
 import type { EquipmentSelection } from "../../lib/hierarchy";
 import { useLocalStorage } from "../../lib/useLocalStorage";
 import { DRAWER_DEFAULT_WIDTH, DRAWER_MAX_WIDTH, DRAWER_MIN_WIDTH, Drawer } from "./Drawer";
@@ -180,7 +179,6 @@ export function AppShell() {
                     </Drawer>
                 </div>
             </div>
-            {import.meta.env.DEV && <DemoReplayButton />}
             <AgentConstellation
                 open={constellationOpen}
                 onClose={() => setConstellationOpen(false)}
