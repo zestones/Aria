@@ -71,11 +71,12 @@ async def _llm_call(
     """
     async with anthropic.messages.stream(
         model=model_for("reasoning"),
-        thinking={"type": "enabled", "budget_tokens": _THINKING_BUDGET},
+        thinking={"type": "adaptive", "display": "summarized"},
         system=system,
         messages=cast(Any, messages),
         tools=cast(Any, tools),
         max_tokens=_MAX_TOKENS,
+        extra_body={"output_config": {"effort": "high"}},
     ) as stream:
         async for raw_event in stream:
             # The MessageStreamEvent union has many variants; pyright would
