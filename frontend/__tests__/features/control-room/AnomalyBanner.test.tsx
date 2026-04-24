@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useChatStore } from "@/features/chat/chatStore";
 import { AnomalyBanner, buildInvestigatePrompt, formatRelativeTime } from "@/features/control-room/AnomalyBanner";
@@ -16,7 +17,13 @@ function makeClient(): QueryClient {
 }
 
 function withClient(ui: ReactNode) {
-    return <QueryClientProvider client={makeClient()}>{ui}</QueryClientProvider>;
+    // ``MemoryRouter`` is required because the Discuss CTA uses
+    // ``useNavigate`` to deep-link to the underlying work-order page.
+    return (
+        <QueryClientProvider client={makeClient()}>
+            <MemoryRouter>{ui}</MemoryRouter>
+        </QueryClientProvider>
+    );
 }
 
 function anomalyFixture(overrides: Partial<AnomalyEvent> = {}): AnomalyEvent {

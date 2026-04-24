@@ -372,8 +372,7 @@ export function SignalChart(props: SignalChartProps) {
         serverBreachHours !== undefined && serverBreachHours >= 0
             ? serverBreachHours
             : forecast.etaHours;
-    const effectiveTrend =
-        serverTrend && serverTrend !== "unknown" ? serverTrend : forecast.trend;
+    const effectiveTrend = serverTrend && serverTrend !== "unknown" ? serverTrend : forecast.trend;
     const etaSource: "server" | "local" | "none" =
         serverBreachHours !== undefined && serverBreachHours >= 0
             ? "server"

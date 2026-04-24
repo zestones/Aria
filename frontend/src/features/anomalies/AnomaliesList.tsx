@@ -161,6 +161,10 @@ export function AnomaliesList() {
             triggeredAt: row.trigger_anomaly_time ?? row.created_at,
             woId: row.id,
         });
+        // Open the underlying work order page first so the operator lands
+        // on the artefact context, then surface the chat drawer with a
+        // prefilled prompt for QA / Investigator follow-up.
+        navigate(`/work-orders/${row.id}`);
         requestDrawerOpen();
         sendMessage(prompt);
         requestFocus();
@@ -363,7 +367,7 @@ function Row({ row, signalLabel, onOpen, onInvestigate }: RowProps) {
                             onClick={onInvestigate}
                             data-testid={`anomaly-row-investigate-${row.id}`}
                         >
-                            Investigate
+                            Discuss
                         </Button>
                     )}
                     <Button

@@ -22,6 +22,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { AlertCircle, AlertTriangle, X } from "../../components/ui/icons";
 import { fadeInUp } from "../../components/ui/motion";
@@ -246,7 +247,7 @@ function BannerBody({ item, count, signalLabel, onDismiss, onInvestigate }: Bann
                     onClick={() => onInvestigate(investigatePrompt)}
                     data-testid="anomaly-banner-investigate"
                 >
-                    {item.kind === "forecast" ? "Assess" : "Investigate"}
+                    {item.kind === "forecast" ? "Assess" : "Discuss"}
                 </Button>
                 <Button
                     size="sm"
@@ -310,6 +311,7 @@ export function AnomalyBanner({
     const sendMessage = useChatStore((s) => s.sendMessage);
     const requestFocus = useChatStore((s) => s.requestFocus);
     const requestDrawerOpen = useChatDrawerOpener((s) => s.requestOpen);
+    const navigate = useNavigate();
 
     // Head is the first real anomaly if any; otherwise the first forecast.
     // The signal-label hook must fetch definitions for whichever cell owns
@@ -365,6 +367,13 @@ export function AnomalyBanner({
     }, [head, stream, forecastStream]);
 
     const handleInvestigate = (prompt: string) => {
+        // Real anomalies always carry a ``work_order_id`` (Sentinel inserts
+        // the WO before broadcasting). Forecasts don't open a WO so we skip
+        // navigation and only open the chat — the prompt itself frames it as
+        // an advisory "assess" turn.
+        if (head?.kind === "anomaly" && head.event.work_order_id) {
+            navigate(`/work-orders/${head.event.work_order_id}`);
+        }
         // Make sure the chat drawer is visible before sending — AppShell
         // subscribes to ``useChatDrawerOpener`` and flips its drawer state to
         // open the next tick. Then send + focus.
