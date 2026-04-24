@@ -1,0 +1,220 @@
+/* Print layout for WorkOrder (M9.1). Print mode is an explicit exception to
+   DESIGN_PLAN §2 — black-on-white is mandatory for paper.
+   
+   The `.printable-work-order` article is rendered via React Portal
+   (see WorkOrderDetail.tsx) as a direct child of <body>, so the AppShell
+   grid / flex / viewport-height chain is completely out of the printed
+   pagination's way. On screen the portal root stays hidden; under
+   @media print, we hide every other body child and show the portal. */
+
+.printable-work-order {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 12mm 12mm;
+    }
+
+    html,
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+
+    /* Hide every direct child of <body> except the portaled printable.
+       Because the printable is a sibling of #root (not a descendant),
+       we don't have to neutralize any ancestor — just suppress siblings. */
+    body > *:not(.printable-work-order) {
+        display: none !important;
+    }
+
+    .printable-work-order {
+        display: block !important;
+        position: static;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+        color: #000000;
+        font-family: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+        font-size: 11pt;
+        line-height: 1.45;
+    }
+
+    .pw-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16pt;
+        padding-bottom: 10pt;
+        border-bottom: 1pt solid #000000;
+    }
+
+    .pw-title {
+        font-size: 18pt;
+        font-weight: 700;
+        margin: 0 0 3pt 0;
+        letter-spacing: -0.01em;
+    }
+
+    .pw-subtitle {
+        font-size: 10pt;
+        margin: 0;
+        color: #333333;
+    }
+
+    .pw-header-right {
+        text-align: right;
+    }
+
+    .pw-brand {
+        font-size: 12pt;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.02em;
+    }
+
+    .pw-date {
+        font-size: 9pt;
+        margin: 2pt 0 0 0;
+        color: #333333;
+    }
+
+    .pw-meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10pt 24pt;
+        margin: 12pt 0;
+        padding-bottom: 10pt;
+        border-bottom: 0.5pt solid #888888;
+    }
+
+    .pw-field {
+        display: flex;
+        flex-direction: column;
+        gap: 2pt;
+    }
+
+    .pw-field-label {
+        font-size: 8pt;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #555555;
+    }
+
+    .pw-field-value {
+        font-size: 11pt;
+        font-weight: 500;
+        color: #000000;
+    }
+
+    .pw-section {
+        margin: 10pt 0;
+        /* Let the browser paginate naturally — the earlier `break-inside:
+           avoid` pushed whole sections to new pages when they were a few
+           millimetres too tall, creating awkward whitespace. */
+        break-inside: auto;
+        page-break-inside: auto;
+    }
+
+    .pw-section:last-of-type {
+        margin-bottom: 0 !important;
+    }
+
+    .pw-section-title {
+        font-size: 12pt;
+        font-weight: 600;
+        margin: 0 0 6pt 0;
+        padding-bottom: 3pt;
+        border-bottom: 0.5pt solid #888888;
+    }
+
+    .pw-paragraph {
+        font-size: 11pt;
+        margin: 0;
+        white-space: pre-wrap;
+    }
+
+    .pw-ordered,
+    .pw-bulleted {
+        font-size: 11pt;
+        margin: 0;
+        padding-left: 18pt;
+    }
+
+    .pw-ordered li,
+    .pw-bulleted li {
+        margin: 2pt 0;
+    }
+
+    .pw-signoff {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14pt 24pt;
+        margin-top: 4pt;
+    }
+
+    .pw-signoff-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4pt;
+    }
+
+    .pw-signoff-label {
+        font-size: 9pt;
+        color: #555555;
+    }
+
+    .pw-signoff-line {
+        display: block;
+        height: 1.2em;
+        border-bottom: 0.75pt solid #000000;
+    }
+
+    .pw-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16pt;
+        margin-top: 8pt;
+        padding-top: 6pt;
+        border-top: 0.5pt solid #888888;
+    }
+
+    .pw-footer-title {
+        font-size: 9pt;
+        font-weight: 600;
+        margin: 0 0 2pt 0;
+        color: #333333;
+    }
+
+    .pw-footer-url {
+        font-size: 10pt;
+        margin: 0;
+        font-family: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, Menlo, monospace;
+        color: #000000;
+    }
+
+    .pw-qr {
+        width: 26mm;
+        height: 26mm;
+        border: 0.5pt solid #000000;
+    }
+
+    /* Belt + suspenders: zero trailing space on the footer and tell the
+       print engine not to paginate after it, so a 1-2mm overflow can't
+       trigger a blank trailing page. */
+    .printable-work-order > *:last-child {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+}

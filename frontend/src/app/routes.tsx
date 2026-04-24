@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import RequireAuth from "../components/RequireAuth";
+import { WorkOrderDetail, WorkOrderList } from "../features/work-orders";
 import ControlRoomPage from "../pages/ControlRoomPage";
 import DataPage from "../pages/DataPage";
 import DesignPage from "../pages/DesignPage";
@@ -44,6 +45,8 @@ export function AppRoutes() {
                 }
             >
                 <Route path="/control-room" element={<ControlRoomPage />} />
+                <Route path="/work-orders" element={<WorkOrderList />} />
+                <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
             </Route>
             <Route path="/" element={<Navigate to="/control-room" replace />} />
             <Route path="*" element={<Navigate to="/control-room" replace />} />

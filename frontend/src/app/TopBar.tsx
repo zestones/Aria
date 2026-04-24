@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { AriaMark, Icons, KbdKey, StatusDot, ThemeToggle } from "../design-system";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { EquipmentPicker } from "./EquipmentPicker";
@@ -30,6 +31,9 @@ export interface TopBarProps {
     kpiSlot?: React.ReactNode;
 }
 
+const NAV_BASE_CLASS =
+    "inline-flex h-8 items-center gap-1.5 rounded-[var(--ds-radius-sm)] px-2.5 text-[var(--ds-text-sm)] font-medium transition-colors duration-[var(--ds-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]";
+
 export function TopBar({
     selection,
     onSelectionChange,
@@ -53,6 +57,35 @@ export function TopBar({
             <div className="h-5 w-px flex-none bg-[var(--ds-border)]" aria-hidden />
 
             <EquipmentPicker selection={selection} onChange={onSelectionChange} />
+
+            <nav className="flex items-center gap-1" aria-label="Primary">
+                <NavLink
+                    to="/control-room"
+                    className={({ isActive }) =>
+                        `${NAV_BASE_CLASS} ${
+                            isActive
+                                ? "bg-[var(--ds-accent-soft)] text-[var(--ds-accent)]"
+                                : "text-[var(--ds-fg-muted)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)]"
+                        }`
+                    }
+                >
+                    <Icons.Gauge className="size-4" aria-hidden />
+                    Control room
+                </NavLink>
+                <NavLink
+                    to="/work-orders"
+                    className={({ isActive }) =>
+                        `${NAV_BASE_CLASS} ${
+                            isActive
+                                ? "bg-[var(--ds-accent-soft)] text-[var(--ds-accent)]"
+                                : "text-[var(--ds-fg-muted)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)]"
+                        }`
+                    }
+                >
+                    <Icons.Wrench className="size-4" aria-hidden />
+                    Work orders
+                </NavLink>
+            </nav>
 
             <div className="min-w-0 flex-1" data-kpi-slot>
                 {kpiSlot}
