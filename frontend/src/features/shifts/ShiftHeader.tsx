@@ -66,7 +66,7 @@ export function ShiftHeader({ data, isLoading, isError }: ShiftHeaderProps) {
     }
 
     return (
-        <Card padding="lg" rail="nominal" railPulse={false}>
+        <Card padding="lg">
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
                 <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
