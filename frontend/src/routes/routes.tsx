@@ -8,6 +8,7 @@ import {
     DesignPage,
     LoginPage,
     OnboardingPage,
+    WorkspacePage,
 } from "../pages";
 import RequireAuth from "./auth-guards";
 
@@ -17,6 +18,18 @@ export function AppRoutes() {
             {/* Public / unauthenticated surfaces — render bare, no shell. */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/design" element={<DesignPage />} />
+
+            {/* Full-screen Agent Workspace — deliberately rendered
+                outside AppShell so the artifact canvas owns the entire
+                viewport. Auth-gated like the rest of the app. */}
+            <Route
+                path="/workspace"
+                element={
+                    <RequireAuth>
+                        <WorkspacePage />
+                    </RequireAuth>
+                }
+            />
 
             {/* Single global shell for every authenticated page. Mirrors the
                 IAP pattern (RequireAuth wraps AppLayout once) so Sidebar +

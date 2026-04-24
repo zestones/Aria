@@ -3,6 +3,7 @@ import {
     Activity as RawActivity,
     AlertCircle as RawAlertCircle,
     AlertTriangle as RawAlertTriangle,
+    ArrowLeft as RawArrowLeft,
     ArrowRight as RawArrowRight,
     Building2 as RawBuilding2,
     Check as RawCheck,
@@ -24,6 +25,7 @@ import {
     Layers as RawLayers,
     LogOut as RawLogOut,
     MapPin as RawMapPin,
+    Maximize2 as RawMaximize2,
     MessageCircle as RawMessageCircle,
     MessageSquare as RawMessageSquare,
     Monitor as RawMonitor,
@@ -65,6 +67,7 @@ function styled(Raw: LucideIcon, name: string) {
 export const Activity = styled(RawActivity, "Activity");
 export const AlertCircle = styled(RawAlertCircle, "AlertCircle");
 export const AlertTriangle = styled(RawAlertTriangle, "AlertTriangle");
+export const ArrowLeft = styled(RawArrowLeft, "ArrowLeft");
 export const ArrowRight = styled(RawArrowRight, "ArrowRight");
 export const Building2 = styled(RawBuilding2, "Building2");
 export const Check = styled(RawCheck, "Check");
@@ -85,6 +88,7 @@ export const Gauge = styled(RawGauge, "Gauge");
 export const GitBranch = styled(RawGitBranch, "GitBranch");
 export const Layers = styled(RawLayers, "Layers");
 export const LogOut = styled(RawLogOut, "LogOut");
+export const Maximize2 = styled(RawMaximize2, "Maximize2");
 export const MapPin = styled(RawMapPin, "MapPin");
 export const MessageCircle = styled(RawMessageCircle, "MessageCircle");
 export const MessageSquare = styled(RawMessageSquare, "MessageSquare");

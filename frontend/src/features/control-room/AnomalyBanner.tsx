@@ -29,15 +29,40 @@ import { useChatDrawerOpener } from "../chat/chatDrawerStore";
 import { useChatStore } from "../chat/chatStore";
 import type { AnomalyEvent } from "./useAnomalyStream";
 import { useAnomalyStream } from "./useAnomalyStream";
+import type { ForecastEvent } from "./useForecastStream";
+import { useForecastStream } from "./useForecastStream";
 import { useSignalDefinitions } from "./useSignalDefinitions";
 
 type Severity = AnomalyEvent["severity"];
 
-function severityTone(severity: Severity): {
+/**
+ * Unified banner item — either a real breach (Sentinel) or a projected
+ * breach (forecast-watch). We tag at the source so the banner can branch
+ * on copy and tone without inspecting payload shape.
+ */
+type BannerItem =
+    | { kind: "anomaly"; event: AnomalyEvent; stamp: number }
+    | { kind: "forecast"; event: ForecastEvent; stamp: number };
+
+function severityTone(
+    severity: Severity,
+    kind: BannerItem["kind"],
+): {
     accentVar: string;
     fgVar: string;
     Icon: typeof AlertTriangle;
 } {
+    if (kind === "forecast") {
+        // Forecasts are advisory — use a cooler, lower-saturation tone even
+        // when severity is "trip", so judges read them as "warning ahead",
+        // not "pipe bursting right now". `--accent-arc` is the same token
+        // the SignalChart forecast line uses — visual rhyme intended.
+        return {
+            accentVar: "var(--accent-arc)",
+            fgVar: "var(--accent-arc)",
+            Icon: AlertTriangle,
+        };
+    }
     if (severity === "trip") {
         return {
             accentVar: "var(--destructive)",
@@ -50,6 +75,12 @@ function severityTone(severity: Severity): {
         fgVar: "var(--warning)",
         Icon: AlertTriangle,
     };
+}
+
+function formatEta(hours: number): string {
+    if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
+    if (hours < 48) return `${hours < 10 ? hours.toFixed(1) : Math.round(hours)} h`;
+    return `${(hours / 24).toFixed(hours < 24 * 10 ? 1 : 0)} days`;
 }
 
 /**
@@ -86,29 +117,76 @@ export function buildInvestigatePrompt(args: {
     );
 }
 
+/** Prompt handed to the chat when the operator clicks "Investigate" on a
+ *  forecast warning. Distinct from the breach prompt — we want the agent to
+ *  frame this as a drift projection, not a failure post-mortem. */
+export function buildForecastPrompt(args: { event: ForecastEvent; signalLabel: string }): string {
+    const { event, signalLabel } = args;
+    const eta = formatEta(event.eta_hours);
+    const confidencePct = Math.round(event.confidence * 100);
+    return (
+        `Forecast breach on Cell ${event.cell_id}: ${signalLabel} is ${event.trend} toward ` +
+        `its ${event.threshold_field} threshold (${event.current_value} → ${event.threshold_value}) ` +
+        `in ~${eta} at the current drift rate (regression confidence ${confidencePct}%). ` +
+        `Assess whether a preventive investigation or maintenance window is warranted now.`
+    );
+}
+
 interface BannerBodyProps {
-    event: AnomalyEvent;
+    item: BannerItem;
     count: number;
     signalLabel: string;
     onDismiss: () => void;
     onInvestigate: (prompt: string) => void;
 }
 
-function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: BannerBodyProps) {
-    const { accentVar, fgVar, Icon } = severityTone(event.severity);
-    const relativeTime = formatRelativeTime(event.receivedAt);
+function BannerBody({ item, count, signalLabel, onDismiss, onInvestigate }: BannerBodyProps) {
+    const { accentVar, fgVar, Icon } = severityTone(item.event.severity, item.kind);
+    const relativeTime = formatRelativeTime(
+        item.kind === "anomaly" ? item.event.receivedAt : item.event.receivedAt,
+    );
 
-    const description = `Cell ${event.cell_id} · ${signalLabel} ${event.direction} of threshold (${event.value} vs ${event.threshold})`;
+    const description =
+        item.kind === "anomaly"
+            ? `Cell ${item.event.cell_id} · ${signalLabel} ${item.event.direction} of threshold (${item.event.value} vs ${item.event.threshold})`
+            : // Forecast copy is deliberately forward-looking: "will breach",
+              // not "breached". The ETA is the headline — that is what makes
+              // the banner *predictive* rather than reactive.
+              `Cell ${item.event.cell_id} · ${signalLabel} forecast to breach ` +
+              `${item.event.threshold_field} (${item.event.current_value} → ${item.event.threshold_value}) ` +
+              `in ~${formatEta(item.event.eta_hours)}`;
+
+    const kindLabel =
+        item.kind === "forecast"
+            ? `Forecast · ${Math.round(item.event.confidence * 100)}% confidence`
+            : null;
 
     // `color-mix` tint — very subtle surface, tokens only.
     const background = `color-mix(in oklab, ${accentVar} 12%, var(--card))`;
 
+    const ariaLive =
+        item.kind === "anomaly"
+            ? item.event.severity === "trip"
+                ? "assertive"
+                : "polite"
+            : "polite"; // forecasts never barge in — they are advisory.
+
+    const investigatePrompt =
+        item.kind === "anomaly"
+            ? buildInvestigatePrompt({
+                  event: item.event,
+                  signalLabel,
+                  relativeTime,
+              })
+            : buildForecastPrompt({ event: item.event, signalLabel });
+
     return (
         <motion.div
-            key={event.id}
+            key={item.event.id}
             role="alert"
-            aria-live={event.severity === "trip" ? "assertive" : "polite"}
-            data-severity={event.severity}
+            aria-live={ariaLive}
+            data-kind={item.kind}
+            data-severity={item.event.severity}
             data-testid="anomaly-banner"
             variants={fadeInUp}
             initial="hidden"
@@ -129,6 +207,19 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
             />
 
             <Icon size={16} style={{ color: fgVar }} aria-hidden="true" />
+
+            {kindLabel && (
+                <span
+                    className="whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest"
+                    style={{
+                        borderColor: accentVar,
+                        color: fgVar,
+                    }}
+                    data-testid="anomaly-banner-kind"
+                >
+                    {kindLabel}
+                </span>
+            )}
 
             <span
                 className="text-sm font-medium text-foreground truncate"
@@ -152,24 +243,16 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
                 <Button
                     size="sm"
                     variant="default"
-                    onClick={() =>
-                        onInvestigate(
-                            buildInvestigatePrompt({
-                                event,
-                                signalLabel,
-                                relativeTime,
-                            }),
-                        )
-                    }
+                    onClick={() => onInvestigate(investigatePrompt)}
                     data-testid="anomaly-banner-investigate"
                 >
-                    Investigate
+                    {item.kind === "forecast" ? "Assess" : "Investigate"}
                 </Button>
                 <Button
                     size="sm"
                     variant="ghost"
                     onClick={onDismiss}
-                    aria-label="Dismiss anomaly"
+                    aria-label={item.kind === "forecast" ? "Dismiss forecast" : "Dismiss anomaly"}
                     data-testid="anomaly-banner-dismiss"
                     className="px-2"
                 >
@@ -182,10 +265,14 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
 
 export interface AnomalyBannerProps {
     /**
-     * Test seam — override the stream to feed a fixed anomaly list without
+     * Test seam — override the anomaly stream to feed a fixed list without
      * mocking the WS runtime. Production mount passes nothing.
      */
     streamOverride?: ReturnType<typeof useAnomalyStream>;
+    /**
+     * Test seam — override the forecast stream. Production mount passes nothing.
+     */
+    forecastStreamOverride?: ReturnType<typeof useForecastStream>;
     /**
      * Test seam — override the signal-label lookup. Production mount passes
      * nothing; the hook fetches from `/signals/definitions`.
@@ -194,54 +281,88 @@ export interface AnomalyBannerProps {
 }
 
 /**
- * Sticky under-TopBar anomaly banner. Renders nothing (zero DOM) when the
- * stream has no active events, so it does not reserve vertical space.
+ * Sticky under-TopBar anomaly + forecast banner. Renders nothing (zero DOM)
+ * when both streams are empty, so it does not reserve vertical space.
  *
  * Consumes:
- *  - `useAnomalyStream()` for the event list + dismiss handlers
- *  - `useChatStore()` for the Investigate CTA (`sendMessage` + `requestFocus`)
- *  - `useSignalDefinitions(cellId)` so the text shows `flow_rate` rather than
- *    `Signal #11`; falls back cleanly if the fetch fails.
+ *  - `useAnomalyStream()` — real threshold breaches (Sentinel)
+ *  - `useForecastStream()` — projected breaches (forecast-watch, M9)
+ *  - `useChatStore()` for the Investigate/Assess CTA
+ *  - `useSignalDefinitions(cellId)` so the text shows `flow_rate` rather
+ *    than `Signal #11`; falls back cleanly if the fetch fails.
+ *
+ * **Merge rule**: real anomalies always win the head slot over forecasts —
+ * a breach that has actually happened is more urgent than a projection.
+ * Within each group, newest-first. The "+N more" count reflects the union
+ * of both streams so operators know how many alerts are queued regardless
+ * of kind.
  */
 export function AnomalyBanner({
     streamOverride,
+    forecastStreamOverride,
     resolveSignalLabelOverride,
 }: AnomalyBannerProps = {}) {
     const streamFromHook = useAnomalyStream();
+    const forecastFromHook = useForecastStream();
     const stream = streamOverride ?? streamFromHook;
+    const forecastStream = forecastStreamOverride ?? forecastFromHook;
 
     const sendMessage = useChatStore((s) => s.sendMessage);
     const requestFocus = useChatStore((s) => s.requestFocus);
     const requestDrawerOpen = useChatDrawerOpener((s) => s.requestOpen);
 
-    const latest = stream.latest;
-    const cellId = latest?.cell_id;
-    const signalDefs = useSignalDefinitions(cellId ?? null);
-    const signalLabel = useMemo(() => {
-        if (!latest) return "";
-        if (resolveSignalLabelOverride) return resolveSignalLabelOverride(latest.signal_def_id);
-        return signalDefs.resolve(latest.signal_def_id) ?? `Signal #${latest.signal_def_id}`;
-    }, [latest, resolveSignalLabelOverride, signalDefs]);
+    // Head is the first real anomaly if any; otherwise the first forecast.
+    // The signal-label hook must fetch definitions for whichever cell owns
+    // the head item, so we resolve it per-render.
+    const head: BannerItem | null = useMemo(() => {
+        if (stream.latest) {
+            return { kind: "anomaly", event: stream.latest, stamp: stream.latest.receivedAt };
+        }
+        if (forecastStream.latest) {
+            return {
+                kind: "forecast",
+                event: forecastStream.latest,
+                stamp: forecastStream.latest.receivedAt,
+            };
+        }
+        return null;
+    }, [stream.latest, forecastStream.latest]);
 
-    // ESC → dismiss the head anomaly. Only wire while the banner is rendered.
+    const totalCount = stream.count + forecastStream.count;
+
+    const headCellId = head?.event.cell_id;
+    const signalDefs = useSignalDefinitions(headCellId ?? null);
+    const signalLabel = useMemo(() => {
+        if (!head) return "";
+        if (resolveSignalLabelOverride) {
+            return resolveSignalLabelOverride(head.event.signal_def_id);
+        }
+        const fromDefs = signalDefs.resolve(head.event.signal_def_id);
+        if (fromDefs) return fromDefs;
+        // Forecast payloads always carry a `signal_name`; prefer it over the
+        // generic `Signal #X` fallback for a cleaner banner on fresh mounts.
+        if (head.kind === "forecast" && head.event.signal_name) return head.event.signal_name;
+        return `Signal #${head.event.signal_def_id}`;
+    }, [head, resolveSignalLabelOverride, signalDefs]);
+
+    // ESC → dismiss the head item from whichever stream it came from.
     useEffect(() => {
-        if (!latest) return;
+        if (!head) return;
+        const dismissHead =
+            head.kind === "anomaly" ? stream.dismissLatest : forecastStream.dismissLatest;
         const onKey = (e: KeyboardEvent) => {
             if (e.key !== "Escape") return;
-            // Don't hijack ESC when the user is typing — mirrors AppShell's
-            // isTypingTarget guard. Keeping it local to avoid a shared util
-            // for M7.3 scope.
             const target = e.target;
             if (target instanceof HTMLElement) {
                 const tag = target.tagName;
                 if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
                 if (target.isContentEditable) return;
             }
-            stream.dismissLatest();
+            dismissHead();
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [latest, stream]);
+    }, [head, stream, forecastStream]);
 
     const handleInvestigate = (prompt: string) => {
         // Make sure the chat drawer is visible before sending — AppShell
@@ -251,6 +372,9 @@ export function AnomalyBanner({
         sendMessage(prompt);
         requestFocus();
     };
+
+    const dismissHead =
+        head?.kind === "forecast" ? forecastStream.dismissLatest : stream.dismissLatest;
 
     return (
         <div
@@ -262,13 +386,13 @@ export function AnomalyBanner({
             className="sticky top-0 z-30"
         >
             <AnimatePresence mode="wait" initial={false}>
-                {latest ? (
+                {head ? (
                     <BannerBody
-                        key={latest.id}
-                        event={latest}
-                        count={stream.count}
+                        key={head.event.id}
+                        item={head}
+                        count={totalCount}
                         signalLabel={signalLabel}
-                        onDismiss={stream.dismissLatest}
+                        onDismiss={dismissHead}
                         onInvestigate={handleInvestigate}
                     />
                 ) : null}

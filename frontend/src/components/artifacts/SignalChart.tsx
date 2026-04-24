@@ -331,7 +331,7 @@ export function SignalChart(props: SignalChartProps) {
     // Loading — sober text, no shimmer (§9).
     if (isLoading) {
         return (
-            <div className="flex h-[200px] w-full max-w-[400px] items-center justify-center rounded-lg border border-border bg-card">
+            <div className="flex h-[240px] w-full items-center justify-center rounded-2xl border border-border bg-card shadow-card">
                 <span className="text-xs text-muted-foreground">Loading signal…</span>
             </div>
         );
@@ -340,7 +340,7 @@ export function SignalChart(props: SignalChartProps) {
     // Error / empty — inline card, retry handled by TanStack Query.
     if (isError || !series || series.length === 0) {
         return (
-            <div className="w-full max-w-[400px] rounded-lg border border-border bg-card p-3">
+            <div className="w-full rounded-2xl border border-border bg-card p-4 shadow-card">
                 <div className="mb-1 text-sm font-medium text-foreground">{displayName}</div>
                 <div className="text-xs text-text-tertiary">
                     No data for signal #{signal_def_id} in the last {window_hours}h.
@@ -360,8 +360,8 @@ export function SignalChart(props: SignalChartProps) {
                 : "var(--success)";
 
     return (
-        <div className="w-full max-w-[400px] rounded-lg border border-border bg-card p-3">
-            <div className="mb-2 flex items-baseline justify-between gap-3">
+        <div className="w-full rounded-2xl border border-border bg-card p-4 shadow-card">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
                 <span className="text-sm font-medium text-foreground">{displayName}</span>
                 <span className="font-mono text-xs text-muted-foreground">
                     Last {window_hours}h · Cell {cell_id}
@@ -369,7 +369,7 @@ export function SignalChart(props: SignalChartProps) {
             </div>
 
             <div
-                className="h-[160px] w-full"
+                className="h-[240px] w-full"
                 data-testid="signal-chart-container"
                 role="img"
                 aria-label={`${displayName} — ${series.length} samples over the last ${window_hours} hours, with a ${forecast.horizonHours.toFixed(0)}h forward projection`}

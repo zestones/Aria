@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
+import { Link } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
-import { type Status, StatusDot } from "../../components/ui";
+import { Icons, type Status, StatusDot } from "../../components/ui";
 import type { EquipmentSelection } from "../../lib/hierarchy";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import { type ChatMessage, useChatStore } from "./chatStore";
@@ -55,6 +56,15 @@ export function ChatPanel({ selection }: ChatPanelProps) {
                 </h2>
                 <StatusDot status={dotStatus} size={6} aria-hidden />
                 <span className="sr-only">{statusLabel}</span>
+                <Link
+                    to="/workspace"
+                    aria-label="Open the full-screen Agent workspace"
+                    title="Open Agent workspace"
+                    className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    <Icons.Maximize2 className="size-3" aria-hidden />
+                    Workspace
+                </Link>
             </header>
 
             <MessageList messages={messages} activeSubAgent={activeSubAgent} />
