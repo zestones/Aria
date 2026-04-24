@@ -1,5 +1,6 @@
 export { default as AnomaliesPage } from "./AnomaliesPage";
 export { default as ControlRoomPage } from "./ControlRoomPage";
+export { default as EquipmentPage } from "./EquipmentPage";
 export { default as LogbookPage } from "./LogbookPage";
 export { default as LoginPage } from "./LoginPage";
 export { default as OnboardingPage } from "./OnboardingPage";

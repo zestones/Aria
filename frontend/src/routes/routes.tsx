@@ -4,6 +4,7 @@ import { WorkOrderDetail, WorkOrderList } from "../features/work-orders";
 import {
     AnomaliesPage,
     ControlRoomPage,
+    EquipmentPage,
     LogbookPage,
     LoginPage,
     OnboardingPage,
@@ -33,6 +34,7 @@ export function AppRoutes() {
                 }
             >
                 <Route path="/control-room" element={<ControlRoomPage />} />
+                <Route path="/equipment" element={<EquipmentPage />} />
                 <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/work-orders" element={<WorkOrderList />} />
                 <Route path="/work-orders/:id" element={<WorkOrderDetail />} />

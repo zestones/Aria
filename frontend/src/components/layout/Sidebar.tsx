@@ -41,17 +41,32 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
     {
-        id: "operations",
-        label: "Operations",
+        id: "overview",
+        label: "Overview",
+        items: [{ to: "/control-room", label: "Dashboard", icon: Icons.Gauge }],
+    },
+    {
+        id: "monitor",
+        label: "Monitor",
         items: [
-            { to: "/control-room", label: "Control room", icon: Icons.Gauge },
+            { to: "/equipment", label: "Equipment", icon: Icons.CircleDot },
             { to: "/anomalies", label: "Anomalies", icon: Icons.AlertTriangle },
-            { to: "/work-orders", label: "Work orders", icon: Icons.Wrench },
             { to: "/shifts", label: "Shifts", icon: Icons.Clock },
             { to: "/logbook", label: "Logbook", icon: Icons.BookOpen },
-            { to: "/workspace", label: "Agent workspace", icon: Icons.Sparkles },
+        ],
+    },
+    {
+        id: "act",
+        label: "Act",
+        items: [
+            { to: "/work-orders", label: "Work orders", icon: Icons.Wrench },
             { to: "/onboarding", label: "Onboarding", icon: Icons.Upload },
         ],
+    },
+    {
+        id: "agents",
+        label: "Agents",
+        items: [{ to: "/workspace", label: "Workspace", icon: Icons.Sparkles }],
     },
 ];
 
