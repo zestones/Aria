@@ -93,7 +93,15 @@ async def handle_ask_investigator(
         },
     )
     child_turn_id = uuid.uuid4().hex
+    # Issue #125: forward the sub-agent agent_start on the chat socket too,
+    # so the M8.5 Agent Inspector can correlate the chat badge with the
+    # /api/v1/events thinking_delta stream (filtered by agent name + turn_id).
+    # The events-bus broadcast contract is unchanged.
     await ws_manager.broadcast("agent_start", {"agent": "investigator", "turn_id": child_turn_id})
+    await safe_send(
+        ws,
+        {"type": "agent_start", "agent": "investigator", "turn_id": child_turn_id},
+    )
     try:
         # Resolved via the module so ``monkeypatch.setattr(investigator_qa,
         # "answer_investigator_question", ...)`` in tests takes effect.
@@ -110,12 +118,26 @@ async def handle_ask_investigator(
             "confidence": 0.0,
         }
         is_error = True
+    finish_reason = "answered" if not is_error else "error"
     await ws_manager.broadcast(
         "agent_end",
         {
             "agent": "investigator",
             "turn_id": child_turn_id,
-            "finish_reason": "answered" if not is_error else "error",
+            "finish_reason": finish_reason,
+        },
+    )
+    # Issue #125: mirror agent_end on the chat socket. ChatMap currently has
+    # no agent_end variant — the frontend chatStore switch ignores unknown
+    # types, so this is a forward-compatible no-op until the inspector wires
+    # the end signal in. Sending it now closes the contract gap server-side.
+    await safe_send(
+        ws,
+        {
+            "type": "agent_end",
+            "agent": "investigator",
+            "turn_id": child_turn_id,
+            "finish_reason": finish_reason,
         },
     )
     return json.dumps(answer), is_error
