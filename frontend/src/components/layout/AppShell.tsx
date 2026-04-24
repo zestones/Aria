@@ -131,7 +131,7 @@ export function AppShell() {
     const sidebarWidth = safeSidebar.collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-ds-bg-base text-ds-fg-primary">
+        <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
             <Sidebar collapsed={safeSidebar.collapsed} onToggle={toggleSidebar} />
             <div
                 className="flex min-w-0 flex-1 flex-col"
@@ -154,7 +154,7 @@ export function AppShell() {
                         gridTemplateColumns: safeDrawer.open
                             ? `minmax(0, 1fr) ${safeDrawer.width}px`
                             : "minmax(0, 1fr) 0",
-                        transition: `grid-template-columns var(--ds-motion-base) var(--ds-ease-out)`,
+                        transition: `grid-template-columns var(--motion-base) var(--ease-out-soft)`,
                     }}
                 >
                     <main className="relative flex min-h-0 flex-col overflow-hidden">
@@ -163,7 +163,7 @@ export function AppShell() {
                             style={{
                                 paddingBottom: inspectorAgent ? INSPECTOR_HEIGHT : undefined,
                                 transition:
-                                    "padding-bottom var(--ds-motion-base) var(--ds-ease-out)",
+                                    "padding-bottom var(--motion-base) var(--ease-out-soft)",
                             }}
                         >
                             <Outlet />

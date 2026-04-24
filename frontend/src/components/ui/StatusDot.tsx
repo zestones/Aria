@@ -3,10 +3,10 @@ import type { HTMLAttributes } from "react";
 export type Status = "nominal" | "warning" | "critical" | "unknown";
 
 const colors: Record<Status, string> = {
-    nominal: "var(--ds-status-nominal)",
-    warning: "var(--ds-status-warning)",
-    critical: "var(--ds-status-critical)",
-    unknown: "var(--ds-fg-subtle)",
+    nominal: "var(--success)",
+    warning: "var(--warning)",
+    critical: "var(--destructive)",
+    unknown: "var(--text-tertiary)",
 };
 
 export interface StatusDotProps extends HTMLAttributes<HTMLSpanElement> {

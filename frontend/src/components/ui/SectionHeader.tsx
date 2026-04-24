@@ -15,9 +15,9 @@ export interface SectionHeaderProps {
 }
 
 const sizeClasses: Record<Required<SectionHeaderProps>["size"], string> = {
-    sm: "text-ds-lg font-semibold",
-    md: "text-ds-xl font-semibold",
-    lg: "text-ds-2xl font-semibold",
+    sm: "text-lg font-semibold",
+    md: "text-xl font-semibold",
+    lg: "text-2xl font-semibold",
 };
 
 /**
@@ -37,16 +37,13 @@ export function SectionHeader({
     size = "md",
     className = "",
 }: SectionHeaderProps) {
-    const color = accent ? "var(--ds-accent)" : "var(--ds-fg-primary)";
+    const color = accent ? "var(--primary)" : "var(--foreground)";
 
     return (
         <header className={`flex items-baseline justify-between gap-4 ${className}`}>
             <div className="flex items-baseline gap-2">
                 {marker && (
-                    <span
-                        className="text-ds-sm font-medium"
-                        style={{ color: "var(--ds-fg-subtle)" }}
-                    >
+                    <span className="text-sm font-medium" style={{ color: "var(--text-tertiary)" }}>
                         {marker}
                     </span>
                 )}
@@ -58,7 +55,9 @@ export function SectionHeader({
                 </h2>
             </div>
             {meta && (
-                <div className="flex items-baseline gap-2 text-ds-sm text-ds-fg-muted">{meta}</div>
+                <div className="flex items-baseline gap-2 text-sm text-muted-foreground">
+                    {meta}
+                </div>
             )}
         </header>
     );

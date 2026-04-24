@@ -15,26 +15,26 @@ const MINUTES_AGO = (m: number) => new Date(Date.now() - m * 60_000).toISOString
 
 function Pre({ value }: { value: unknown }) {
     return (
-        <pre className="max-h-64 overflow-auto rounded-ds-sm border border-ds-border bg-ds-bg-elevated p-2 font-mono text-ds-xs text-ds-fg-primary">
+        <pre className="max-h-64 overflow-auto rounded-md border border-border bg-muted p-2 font-mono text-xs text-foreground">
             {JSON.stringify(value, null, 2)}
         </pre>
     );
 }
 
 function Loading() {
-    return <p className="text-ds-sm text-ds-fg-muted">Loading…</p>;
+    return <p className="text-sm text-muted-foreground">Loading…</p>;
 }
 
 function ErrorLine({ error }: { error: unknown }) {
     return (
-        <p className="text-ds-sm text-ds-critical">
+        <p className="text-sm text-destructive">
             {error instanceof Error ? error.message : "Request failed."}
         </p>
     );
 }
 
 function Empty({ label }: { label: string }) {
-    return <p className="text-ds-sm text-ds-fg-muted">{label}</p>;
+    return <p className="text-sm text-muted-foreground">{label}</p>;
 }
 
 export default function DataInspector() {
@@ -93,30 +93,30 @@ export default function DataInspector() {
     }
 
     return (
-        <div className="min-h-full bg-ds-bg-base">
-            <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-ds-border bg-ds-bg-base px-6">
+        <div className="min-h-full bg-background">
+            <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-background px-6">
                 <div className="flex items-center gap-2.5">
                     <AriaMark size={20} />
-                    <span className="text-ds-md font-semibold tracking-[-0.01em] text-ds-fg-primary">
+                    <span className="text-base font-semibold tracking-[-0.01em] text-foreground">
                         ARIA
                     </span>
                 </div>
-                <span className="h-5 w-px flex-none bg-ds-border" aria-hidden />
-                <span className="text-ds-sm text-ds-fg-muted">Data explorer</span>
+                <span className="h-5 w-px flex-none bg-border" aria-hidden />
+                <span className="text-sm text-muted-foreground">Data explorer</span>
 
-                <div className="ml-auto flex items-center gap-3 text-ds-sm">
+                <div className="ml-auto flex items-center gap-3 text-sm">
                     {user && (
                         <span className="hidden items-baseline gap-1.5 sm:inline-flex">
-                            <span className="font-medium text-ds-fg-primary">{user.username}</span>
-                            <span className="text-ds-fg-subtle">·</span>
-                            <span className="text-ds-fg-muted">{user.role}</span>
+                            <span className="font-medium text-foreground">{user.username}</span>
+                            <span className="text-text-tertiary">·</span>
+                            <span className="text-muted-foreground">{user.role}</span>
                         </span>
                     )}
                     <ThemeToggle />
                     <button
                         type="button"
                         onClick={handleLogout}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-ds-md border border-ds-border bg-ds-bg-surface px-2.5 text-ds-sm font-medium text-ds-fg-muted transition-colors duration-ds-fast hover:border-ds-border-strong hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:border-input hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                         <Icons.LogOut className="size-3.5" />
                         Logout
@@ -137,9 +137,9 @@ export default function DataInspector() {
                         {status.isLoading && <Loading />}
                         {status.error && <ErrorLine error={status.error} />}
                         {status.data && (
-                            <table className="w-full text-ds-sm">
+                            <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="text-left text-ds-xs font-medium text-ds-fg-muted">
+                                    <tr className="text-left text-xs font-medium text-muted-foreground">
                                         <th className="py-1 pr-2">Cell</th>
                                         <th className="py-1 pr-2">Line</th>
                                         <th className="py-1 pr-2">Status</th>
@@ -148,11 +148,11 @@ export default function DataInspector() {
                                 </thead>
                                 <tbody>
                                     {status.data.map((c) => (
-                                        <tr key={c.cell_id} className="border-t border-ds-border">
-                                            <td className="py-1.5 pr-2 font-medium text-ds-fg-primary">
+                                        <tr key={c.cell_id} className="border-t border-border">
+                                            <td className="py-1.5 pr-2 font-medium text-foreground">
                                                 {c.cell_name}
                                             </td>
-                                            <td className="py-1.5 pr-2 text-ds-fg-muted">
+                                            <td className="py-1.5 pr-2 text-muted-foreground">
                                                 {c.line_name ?? "—"}
                                             </td>
                                             <td className="py-1.5 pr-2">
@@ -164,7 +164,7 @@ export default function DataInspector() {
                                                     {c.status_name ?? "?"}
                                                 </Badge>
                                             </td>
-                                            <td className="py-1.5 text-ds-xs text-ds-fg-muted">
+                                            <td className="py-1.5 text-xs text-muted-foreground">
                                                 {c.last_status_change
                                                     ? new Date(
                                                           c.last_status_change,
@@ -183,9 +183,9 @@ export default function DataInspector() {
                         {signals.isLoading && <Loading />}
                         {signals.error && <ErrorLine error={signals.error} />}
                         {signals.data && (
-                            <table className="w-full text-ds-sm">
+                            <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="text-left text-ds-xs font-medium text-ds-fg-muted">
+                                    <tr className="text-left text-xs font-medium text-muted-foreground">
                                         <th className="py-1 pr-2">Signal</th>
                                         <th className="py-1 pr-2 text-right">Value</th>
                                         <th className="py-1 pr-2">Unit</th>
@@ -196,18 +196,18 @@ export default function DataInspector() {
                                     {signals.data.map((s) => (
                                         <tr
                                             key={s.signal_def_id}
-                                            className="border-t border-ds-border"
+                                            className="border-t border-border"
                                         >
-                                            <td className="py-1.5 pr-2 text-ds-fg-primary">
+                                            <td className="py-1.5 pr-2 text-foreground">
                                                 {s.display_name ?? s.signal_name}
                                             </td>
-                                            <td className="py-1.5 pr-2 text-right font-mono tabular-nums text-ds-fg-primary">
+                                            <td className="py-1.5 pr-2 text-right font-mono tabular-nums text-foreground">
                                                 {s.raw_value.toFixed(2)}
                                             </td>
-                                            <td className="py-1.5 pr-2 text-ds-fg-muted">
+                                            <td className="py-1.5 pr-2 text-muted-foreground">
                                                 {s.unit_name ?? "—"}
                                             </td>
-                                            <td className="py-1.5 text-ds-xs text-ds-fg-muted">
+                                            <td className="py-1.5 text-xs text-muted-foreground">
                                                 {new Date(s.time).toLocaleTimeString()}
                                             </td>
                                         </tr>
@@ -233,12 +233,12 @@ export default function DataInspector() {
                                     (k) => (
                                         <div
                                             key={k}
-                                            className="rounded-ds-sm border border-ds-border bg-ds-bg-elevated p-3 text-center"
+                                            className="rounded-md border border-border bg-muted p-3 text-center"
                                         >
-                                            <div className="text-ds-xs font-medium text-ds-fg-muted">
+                                            <div className="text-xs font-medium text-muted-foreground">
                                                 {labelFor(k)}
                                             </div>
-                                            <div className="mt-1 font-mono text-ds-2xl font-semibold tabular-nums text-ds-fg-primary">
+                                            <div className="mt-1 font-mono text-2xl font-semibold tabular-nums text-foreground">
                                                 {(Number(oee.data[0][k] ?? 0) * 100).toFixed(1)}%
                                             </div>
                                         </div>
@@ -270,16 +270,16 @@ export default function DataInspector() {
                             <Empty label="No work orders yet." />
                         )}
                         {workOrders.data && workOrders.data.length > 0 && (
-                            <ul className="space-y-2 text-ds-sm">
+                            <ul className="space-y-2 text-sm">
                                 {workOrders.data.map((w) => (
                                     <li
                                         key={w.id}
-                                        className="flex items-center justify-between gap-3 rounded-ds-sm border border-ds-border bg-ds-bg-elevated p-2.5"
+                                        className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted p-2.5"
                                     >
-                                        <span className="font-medium text-ds-fg-primary">
+                                        <span className="font-medium text-foreground">
                                             {w.title}
                                         </span>
-                                        <span className="text-ds-xs text-ds-fg-muted">
+                                        <span className="text-xs text-muted-foreground">
                                             {w.priority} · {w.status}
                                         </span>
                                     </li>
@@ -299,29 +299,24 @@ export default function DataInspector() {
                         {logbook.error && <ErrorLine error={logbook.error} />}
                         {logbook.data && logbook.data.length === 0 && <Empty label="No entries." />}
                         {logbook.data && logbook.data.length > 0 && (
-                            <ul className="space-y-3 text-ds-sm">
+                            <ul className="space-y-3 text-sm">
                                 {logbook.data.map((l) => (
-                                    <li
-                                        key={l.id}
-                                        className="border-l-2 border-ds-border-strong pl-3"
-                                    >
+                                    <li key={l.id} className="border-l-2 border-input pl-3">
                                         <div className="flex items-baseline justify-between gap-3">
-                                            <span className="font-medium text-ds-fg-primary">
+                                            <span className="font-medium text-foreground">
                                                 {l.title}
                                             </span>
-                                            <span className="text-ds-xs text-ds-fg-muted">
+                                            <span className="text-xs text-muted-foreground">
                                                 {l.category} · {l.severity}
                                             </span>
                                         </div>
-                                        <p className="text-ds-xs text-ds-fg-muted">
+                                        <p className="text-xs text-muted-foreground">
                                             {l.cell_name ?? `cell #${l.cell_id}`} ·{" "}
                                             {new Date(l.created_at).toLocaleString()} ·{" "}
                                             {l.author_username ?? "—"}
                                         </p>
                                         {l.body && (
-                                            <p className="mt-1 text-ds-xs text-ds-fg-primary">
-                                                {l.body}
-                                            </p>
+                                            <p className="mt-1 text-xs text-foreground">{l.body}</p>
                                         )}
                                     </li>
                                 ))}

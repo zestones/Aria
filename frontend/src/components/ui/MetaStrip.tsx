@@ -18,8 +18,8 @@ export interface MetaStripProps extends HTMLAttributes<HTMLDListElement> {
 export function MetaStrip({ items, className = "", ...rest }: MetaStripProps) {
     return (
         <dl
-            className={`flex items-baseline gap-2 text-ds-sm ${className}`}
-            style={{ color: "var(--ds-fg-muted)" }}
+            className={`flex items-baseline gap-2 text-sm ${className}`}
+            style={{ color: "var(--muted-foreground)" }}
             {...rest}
         >
             {items.map((item, idx) => (
@@ -28,12 +28,14 @@ export function MetaStrip({ items, className = "", ...rest }: MetaStripProps) {
                     className="flex items-baseline gap-1.5"
                 >
                     {idx > 0 && (
-                        <span aria-hidden style={{ color: "var(--ds-fg-subtle)" }}>
+                        <span aria-hidden style={{ color: "var(--text-tertiary)" }}>
                             ·
                         </span>
                     )}
-                    {item.label && <dt style={{ color: "var(--ds-fg-muted)" }}>{item.label}</dt>}
-                    <dd style={{ color: "var(--ds-fg-primary)" }}>{item.value}</dd>
+                    {item.label && (
+                        <dt style={{ color: "var(--muted-foreground)" }}>{item.label}</dt>
+                    )}
+                    <dd style={{ color: "var(--foreground)" }}>{item.value}</dd>
                 </span>
             ))}
         </dl>

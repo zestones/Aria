@@ -99,8 +99,8 @@ const AgentInspectorDrawer = memo(function AgentInspectorDrawer({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-x-0 bottom-0 z-30 flex h-[40vh] min-h-[280px] flex-col overflow-hidden rounded-t-ds-md border-t border-ds-border bg-ds-bg-surface"
-            style={{ boxShadow: "var(--ds-shadow-overlay)" }}
+            className="absolute inset-x-0 bottom-0 z-30 flex h-[40vh] min-h-[280px] flex-col overflow-hidden rounded-t-lg border-t border-border bg-card"
+            style={{ boxShadow: "var(--shadow-overlay)" }}
         >
             <InspectorHeader
                 agent={agent}
@@ -157,11 +157,11 @@ interface InspectorHeaderProps {
 
 function InspectorHeader({ agent, agentKey, turnId, isStreaming, onClose }: InspectorHeaderProps) {
     return (
-        <header className="flex items-center justify-between gap-3 border-b border-ds-border px-4 py-3">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
                 <h2
                     id="agent-inspector-heading"
-                    className="flex items-center gap-2 text-ds-lg font-semibold text-ds-fg-primary"
+                    className="flex items-center gap-2 text-lg font-semibold text-foreground"
                 >
                     {agentKey ? (
                         <Badge variant="agent" agent={agentKey} size="md">
@@ -174,7 +174,7 @@ function InspectorHeader({ agent, agentKey, turnId, isStreaming, onClose }: Insp
                     )}
                     <span>Agent inspector</span>
                 </h2>
-                <span className="text-ds-sm text-ds-fg-muted">
+                <span className="text-sm text-muted-foreground">
                     Turn <span className="font-mono">{truncateId(turnId)}</span>
                     {" · "}
                     {isStreaming ? "Streaming" : "Idle"}
@@ -184,7 +184,7 @@ function InspectorHeader({ agent, agentKey, turnId, isStreaming, onClose }: Insp
                 type="button"
                 onClick={onClose}
                 aria-label="Close agent inspector"
-                className="inline-flex size-8 items-center justify-center rounded-ds-sm text-ds-fg-muted hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
                 <Icons.X className="size-4" aria-hidden />
             </button>
@@ -223,23 +223,23 @@ function ThinkingPanel({ thinking, isStreaming }: ThinkingPanelProps) {
         >
             {hasContent ? (
                 <pre
-                    className="whitespace-pre-wrap break-words font-mono text-ds-sm leading-[1.55]"
+                    className="whitespace-pre-wrap break-words font-mono text-sm leading-[1.55]"
                     style={{
-                        color: "color-mix(in oklab, var(--ds-agent-investigator), var(--ds-fg-muted) 45%)",
+                        color: "color-mix(in oklab, var(--agent-investigator), var(--muted-foreground) 45%)",
                     }}
                 >
                     {thinking}
                     {isStreaming && (
-                        <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-pulse bg-ds-accent align-middle" />
+                        <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-pulse bg-primary align-middle" />
                     )}
                 </pre>
             ) : isStreaming ? (
-                <p className="flex items-center gap-2 text-ds-sm text-ds-fg-muted">
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Icons.Activity className="size-3.5 animate-pulse" aria-hidden />
                     <span>Thinking…</span>
                 </p>
             ) : (
-                <p className="text-ds-sm text-ds-fg-subtle">
+                <p className="text-sm text-text-tertiary">
                     No extended thinking captured for this turn yet.
                 </p>
             )}
@@ -257,7 +257,7 @@ function ToolsPanel({ tools, handoffs }: ToolsPanelProps) {
     return (
         <div className="h-full overflow-y-auto px-4 py-3">
             {empty ? (
-                <p className="text-ds-sm text-ds-fg-subtle">No tool activity yet.</p>
+                <p className="text-sm text-text-tertiary">No tool activity yet.</p>
             ) : (
                 <ul className="flex flex-col gap-1.5">
                     {tools.map((run) => (
@@ -284,23 +284,23 @@ function ToolRow({ run }: { run: ToolRun }) {
 
     return (
         <li>
-            <details className="group rounded-ds-sm border border-ds-border bg-ds-bg-elevated">
-                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-ds-xs">
+            <details className="group rounded-md border border-border bg-muted">
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs">
                     {run.status === "running" ? (
                         <Icons.Activity
-                            className="size-3.5 flex-none animate-pulse text-ds-fg-subtle"
+                            className="size-3.5 flex-none animate-pulse text-text-tertiary"
                             aria-hidden
                         />
                     ) : (
-                        <Icons.Check className="size-3.5 flex-none text-ds-nominal" aria-hidden />
+                        <Icons.Check className="size-3.5 flex-none text-success" aria-hidden />
                     )}
-                    <span className="font-mono text-ds-fg-primary">{run.toolName}</span>
-                    <span className="truncate font-mono text-ds-fg-subtle">{argsPreview}</span>
-                    <span className="ml-auto flex-none text-ds-fg-muted">
+                    <span className="font-mono text-foreground">{run.toolName}</span>
+                    <span className="truncate font-mono text-text-tertiary">{argsPreview}</span>
+                    <span className="ml-auto flex-none text-muted-foreground">
                         {run.durationMs != null ? `${run.durationMs} ms` : "—"}
                     </span>
                 </summary>
-                <pre className="whitespace-pre-wrap break-words border-t border-ds-border px-3 py-2 font-mono text-ds-xs text-ds-fg-muted">
+                <pre className="whitespace-pre-wrap break-words border-t border-border px-3 py-2 font-mono text-xs text-muted-foreground">
                     {safeStringify(run.args)}
                 </pre>
             </details>
@@ -310,13 +310,13 @@ function ToolRow({ run }: { run: ToolRun }) {
 
 function HandoffRow({ handoff }: { handoff: HandoffEvent }) {
     return (
-        <li className="flex items-center gap-2 rounded-ds-sm border border-dashed border-ds-border px-3 py-2 text-ds-xs text-ds-fg-muted">
+        <li className="flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
             <Icons.ArrowRight className="size-3.5 flex-none" aria-hidden />
             <span>Handoff</span>
-            <span className="font-mono text-ds-fg-primary">{handoff.from_agent}</span>
-            <Icons.ChevronRight className="size-3 flex-none text-ds-fg-subtle" aria-hidden />
-            <span className="font-mono text-ds-fg-primary">{handoff.to_agent}</span>
-            <span className="ml-1 truncate text-ds-fg-subtle">· {handoff.reason}</span>
+            <span className="font-mono text-foreground">{handoff.from_agent}</span>
+            <Icons.ChevronRight className="size-3 flex-none text-text-tertiary" aria-hidden />
+            <span className="font-mono text-foreground">{handoff.to_agent}</span>
+            <span className="ml-1 truncate text-text-tertiary">· {handoff.reason}</span>
         </li>
     );
 }
@@ -325,9 +325,7 @@ function IoPanel({ rawEvents }: { rawEvents: RawAgentEvent[] }) {
     if (rawEvents.length === 0) {
         return (
             <div className="h-full overflow-y-auto px-4 py-3">
-                <p className="text-ds-sm text-ds-fg-subtle">
-                    No events received yet for this turn.
-                </p>
+                <p className="text-sm text-text-tertiary">No events received yet for this turn.</p>
             </div>
         );
     }
@@ -335,17 +333,14 @@ function IoPanel({ rawEvents }: { rawEvents: RawAgentEvent[] }) {
         <div className="h-full overflow-y-auto px-4 py-3">
             <ol className="flex flex-col gap-2">
                 {rawEvents.map((evt) => (
-                    <li
-                        key={evt.id}
-                        className="rounded-ds-sm border border-ds-border bg-ds-bg-elevated"
-                    >
-                        <div className="flex items-center gap-2 border-b border-ds-border px-3 py-1.5 text-ds-xs">
-                            <span className="font-mono text-ds-accent">{evt.type}</span>
-                            <span className="ml-auto text-ds-fg-subtle">
+                    <li key={evt.id} className="rounded-md border border-border bg-muted">
+                        <div className="flex items-center gap-2 border-b border-border px-3 py-1.5 text-xs">
+                            <span className="font-mono text-primary">{evt.type}</span>
+                            <span className="ml-auto text-text-tertiary">
                                 {new Date(evt.at).toLocaleTimeString()}
                             </span>
                         </div>
-                        <pre className="whitespace-pre-wrap break-words px-3 py-2 font-mono text-ds-xs text-ds-fg-muted">
+                        <pre className="whitespace-pre-wrap break-words px-3 py-2 font-mono text-xs text-muted-foreground">
                             {safeStringify(evt.payload)}
                         </pre>
                     </li>
@@ -360,10 +355,10 @@ function MemoryPanel({ tools }: { tools: ToolRun[] }) {
     if (memoryHits.length === 0) {
         return (
             <div className="h-full overflow-y-auto px-4 py-3">
-                <p className="text-ds-sm text-ds-fg-subtle">
+                <p className="text-sm text-text-tertiary">
                     No KB or failure-history entries touched yet.
                 </p>
-                <p className="mt-2 text-ds-xs text-ds-fg-subtle">
+                <p className="mt-2 text-xs text-text-tertiary">
                     Inferred from read-style MCP tools: {Array.from(MEMORY_TOOLS).join(", ")}.
                 </p>
             </div>
@@ -375,14 +370,14 @@ function MemoryPanel({ tools }: { tools: ToolRun[] }) {
                 {memoryHits.map((hit) => (
                     <li
                         key={hit.id}
-                        className="flex items-center gap-2 rounded-ds-sm border border-ds-border bg-ds-bg-elevated px-3 py-2 text-ds-xs"
+                        className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-xs"
                     >
                         <Icons.Database
-                            className="size-3.5 flex-none text-ds-fg-muted"
+                            className="size-3.5 flex-none text-muted-foreground"
                             aria-hidden
                         />
-                        <span className="font-mono text-ds-fg-primary">{hit.toolName}</span>
-                        <span className="truncate font-mono text-ds-fg-subtle">
+                        <span className="font-mono text-foreground">{hit.toolName}</span>
+                        <span className="truncate font-mono text-text-tertiary">
                             {safeStringify(hit.args)}
                         </span>
                     </li>

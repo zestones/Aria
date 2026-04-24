@@ -67,9 +67,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
                 e.preventDefault();
                 submit();
             }}
-            className="border-t border-ds-border bg-ds-bg-surface px-3 py-2"
+            className="border-t border-border bg-card px-3 py-2"
         >
-            <div className="rounded-ds-md border border-ds-border bg-ds-bg-elevated transition-colors duration-ds-fast focus-within:border-ds-border-strong focus-within:ring-2 focus-within:ring-ds-accent-ring">
+            <div className="rounded-lg border border-border bg-muted transition-colors duration-150 focus-within:border-input focus-within:ring-2 focus-within:ring-ring">
                 <div className="flex items-end gap-2 px-3 pt-2">
                     <textarea
                         ref={textareaRef}
@@ -84,18 +84,18 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
                         rows={1}
                         spellCheck
                         aria-label="Message input"
-                        className="min-h-[20px] flex-1 resize-none bg-transparent text-ds-sm leading-[1.4] text-ds-fg-primary placeholder:text-ds-fg-subtle focus:outline-none disabled:opacity-50"
+                        className="min-h-[20px] flex-1 resize-none bg-transparent text-sm leading-[1.4] text-foreground placeholder:text-text-tertiary focus:outline-none disabled:opacity-50"
                     />
                     <button
                         type="submit"
                         disabled={!canSubmit}
                         aria-label="Send message"
-                        className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-ds-sm bg-ds-accent text-ds-accent-fg transition-colors duration-ds-fast hover:bg-ds-accent-hover disabled:cursor-not-allowed disabled:bg-ds-bg-hover disabled:text-ds-fg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                        className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-md bg-primary text-primary-foreground transition-colors duration-150 hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-accent disabled:text-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                         <Icons.ArrowRight className="size-3.5" />
                     </button>
                 </div>
-                <p className="px-3 pb-1.5 pt-1 text-ds-xs text-ds-fg-subtle">
+                <p className="px-3 pb-1.5 pt-1 text-xs text-text-tertiary">
                     Enter to send · Shift + Enter for new line
                 </p>
             </div>

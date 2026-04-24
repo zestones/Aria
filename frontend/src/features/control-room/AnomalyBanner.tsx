@@ -39,14 +39,14 @@ function severityTone(severity: Severity): {
 } {
     if (severity === "trip") {
         return {
-            accentVar: "var(--ds-status-critical)",
-            fgVar: "var(--ds-status-critical)",
+            accentVar: "var(--destructive)",
+            fgVar: "var(--destructive)",
             Icon: AlertCircle,
         };
     }
     return {
-        accentVar: "var(--ds-status-warning)",
-        fgVar: "var(--ds-status-warning)",
+        accentVar: "var(--warning)",
+        fgVar: "var(--warning)",
         Icon: AlertTriangle,
     };
 }
@@ -100,7 +100,7 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
     const description = `Cell ${event.cell_id} · ${signalLabel} ${event.direction} of threshold (${event.value} vs ${event.threshold})`;
 
     // `color-mix` tint — very subtle surface, tokens only.
-    const background = `color-mix(in oklab, ${accentVar} 12%, var(--ds-bg-surface))`;
+    const background = `color-mix(in oklab, ${accentVar} 12%, var(--card))`;
 
     return (
         <motion.div
@@ -113,7 +113,7 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="relative flex items-center gap-3 border-b border-ds-border px-4"
+            className="relative flex items-center gap-3 border-b border-border px-4"
             style={{
                 minHeight: 44,
                 paddingLeft: 16,
@@ -130,18 +130,18 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
             <Icon size={16} style={{ color: fgVar }} aria-hidden="true" />
 
             <span
-                className="text-ds-sm font-medium text-ds-fg-primary truncate"
+                className="text-sm font-medium text-foreground truncate"
                 data-testid="anomaly-banner-text"
             >
                 {description}
             </span>
 
-            <span className="text-ds-xs text-ds-fg-muted whitespace-nowrap">{relativeTime}</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{relativeTime}</span>
 
             {count > 1 && (
                 <span
                     data-testid="anomaly-banner-count"
-                    className="ml-auto rounded-ds-sm border border-ds-border bg-ds-bg-elevated px-2 py-0.5 text-ds-xs font-medium text-ds-fg-muted"
+                    className="ml-auto rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
                 >
                     +{count - 1} more
                 </span>
@@ -150,7 +150,7 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
             <div className={`${count > 1 ? "" : "ml-auto"} flex items-center gap-1`}>
                 <Button
                     size="sm"
-                    variant="accent"
+                    variant="default"
                     onClick={() =>
                         onInvestigate(
                             buildInvestigatePrompt({

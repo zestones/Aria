@@ -12,7 +12,7 @@ export interface HairlineProps extends HTMLAttributes<HTMLDivElement> {
  * inline section rule ("─── Control room ───") in sentence-case sans muted.
  */
 export function Hairline({ label, weight = 1, className = "", ...rest }: HairlineProps) {
-    const color = weight === 2 ? "var(--ds-border-strong)" : "var(--ds-border)";
+    const color = weight === 2 ? "var(--input)" : "var(--border)";
 
     if (!label) {
         return (
@@ -29,8 +29,8 @@ export function Hairline({ label, weight = 1, className = "", ...rest }: Hairlin
         <div aria-hidden className={`flex items-center gap-3 ${className}`} {...rest}>
             <div className="flex-1" style={{ height: `${weight}px`, backgroundColor: color }} />
             <span
-                className="text-ds-sm font-medium whitespace-nowrap"
-                style={{ color: "var(--ds-fg-muted)" }}
+                className="text-sm font-medium whitespace-nowrap"
+                style={{ color: "var(--muted-foreground)" }}
             >
                 {label}
             </span>

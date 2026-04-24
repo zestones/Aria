@@ -1,12 +1,33 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    Base Styles — ARIA
-   Operator-calm foundation. Inter typography. ARIA design-system tokens drive
-   the app surface; Tailwind utilities are used directly for legacy pages.
+   Editorial-calm foundation. Sofia Sans (open-source MarkForMC stand-in).
    ───────────────────────────────────────────────────────────────────────────── */
 
+@import "./light.css";
+@import "./dark.css";
+
 @layer base {
+  /* Theme-independent design tokens (typography stack, motion, atmospheric
+   * shadows). Theme-specific colour tokens live in light.css / dark.css. */
+  :root {
+    --font-sans:
+      "Sofia Sans Variable", "Sofia Sans", "Inter Variable", "Inter", ui-sans-serif, system-ui,
+      -apple-system, sans-serif;
+    --font-mono:
+      "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --motion-fast: 150ms;
+    --motion-base: 220ms;
+    --motion-slow: 420ms;
+    --ease-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --text-md: 15px;
+
+    --shadow-overlay: 0 24px 48px 0 rgb(0 0 0 / 0.08);
+  }
+
   * {
-    border-color: var(--ds-border);
+    border-color: var(--border);
   }
 
   html,
@@ -17,20 +38,37 @@
   }
 
   body {
-    background-color: var(--ds-bg-base);
-    color: var(--ds-fg-primary);
-    font-family: var(--ds-font-sans);
-    font-size: var(--ds-text-base);
-    line-height: 1.55;
-    font-weight: 400;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family:
+      "Sofia Sans Variable",
+      "Sofia Sans",
+      "Inter Variable",
+      "Inter",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+    /* Mastercard-style half-step body weight (450) — softer than 400,
+     * firmer than 500. Variable-font browsers honour it; static fallbacks
+     * round to 400. */
+    font-weight: 450;
+    font-size: 16px;
+    line-height: 1.4;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     font-optical-sizing: auto;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Disable transitions during theme swap flash-fix */
+  /* Editorial display: tight negative tracking on every heading. */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  /* Avoid the theme-swap flash. */
   .no-transitions *,
   .no-transitions *::before,
   .no-transitions *::after {
@@ -38,12 +76,12 @@
   }
 
   ::selection {
-    background-color: var(--ds-accent-soft);
-    color: var(--ds-fg-primary);
+    background-color: var(--accent-soft);
+    color: var(--foreground);
   }
 
   :focus-visible {
-    outline: 2px solid var(--ds-accent-ring);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 }
@@ -67,7 +105,7 @@ select {
   font-family: inherit;
 }
 
-/* ─── Scrollbar — Global polished scrollbar ─── */
+/* ─── Scrollbar — Polished, near-invisible until hover ─── */
 @layer base {
   * {
     scrollbar-width: thin;
@@ -76,7 +114,7 @@ select {
 
   *:hover,
   *:focus-within {
-    scrollbar-color: color-mix(in srgb, var(--ds-fg-muted) 40%, transparent) transparent;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent) transparent;
   }
 
   ::-webkit-scrollbar {
@@ -94,11 +132,11 @@ select {
   }
 
   *:hover::-webkit-scrollbar-thumb {
-    background-color: color-mix(in srgb, var(--ds-fg-muted) 40%, transparent);
+    background-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in srgb, var(--ds-fg-muted) 60%, transparent);
+    background-color: color-mix(in srgb, var(--muted-foreground) 60%, transparent);
   }
 
   ::-webkit-scrollbar-corner {
@@ -109,6 +147,23 @@ select {
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--ds-fg-muted) 40%, transparent) transparent;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent) transparent;
+  }
+
+  /* Subtle press effect — primary buttons "compress" on active. */
+  .active-scale {
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .active-scale:active {
+    transform: scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
   }
 }

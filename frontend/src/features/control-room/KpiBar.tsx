@@ -114,28 +114,28 @@ function KpiTile({
 
     return (
         <div
-            className={`flex min-w-0 flex-none items-center gap-2.5 rounded-ds-sm px-1.5 py-1 ${className}`}
+            className={`flex min-w-0 flex-none items-center gap-2.5 rounded-md px-1.5 py-1 ${className}`}
             data-kpi={dataKpi}
             data-kpi-state={state}
             data-flashing={flashing ? "true" : undefined}
             style={{
-                outline: flashing ? "1px solid var(--ds-accent)" : "1px solid transparent",
+                outline: flashing ? "1px solid var(--primary)" : "1px solid transparent",
                 outlineOffset: "1px",
-                transition: `outline-color var(--ds-motion-fast) var(--ds-ease-out)`,
+                transition: `outline-color var(--motion-fast) var(--ease-out-soft)`,
             }}
         >
             <div className="flex min-w-0 flex-col leading-none">
-                <span className="flex items-center gap-1 text-ds-xs text-ds-fg-muted">
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     {label}
                     {state === "error" && (
                         <StatusDot status="critical" size={4} aria-label={`${label} unavailable`} />
                     )}
                 </span>
                 <span
-                    className="mt-1 font-medium tabular-nums text-ds-fg-primary"
+                    className="mt-1 font-medium tabular-nums text-foreground"
                     style={{
-                        fontFamily: "var(--ds-font-mono)",
-                        fontSize: "var(--ds-text-md)",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "var(--text-md)",
                         lineHeight: 1.1,
                     }}
                 >

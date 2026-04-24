@@ -5,17 +5,17 @@ import type { Status } from "./StatusDot";
 type RailTone = Status | "accent" | AgentId | "idle";
 
 const toneColor: Record<RailTone, string> = {
-    nominal: "var(--ds-status-nominal)",
-    warning: "var(--ds-status-warning)",
-    critical: "var(--ds-status-critical)",
-    unknown: "var(--ds-border-strong)",
-    idle: "var(--ds-border)",
-    accent: "var(--ds-accent)",
-    sentinel: "var(--ds-agent-sentinel)",
-    investigator: "var(--ds-agent-investigator)",
-    kb_builder: "var(--ds-agent-kb-builder)",
-    work_order: "var(--ds-agent-work-order)",
-    qa: "var(--ds-agent-qa)",
+    nominal: "var(--success)",
+    warning: "var(--warning)",
+    critical: "var(--destructive)",
+    unknown: "var(--input)",
+    idle: "var(--border)",
+    accent: "var(--primary)",
+    sentinel: "var(--agent-sentinel)",
+    investigator: "var(--agent-investigator)",
+    kb_builder: "var(--agent-kb-builder)",
+    work_order: "var(--agent-work-order)",
+    qa: "var(--agent-qa)",
 };
 
 export interface StatusRailProps extends HTMLAttributes<HTMLSpanElement> {

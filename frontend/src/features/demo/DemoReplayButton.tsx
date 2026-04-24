@@ -67,24 +67,24 @@ export function DemoReplayButton() {
 
     return (
         <div className="pointer-events-none fixed bottom-4 left-4 z-40 flex items-end gap-2">
-            <div className="pointer-events-auto flex items-center gap-2 rounded-ds-md border border-dashed border-ds-border-strong bg-ds-bg-surface px-2 py-1.5 shadow-sm">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-lg border border-dashed border-input bg-card px-2 py-1.5 shadow-sm">
                 <button
                     type="button"
                     onClick={replay}
                     disabled={busy}
                     aria-label="Replay Investigator on the most recent work order (demo trigger)"
-                    className="inline-flex h-7 items-center gap-1.5 rounded-ds-sm bg-transparent px-2 text-ds-xs font-medium text-ds-fg-muted transition-colors duration-ds-fast hover:bg-ds-accent-soft hover:text-ds-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring disabled:opacity-60"
+                    className="inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:bg-accent-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 >
                     <Icons.Play className="size-3" aria-hidden />
                     {busy ? "Replaying…" : "Replay last investigation"}
-                    <span className="text-ds-fg-subtle">· dev</span>
+                    <span className="text-text-tertiary">· dev</span>
                 </button>
                 {lastSpawned != null && !error && (
-                    <span className="text-ds-xs text-ds-fg-subtle">
+                    <span className="text-xs text-text-tertiary">
                         → WO #{lastSpawned.id} (cell {lastSpawned.cell_id})
                     </span>
                 )}
-                {error && <span className="text-ds-xs text-ds-critical">{error}</span>}
+                {error && <span className="text-xs text-destructive">{error}</span>}
             </div>
         </div>
     );

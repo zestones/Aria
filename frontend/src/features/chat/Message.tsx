@@ -31,10 +31,10 @@ interface UserRowProps {
 function UserRow({ message, now }: UserRowProps) {
     return (
         <div className="flex flex-col items-end gap-1">
-            <div className="max-w-[80%] rounded-ds-md bg-ds-bg-elevated border border-ds-border px-3 py-2 text-ds-sm leading-[1.55] text-ds-fg-primary whitespace-pre-wrap break-words">
+            <div className="max-w-[80%] rounded-lg bg-muted border border-border px-3 py-2 text-sm leading-[1.55] text-foreground whitespace-pre-wrap break-words">
                 {message.content}
             </div>
-            <span className="text-ds-xs text-ds-fg-subtle">
+            <span className="text-xs text-text-tertiary">
                 {formatRelativeTime(message.createdAt, now)}
             </span>
         </div>
@@ -57,16 +57,16 @@ interface ToolCallRowProps {
 function ToolCallRow({ part }: ToolCallRowProps) {
     const running = part.status === "running";
     return (
-        <div className="flex items-center gap-2 rounded-ds-sm border border-ds-border bg-ds-bg-elevated/60 px-2.5 py-1.5 text-ds-xs text-ds-fg-muted">
+        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
             {running ? (
-                <Icons.Activity className="size-3.5 flex-none animate-pulse text-ds-fg-subtle" />
+                <Icons.Activity className="size-3.5 flex-none animate-pulse text-text-tertiary" />
             ) : (
-                <Icons.Check className="size-3.5 flex-none text-ds-nominal" />
+                <Icons.Check className="size-3.5 flex-none text-success" />
             )}
-            <span className="font-mono text-ds-fg-primary">{part.name}</span>
-            <span className="truncate font-mono text-ds-fg-subtle">{renderArgs(part.args)}</span>
+            <span className="font-mono text-foreground">{part.name}</span>
+            <span className="truncate font-mono text-text-tertiary">{renderArgs(part.args)}</span>
             {part.summary && (
-                <span className="ml-auto flex-none text-ds-fg-muted">{part.summary}</span>
+                <span className="ml-auto flex-none text-muted-foreground">{part.summary}</span>
             )}
         </div>
     );
@@ -80,8 +80,8 @@ function HandoffRow({ part }: HandoffRowProps) {
     const fromAgent = KNOWN_AGENTS.has(String(part.from)) ? (part.from as never) : undefined;
     const toAgent = KNOWN_AGENTS.has(String(part.to)) ? (part.to as never) : undefined;
     return (
-        <div className="flex items-center gap-2 rounded-ds-sm border border-dashed border-ds-border bg-transparent px-2.5 py-1.5 text-ds-xs text-ds-fg-muted">
-            <Icons.ArrowRight className="size-3.5 flex-none text-ds-fg-subtle" />
+        <div className="flex items-center gap-2 rounded-md border border-dashed border-border bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground">
+            <Icons.ArrowRight className="size-3.5 flex-none text-text-tertiary" />
             <span>Handoff</span>
             {fromAgent ? (
                 <Badge variant="agent" agent={fromAgent}>
@@ -90,7 +90,7 @@ function HandoffRow({ part }: HandoffRowProps) {
             ) : (
                 <span className="font-mono">{part.from}</span>
             )}
-            <Icons.ChevronRight className="size-3 flex-none text-ds-fg-subtle" />
+            <Icons.ChevronRight className="size-3 flex-none text-text-tertiary" />
             {toAgent ? (
                 <Badge variant="agent" agent={toAgent}>
                     {formatAgentLabel(part.to)}
@@ -98,7 +98,7 @@ function HandoffRow({ part }: HandoffRowProps) {
             ) : (
                 <span className="font-mono">{part.to}</span>
             )}
-            <span className="ml-1 truncate text-ds-fg-subtle">· {part.reason}</span>
+            <span className="ml-1 truncate text-text-tertiary">· {part.reason}</span>
         </div>
     );
 }
@@ -118,7 +118,7 @@ function AgentRow({ message, now }: AgentRowProps) {
                 type="button"
                 onClick={() => openInspector(message.agent)}
                 aria-label={`Open agent inspector for ${formatAgentLabel(message.agent)}`}
-                className="-mx-1 -my-0.5 inline-flex w-fit items-center gap-2 rounded-ds-sm px-1 py-0.5 text-left transition-colors duration-ds-fast hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                className="-mx-1 -my-0.5 inline-flex w-fit items-center gap-2 rounded-md px-1 py-0.5 text-left transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
                 {agentKey ? (
                     <Badge variant="agent" agent={agentKey}>
@@ -127,14 +127,14 @@ function AgentRow({ message, now }: AgentRowProps) {
                 ) : (
                     <Badge variant="default">{formatAgentLabel(message.agent)}</Badge>
                 )}
-                <span className="text-ds-xs text-ds-fg-subtle">
+                <span className="text-xs text-text-tertiary">
                     {formatRelativeTime(message.createdAt, now)}
                 </span>
                 {message.streaming && <StatusDot status="warning" size={6} pulse aria-hidden />}
             </button>
             <div className="flex flex-col gap-2">
                 {message.parts.length === 0 && message.streaming && (
-                    <span className="text-ds-sm text-ds-fg-subtle italic">Thinking…</span>
+                    <span className="text-sm text-text-tertiary italic">Thinking…</span>
                 )}
                 {message.parts.map((part) => {
                     if (part.kind === "tool_call") return <ToolCallRow key={part.id} part={part} />;
@@ -149,16 +149,16 @@ function AgentRow({ message, now }: AgentRowProps) {
                         );
                     }
                     return (
-                        <div key={part.id} className="max-w-full text-ds-fg-primary">
+                        <div key={part.id} className="max-w-full text-foreground">
                             <Markdown>{part.content}</Markdown>
                             {part.streaming && (
-                                <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-pulse bg-ds-accent align-middle" />
+                                <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-pulse bg-primary align-middle" />
                             )}
                         </div>
                     );
                 })}
                 {message.error && (
-                    <div className="flex items-center gap-2 rounded-ds-sm border border-[color-mix(in_oklab,var(--ds-status-critical),transparent_70%)] bg-[color-mix(in_oklab,var(--ds-status-critical),transparent_90%)] px-2.5 py-1.5 text-ds-xs text-ds-critical">
+                    <div className="flex items-center gap-2 rounded-md border border-[color-mix(in_oklab,var(--destructive),transparent_70%)] bg-[color-mix(in_oklab,var(--destructive),transparent_90%)] px-2.5 py-1.5 text-xs text-destructive">
                         <Icons.AlertTriangle className="size-3.5 flex-none" />
                         <span>{message.error}</span>
                     </div>

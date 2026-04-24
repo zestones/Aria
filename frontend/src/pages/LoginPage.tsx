@@ -38,11 +38,11 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-full flex flex-col bg-ds-bg-base">
+        <div className="min-h-full flex flex-col bg-background">
             <header className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-2.5">
                     <AriaMark size={20} />
-                    <span className="text-ds-md font-semibold tracking-[-0.01em] text-ds-fg-primary">
+                    <span className="text-base font-semibold tracking-[-0.01em] text-foreground">
                         ARIA
                     </span>
                 </div>
@@ -54,13 +54,13 @@ export default function LoginPage() {
                     onSubmit={onSubmit}
                     aria-busy={loading}
                     noValidate
-                    className="w-full max-w-sm rounded-ds-md border border-ds-border bg-ds-bg-surface p-6 space-y-5"
+                    className="w-full max-w-sm rounded-lg border border-border bg-card p-6 space-y-5"
                 >
                     <div className="space-y-1">
-                        <h1 className="text-ds-2xl font-semibold leading-tight tracking-[-0.01em] text-ds-fg-primary">
+                        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.01em] text-foreground">
                             Sign in
                         </h1>
-                        <p className="text-ds-sm text-ds-fg-muted">
+                        <p className="text-sm text-muted-foreground">
                             Operator console for water-treatment telemetry.
                         </p>
                     </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
                     <div className="space-y-1.5">
                         <label
                             htmlFor={usernameId}
-                            className="block text-ds-sm font-medium text-ds-fg-muted"
+                            className="block text-sm font-medium text-muted-foreground"
                         >
                             Username
                         </label>
@@ -81,14 +81,14 @@ export default function LoginPage() {
                             onChange={(e) => setUsername(e.target.value)}
                             required
                             disabled={loading}
-                            className="h-9 w-full rounded-ds-md border border-ds-border bg-ds-bg-elevated px-3 text-ds-sm text-ds-fg-primary placeholder:text-ds-fg-subtle transition-colors duration-ds-fast hover:border-ds-border-strong focus:border-ds-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring disabled:opacity-50"
+                            className="h-9 w-full rounded-lg border border-border bg-muted px-3 text-sm text-foreground placeholder:text-text-tertiary transition-colors duration-150 hover:border-input focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                         />
                     </div>
 
                     <div className="space-y-1.5">
                         <label
                             htmlFor={passwordId}
-                            className="block text-ds-sm font-medium text-ds-fg-muted"
+                            className="block text-sm font-medium text-muted-foreground"
                         >
                             Password
                         </label>
@@ -102,7 +102,7 @@ export default function LoginPage() {
                             required
                             disabled={loading}
                             aria-describedby={error ? errorId : undefined}
-                            className="h-9 w-full rounded-ds-md border border-ds-border bg-ds-bg-elevated px-3 text-ds-sm text-ds-fg-primary placeholder:text-ds-fg-subtle transition-colors duration-ds-fast hover:border-ds-border-strong focus:border-ds-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring disabled:opacity-50"
+                            className="h-9 w-full rounded-lg border border-border bg-muted px-3 text-sm text-foreground placeholder:text-text-tertiary transition-colors duration-150 hover:border-input focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                         />
                     </div>
 
@@ -110,13 +110,13 @@ export default function LoginPage() {
                         <div
                             id={errorId}
                             role="alert"
-                            className="rounded-ds-md border px-3 py-2 text-ds-sm"
+                            className="rounded-lg border px-3 py-2 text-sm"
                             style={{
                                 backgroundColor:
-                                    "color-mix(in oklab, var(--ds-status-critical), transparent 88%)",
+                                    "color-mix(in oklab, var(--destructive), transparent 88%)",
                                 borderColor:
-                                    "color-mix(in oklab, var(--ds-status-critical), transparent 70%)",
-                                color: "var(--ds-status-critical)",
+                                    "color-mix(in oklab, var(--destructive), transparent 70%)",
+                                color: "var(--destructive)",
                             }}
                         >
                             {error}
@@ -126,13 +126,13 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-ds-md bg-ds-accent px-3.5 text-ds-sm font-medium text-ds-accent-fg transition-colors duration-ds-fast hover:bg-ds-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {loading ? "Signing in…" : "Sign in"}
                     </button>
 
                     {DEV && (
-                        <p className="text-center text-ds-xs text-ds-fg-subtle">
+                        <p className="text-center text-xs text-text-tertiary">
                             Dev seed: admin / admin123 · operator / operator123 · viewer / viewer123
                         </p>
                     )}

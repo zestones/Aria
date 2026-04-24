@@ -1,0 +1,91 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   ARIA Light Theme — "Editorial Calm"
+   Inspired by warm editorial design: putty-cream canvas, ink-black ink,
+   signal-orange accent. Tints lean warm (never sterile white).
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* ─── Surface Hierarchy ─── */
+    --background: #f3f0ee; /* Canvas Cream — warm putty */
+    --foreground: #141413; /* Ink Black — slightly warm near-black */
+
+    --card: #fcfbfa; /* Lifted Cream */
+    --card-foreground: #141413;
+
+    --popover: #ffffff;
+    --popover-foreground: #141413;
+
+    --surface-elevated: #f4f4f4; /* Soft Bone — cool gray subregion */
+
+    /* ─── Brand Colors — Signal Orange ─── */
+    --primary: #141413; /* Ink Black is the primary CTA color */
+    --primary-foreground: #f3f0ee; /* Cream text on ink (NOT pure white) */
+    --primary-hover: #262627; /* Charcoal */
+
+    --secondary: #ffffff;
+    --secondary-foreground: #141413;
+
+    /* ─── Neutral Tones ─── */
+    --muted: #f4f4f4;
+    --muted-foreground: #696969; /* Slate Gray */
+
+    --accent: #ebe7e3; /* Cream-on-cream hover surface */
+    --accent-foreground: #141413;
+
+    /* ─── Text Hierarchy ─── */
+    --text-primary: #141413; /* Ink Black */
+    --text-secondary: #555555; /* Granite */
+    --text-tertiary: #696969; /* Slate Gray */
+    --text-muted: #d1cdc7; /* Dust Taupe — whisper text */
+
+    /* ─── Semantic Colors ─── */
+    --destructive: #cf4500; /* Signal Orange — used for errors/alerts */
+    --destructive-foreground: #ffffff;
+    --warning: #b8791b;
+    --warning-foreground: #ffffff;
+    --success: #10a877;
+    --success-foreground: #ffffff;
+    --info: #3860be; /* Link Blue */
+    --info-foreground: #ffffff;
+    --status-online: #10a877;
+
+    /* ─── Borders & Inputs ─── */
+    --border: #e7e5e2;
+    --border-muted: #d4d2cf;
+    --input: #d4d2cf;
+    --ring: #cf4500; /* Signal Orange focus ring */
+
+    /* ─── Accent Decoration ─── */
+    --accent-soft: rgb(207 69 0 / 0.08); /* signal orange wash */
+    --accent-arc: #f37338; /* Light Signal Orange — orbital lines */
+    --watermark: #e8e2da; /* Ghost cream-on-cream watermark */
+
+    /* ─── Data Visualization ─── */
+    --chart-1: #cf4500; /* Signal Orange */
+    --chart-2: #f37338; /* Light Signal Orange */
+    --chart-3: #3860be; /* Link Blue */
+    --chart-4: #10a877; /* Success Green */
+    --chart-5: #696969; /* Slate Gray */
+
+    /* ─── Agent Identities ─── */
+    --agent-sentinel: #3f6fb8;
+    --agent-investigator: #7858c4;
+    --agent-kb-builder: #10a877;
+    --agent-work-order: #a77318;
+    --agent-qa: #a34e81;
+
+    /* ─── Sidebar ─── */
+    --sidebar: #fcfbfa;
+    --sidebar-foreground: #141413;
+    --sidebar-muted-foreground: #696969;
+    --sidebar-primary: #141413;
+    --sidebar-primary-foreground: #f3f0ee;
+    --sidebar-accent: #ebe7e3;
+    --sidebar-accent-foreground: #141413;
+    --sidebar-border: #e7e5e2;
+    --sidebar-ring: #cf4500;
+
+    color-scheme: light;
+  }
+}

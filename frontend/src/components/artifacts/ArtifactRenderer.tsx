@@ -28,16 +28,16 @@ function ArtifactFallback({ kind, name, detail }: FallbackProps) {
     return (
         <Card padding="sm">
             <div className="flex items-start gap-2">
-                <Icons.AlertTriangle aria-hidden className="size-4 flex-none text-ds-fg-subtle" />
+                <Icons.AlertTriangle aria-hidden className="size-4 flex-none text-text-tertiary" />
                 <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <Badge variant="default" size="sm">
                             Artifact
                         </Badge>
-                        <span className="text-ds-xs text-ds-fg-muted">{title}</span>
+                        <span className="text-xs text-muted-foreground">{title}</span>
                     </div>
                     {detail && (
-                        <span className="font-mono text-ds-xs text-ds-fg-subtle break-words">
+                        <span className="font-mono text-xs text-text-tertiary break-words">
                             {detail}
                         </span>
                     )}

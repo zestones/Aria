@@ -58,12 +58,12 @@ export function MessageList({ messages }: MessageListProps) {
                 <button
                     type="button"
                     onClick={jumpToBottom}
-                    className="absolute bottom-3 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-ds-md border border-ds-border-strong bg-ds-bg-surface px-3 py-1.5 text-ds-xs text-ds-fg-primary shadow-ds-overlay transition-colors duration-ds-fast hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                    className="absolute bottom-3 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs text-foreground shadow-card transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     <Icons.ChevronDown className="size-3.5" />
                     Jump to latest
                     {pendingCount > 0 && (
-                        <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-ds-accent px-1 text-[10px] font-medium leading-none text-ds-accent-fg">
+                        <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium leading-none text-primary-foreground">
                             {pendingCount > 99 ? "99+" : pendingCount}
                         </span>
                     )}
@@ -76,10 +76,10 @@ export function MessageList({ messages }: MessageListProps) {
 function EmptyState() {
     return (
         <div className="flex h-full flex-col items-start gap-3 pt-8">
-            <p className="text-ds-sm font-medium text-ds-fg-primary">
+            <p className="text-sm font-medium text-foreground">
                 Ask the operator console anything.
             </p>
-            <p className="text-ds-sm text-ds-fg-muted">
+            <p className="text-sm text-muted-foreground">
                 Try “show WO table”, “query_kb for turbidity RCAs”, or “handoff to investigator”.
             </p>
         </div>

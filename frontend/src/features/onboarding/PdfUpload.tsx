@@ -305,18 +305,18 @@ export function PdfUpload({ cellId, onUploaded, className = "" }: PdfUploadProps
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col gap-4 rounded-ds-md border border-ds-border bg-ds-bg-surface p-4"
+                    className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4"
                 >
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex min-w-0 items-start gap-3">
-                            <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-ds-sm bg-ds-bg-elevated text-ds-fg-muted">
+                            <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                                 <Icons.FileText className="size-5" aria-hidden="true" />
                             </div>
                             <div className="min-w-0">
-                                <p className="truncate text-ds-md font-medium text-ds-fg-primary">
+                                <p className="truncate text-base font-medium text-foreground">
                                     {file.name}
                                 </p>
-                                <p className="mt-0.5 text-ds-sm text-ds-fg-muted">
+                                <p className="mt-0.5 text-sm text-muted-foreground">
                                     {formatBytes(file.size)} · Cell {cellId}
                                 </p>
                             </div>
@@ -335,9 +335,9 @@ export function PdfUpload({ cellId, onUploaded, className = "" }: PdfUploadProps
                     </div>
 
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-                        <div className="flex min-h-[160px] w-full max-w-[280px] items-center justify-center overflow-hidden rounded-ds-sm border border-ds-border bg-ds-bg-elevated">
+                        <div className="flex min-h-[160px] w-full max-w-[280px] items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
                             {!previewReady && (
-                                <span className="text-ds-xs text-ds-fg-subtle">
+                                <span className="text-xs text-text-tertiary">
                                     Rendering preview…
                                 </span>
                             )}
@@ -350,9 +350,9 @@ export function PdfUpload({ cellId, onUploaded, className = "" }: PdfUploadProps
                         <div className="flex flex-1 flex-col gap-3">
                             {stage === "uploading" && (
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-ds-sm text-ds-fg-muted">
+                                    <div className="flex items-center justify-between text-sm text-muted-foreground">
                                         <span>Uploading and extracting…</span>
-                                        <span className="font-medium text-ds-fg-primary tabular-nums">
+                                        <span className="font-medium text-foreground tabular-nums">
                                             {progress}%
                                         </span>
                                     </div>
@@ -363,17 +363,17 @@ export function PdfUpload({ cellId, onUploaded, className = "" }: PdfUploadProps
                                         aria-valuemin={0}
                                         aria-valuemax={100}
                                         aria-label="Upload progress"
-                                        className="h-1.5 w-full overflow-hidden rounded-full bg-ds-bg-elevated"
+                                        className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
                                     >
                                         <div
-                                            className="h-full rounded-full bg-ds-accent transition-[width] duration-ds-fast"
+                                            className="h-full rounded-full bg-primary transition-[width] duration-150"
                                             style={{ width: `${progress}%` }}
                                         />
                                     </div>
                                 </div>
                             )}
                             {stage === "success" && (
-                                <p className="text-ds-sm text-ds-nominal">
+                                <p className="text-sm text-success">
                                     Upload complete — redirecting to onboarding…
                                 </p>
                             )}
@@ -381,7 +381,7 @@ export function PdfUpload({ cellId, onUploaded, className = "" }: PdfUploadProps
                                 {stage === "previewing" && (
                                     <Button
                                         type="button"
-                                        variant="accent"
+                                        variant="default"
                                         size="md"
                                         onClick={startUpload}
                                         disabled={!previewReady}
@@ -423,13 +423,11 @@ export function PdfUpload({ cellId, onUploaded, className = "" }: PdfUploadProps
                 <div
                     id={errorId}
                     role="alert"
-                    className="flex items-start gap-2 rounded-ds-md border px-3 py-2 text-ds-sm"
+                    className="flex items-start gap-2 rounded-lg border px-3 py-2 text-sm"
                     style={{
-                        backgroundColor:
-                            "color-mix(in oklab, var(--ds-status-critical), transparent 88%)",
-                        borderColor:
-                            "color-mix(in oklab, var(--ds-status-critical), transparent 70%)",
-                        color: "var(--ds-status-critical)",
+                        backgroundColor: "color-mix(in oklab, var(--destructive), transparent 88%)",
+                        borderColor: "color-mix(in oklab, var(--destructive), transparent 70%)",
+                        color: "var(--destructive)",
                     }}
                 >
                     <Icons.AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
@@ -459,20 +457,20 @@ function Dropzone({ isDragging, onDrop, onDragOver, onDragLeave, onOpen, inputId
             onDrop={onDrop}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
-            className={`flex w-full flex-col items-center justify-center gap-3 rounded-ds-md border border-dashed px-6 py-12 text-center transition-colors duration-ds-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring ${
+            className={`flex w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-12 text-center transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 isDragging
-                    ? "border-ds-accent bg-ds-accent-soft"
-                    : "border-ds-border-strong bg-ds-bg-surface hover:bg-ds-bg-hover"
+                    ? "border-primary bg-accent-soft"
+                    : "border-input bg-card hover:bg-accent"
             }`}
         >
-            <span className="flex size-10 items-center justify-center rounded-ds-sm bg-ds-bg-elevated text-ds-fg-muted">
+            <span className="flex size-10 items-center justify-center rounded-md bg-muted text-muted-foreground">
                 <Icons.Upload className="size-5" aria-hidden="true" />
             </span>
             <span className="space-y-1">
-                <span className="block text-ds-md font-medium text-ds-fg-primary">
+                <span className="block text-base font-medium text-foreground">
                     Drop a PDF manual
                 </span>
-                <span className="block text-ds-sm text-ds-fg-muted">
+                <span className="block text-sm text-muted-foreground">
                     Or click to browse. PDF only, 50 MB max.
                 </span>
             </span>

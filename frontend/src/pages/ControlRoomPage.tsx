@@ -62,12 +62,12 @@ export default function ControlRoomPage() {
                 }
             />
             <Hairline />
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-ds-md border border-ds-border bg-ds-bg-surface">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-card">
                 <div
                     className="absolute inset-0"
                     style={{
                         paddingLeft: selectedNode ? `${INSPECTOR_DRAWER_WIDTH}px` : "0px",
-                        transition: "padding-left var(--ds-motion-base) var(--ds-ease-out)",
+                        transition: "padding-left var(--motion-base) var(--ease-out-soft)",
                     }}
                 >
                     <EquipmentGrid

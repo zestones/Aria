@@ -116,11 +116,11 @@ function CustomTooltip({ active, payload, unitName }: CustomTooltipProps) {
     const point = payload[0]?.payload;
     if (!point) return null;
     return (
-        <div className="rounded-ds-sm border border-ds-border bg-ds-bg-elevated px-2 py-1.5 text-ds-xs shadow-ds-overlay">
-            <div className="font-mono text-ds-fg-muted">{formatTooltipTime(point.time)}</div>
-            <div className="mt-0.5 text-ds-fg-primary">
+        <div className="rounded-md border border-border bg-muted px-2 py-1.5 text-xs shadow-card">
+            <div className="font-mono text-muted-foreground">{formatTooltipTime(point.time)}</div>
+            <div className="mt-0.5 text-foreground">
                 <span className="font-mono">{formatValue(point.raw_value)}</span>
-                {unitName ? <span className="ml-1 text-ds-fg-muted">{unitName}</span> : null}
+                {unitName ? <span className="ml-1 text-muted-foreground">{unitName}</span> : null}
             </div>
         </div>
     );
@@ -157,8 +157,8 @@ export function SignalChart(props: SignalChartProps) {
     // Loading — sober text, no shimmer (§9).
     if (isLoading) {
         return (
-            <div className="flex h-[200px] w-full max-w-[400px] items-center justify-center rounded-ds-md border border-ds-border bg-ds-bg-surface">
-                <span className="text-ds-xs text-ds-fg-muted">Loading signal…</span>
+            <div className="flex h-[200px] w-full max-w-[400px] items-center justify-center rounded-lg border border-border bg-card">
+                <span className="text-xs text-muted-foreground">Loading signal…</span>
             </div>
         );
     }
@@ -166,9 +166,9 @@ export function SignalChart(props: SignalChartProps) {
     // Error / empty — inline card, retry handled by TanStack Query.
     if (isError || !series || series.length === 0) {
         return (
-            <div className="w-full max-w-[400px] rounded-ds-md border border-ds-border bg-ds-bg-surface p-3">
-                <div className="mb-1 text-ds-sm font-medium text-ds-fg-primary">{displayName}</div>
-                <div className="text-ds-xs text-ds-fg-subtle">
+            <div className="w-full max-w-[400px] rounded-lg border border-border bg-card p-3">
+                <div className="mb-1 text-sm font-medium text-foreground">{displayName}</div>
+                <div className="text-xs text-text-tertiary">
                     No data for signal #{signal_def_id} in the last {window_hours}h.
                 </div>
             </div>
@@ -178,10 +178,10 @@ export function SignalChart(props: SignalChartProps) {
     const anomalyValue = mark_anomaly_at ? findValueAtTime(series, mark_anomaly_at) : null;
 
     return (
-        <div className="w-full max-w-[400px] rounded-ds-md border border-ds-border bg-ds-bg-surface p-3">
+        <div className="w-full max-w-[400px] rounded-lg border border-border bg-card p-3">
             <div className="mb-2 flex items-baseline justify-between gap-3">
-                <span className="text-ds-sm font-medium text-ds-fg-primary">{displayName}</span>
-                <span className="font-mono text-ds-xs text-ds-fg-muted">
+                <span className="text-sm font-medium text-foreground">{displayName}</span>
+                <span className="font-mono text-xs text-muted-foreground">
                     Last {window_hours}h · Cell {cell_id}
                 </span>
             </div>
@@ -196,63 +196,59 @@ export function SignalChart(props: SignalChartProps) {
                     <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
                         <defs>
                             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="var(--ds-accent)" stopOpacity={0.3} />
-                                <stop
-                                    offset="100%"
-                                    stopColor="var(--ds-accent)"
-                                    stopOpacity={0.05}
-                                />
+                                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.3} />
+                                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.05} />
                             </linearGradient>
                         </defs>
                         <XAxis
                             dataKey="time"
                             tickFormatter={formatTimeLabel}
                             tick={{
-                                fill: "var(--ds-fg-subtle)",
+                                fill: "var(--text-tertiary)",
                                 fontSize: 10,
-                                fontFamily: "var(--ds-font-mono)",
+                                fontFamily: "var(--font-mono)",
                             }}
                             tickLine={false}
-                            axisLine={{ stroke: "var(--ds-border)" }}
+                            axisLine={{ stroke: "var(--border)" }}
                             minTickGap={40}
                         />
                         <YAxis
                             tick={{
-                                fill: "var(--ds-fg-subtle)",
+                                fill: "var(--text-tertiary)",
                                 fontSize: 10,
-                                fontFamily: "var(--ds-font-mono)",
+                                fontFamily: "var(--font-mono)",
                             }}
                             tickLine={false}
-                            axisLine={{ stroke: "var(--ds-border)" }}
+                            axisLine={{ stroke: "var(--border)" }}
                             width={36}
                             unit={unitName ?? undefined}
                         />
                         <Tooltip
                             content={<CustomTooltip unitName={unitName} />}
                             cursor={{
-                                stroke: "var(--ds-border-strong)",
+                                stroke: "var(--input)",
                                 strokeDasharray: "2 2",
                             }}
                         />
                         <Area
                             type="monotone"
                             dataKey="raw_value"
-                            stroke="var(--ds-accent)"
+                            stroke="var(--primary)"
                             strokeWidth={1.5}
                             fill={`url(#${gradientId})`}
                             isAnimationActive={false}
                             dot={false}
                             activeDot={{
                                 r: 3,
-                                fill: "var(--ds-accent)",
-                                stroke: "var(--ds-bg-surface)",
+                                fill: "var(--primary)",
+                                stroke: "var(--card)",
                                 strokeWidth: 1,
                             }}
                         />
                         {threshold !== undefined && (
                             <ReferenceLine
                                 y={threshold}
-                                stroke="var(--ds-status-warning)"
+                                stroke="var(--warning)"
                                 strokeDasharray="4 4"
                                 strokeWidth={1}
                                 ifOverflow="extendDomain"
@@ -263,8 +259,8 @@ export function SignalChart(props: SignalChartProps) {
                                 x={mark_anomaly_at}
                                 y={anomalyValue}
                                 r={4}
-                                fill="var(--ds-status-critical)"
-                                stroke="var(--ds-status-critical)"
+                                fill="var(--destructive)"
+                                stroke="var(--destructive)"
                                 ifOverflow="extendDomain"
                             />
                         )}

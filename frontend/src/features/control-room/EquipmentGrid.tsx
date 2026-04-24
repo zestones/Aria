@@ -49,7 +49,7 @@ export function EquipmentGrid({
             <div
                 data-testid="equipment-grid"
                 data-state="loading"
-                className={`flex h-full items-center justify-center p-6 text-ds-sm text-ds-fg-muted ${className}`}
+                className={`flex h-full items-center justify-center p-6 text-sm text-muted-foreground ${className}`}
             >
                 Loading equipment…
             </div>
@@ -61,7 +61,7 @@ export function EquipmentGrid({
             <div
                 data-testid="equipment-grid"
                 data-state="empty"
-                className={`flex h-full items-center justify-center p-6 text-ds-sm text-ds-fg-muted ${className}`}
+                className={`flex h-full items-center justify-center p-6 text-sm text-muted-foreground ${className}`}
             >
                 No equipment in scope.
             </div>

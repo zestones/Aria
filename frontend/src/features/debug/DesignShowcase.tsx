@@ -39,17 +39,15 @@ export default function DesignShowcase() {
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-ds-bg-base text-ds-fg-primary font-sans">
+        <div className="min-h-screen bg-background text-foreground font-sans">
             <div className="max-w-5xl mx-auto px-8 py-10 space-y-10">
                 {/* Page header — operator-calm meta-line */}
                 <header className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                             <AriaMark size={22} />
-                            <span className="text-ds-md font-semibold tracking-[-0.01em]">
-                                ARIA
-                            </span>
-                            <span className="text-ds-sm text-ds-fg-muted">Design system</span>
+                            <span className="text-base font-semibold tracking-[-0.01em]">ARIA</span>
+                            <span className="text-sm text-muted-foreground">Design system</span>
                         </div>
                         <ThemeToggle />
                     </div>
@@ -65,10 +63,10 @@ export default function DesignShowcase() {
                             />
                         }
                     />
-                    <p className="max-w-2xl text-ds-base text-ds-fg-muted">
+                    <p className="max-w-2xl text-sm text-muted-foreground">
                         The v2 design register — dark-first with a real light mode, warm neutrals,
                         one calm product blue. Linear / Vercel / Stripe cousin. See
-                        <code className="mx-1 rounded-ds-sm bg-ds-bg-elevated px-1 py-0.5 font-mono text-[12px] text-ds-fg-primary">
+                        <code className="mx-1 rounded-md bg-muted px-1 py-0.5 font-mono text-[12px] text-foreground">
                             DESIGN_PLAN_v2.md
                         </code>
                         for the full spec.
@@ -80,13 +78,13 @@ export default function DesignShowcase() {
                 <section className="space-y-4">
                     <SectionHeader label="Brand mark" size="md" marker="§5.6" />
                     <div className="flex flex-wrap items-end gap-10">
-                        <AriaMark size={16} className="text-ds-fg-muted" />
+                        <AriaMark size={16} className="text-muted-foreground" />
                         <AriaMark size={24} />
                         <AriaMark size={40} />
                         <AriaMark size={64} />
-                        <AriaMark size={40} className="text-ds-accent" />
+                        <AriaMark size={40} className="text-primary" />
                     </div>
-                    <p className="text-ds-sm text-ds-fg-subtle">
+                    <p className="text-sm text-text-tertiary">
                         Default color is primary fg. Accent tone is opt-in only.
                     </p>
                 </section>
@@ -97,12 +95,12 @@ export default function DesignShowcase() {
                     <SectionHeader label="Surface" size="md" marker="§2.1" />
                     <Palette
                         swatches={[
-                            ["bg-base", "var(--ds-bg-base)"],
-                            ["bg-surface", "var(--ds-bg-surface)"],
-                            ["bg-elevated", "var(--ds-bg-elevated)"],
-                            ["bg-hover", "var(--ds-bg-hover)"],
-                            ["border", "var(--ds-border)"],
-                            ["border-strong", "var(--ds-border-strong)"],
+                            ["bg-base", "var(--background)"],
+                            ["bg-surface", "var(--card)"],
+                            ["bg-elevated", "var(--muted)"],
+                            ["bg-hover", "var(--accent)"],
+                            ["border", "var(--border)"],
+                            ["border-strong", "var(--input)"],
                         ]}
                     />
                 </section>
@@ -111,9 +109,9 @@ export default function DesignShowcase() {
                     <SectionHeader label="Text" size="md" marker="§2.1" />
                     <Palette
                         swatches={[
-                            ["fg-primary", "var(--ds-fg-primary)"],
-                            ["fg-muted", "var(--ds-fg-muted)"],
-                            ["fg-subtle", "var(--ds-fg-subtle)"],
+                            ["fg-primary", "var(--foreground)"],
+                            ["fg-muted", "var(--muted-foreground)"],
+                            ["fg-subtle", "var(--text-tertiary)"],
                         ]}
                     />
                 </section>
@@ -122,11 +120,11 @@ export default function DesignShowcase() {
                     <SectionHeader label="Accent & status" size="md" marker="§2.2" />
                     <Palette
                         swatches={[
-                            ["accent", "var(--ds-accent)"],
-                            ["accent-hover", "var(--ds-accent-hover)"],
-                            ["nominal", "var(--ds-status-nominal)"],
-                            ["warning", "var(--ds-status-warning)"],
-                            ["critical", "var(--ds-status-critical)"],
+                            ["accent", "var(--primary)"],
+                            ["accent-hover", "var(--primary-hover)"],
+                            ["nominal", "var(--success)"],
+                            ["warning", "var(--warning)"],
+                            ["critical", "var(--destructive)"],
                         ]}
                     />
                 </section>
@@ -135,11 +133,11 @@ export default function DesignShowcase() {
                     <SectionHeader label="Agents" size="md" marker="§2.4" />
                     <Palette
                         swatches={[
-                            ["sentinel", "var(--ds-agent-sentinel)"],
-                            ["investigator", "var(--ds-agent-investigator)"],
-                            ["kb-builder", "var(--ds-agent-kb-builder)"],
-                            ["work-order", "var(--ds-agent-work-order)"],
-                            ["qa", "var(--ds-agent-qa)"],
+                            ["sentinel", "var(--agent-sentinel)"],
+                            ["investigator", "var(--agent-investigator)"],
+                            ["kb-builder", "var(--agent-kb-builder)"],
+                            ["work-order", "var(--agent-work-order)"],
+                            ["qa", "var(--agent-qa)"],
                         ]}
                     />
                 </section>
@@ -149,29 +147,29 @@ export default function DesignShowcase() {
                 <section className="space-y-4">
                     <SectionHeader label="Typography" size="md" marker="§3" />
                     <div className="space-y-3">
-                        <p className="text-ds-3xl font-bold tracking-[-0.02em] leading-tight">
+                        <p className="text-3xl font-bold tracking-[-0.02em] leading-tight">
                             Inter — 30/700. Display only.
                         </p>
-                        <p className="text-ds-2xl font-semibold tracking-[-0.01em] leading-tight">
+                        <p className="text-2xl font-semibold tracking-[-0.01em] leading-tight">
                             Inter — 24/600. Page header.
                         </p>
-                        <p className="text-ds-xl font-semibold leading-tight">
+                        <p className="text-xl font-semibold leading-tight">
                             Inter — 20/600. Section header.
                         </p>
-                        <p className="text-ds-lg font-semibold">Inter — 17/600. Card title.</p>
-                        <p className="text-ds-md font-medium">
+                        <p className="text-lg font-semibold">Inter — 17/600. Card title.</p>
+                        <p className="text-base font-medium">
                             Inter — 15/500. Primary UI controls.
                         </p>
-                        <p className="text-ds-base">
+                        <p className="text-sm">
                             Inter — 14/400. Default body. The app runs on this.
                         </p>
-                        <p className="text-ds-sm text-ds-fg-muted">
+                        <p className="text-sm text-muted-foreground">
                             Inter — 13/400–500. Captions, labels.
                         </p>
-                        <p className="text-ds-xs text-ds-fg-subtle">
+                        <p className="text-xs text-text-tertiary">
                             Inter — 11/500. Fine print, metadata.
                         </p>
-                        <p className="font-mono text-[13px] text-ds-fg-muted">
+                        <p className="font-mono text-[13px] text-muted-foreground">
                             JetBrains Mono — 13. Rare: numerics, kbd, code.
                         </p>
                     </div>
@@ -183,16 +181,16 @@ export default function DesignShowcase() {
                     <SectionHeader label="Buttons" size="md" marker="01" />
                     <div className="flex flex-wrap items-center gap-3">
                         <Button>Default</Button>
-                        <Button variant="accent">Accent</Button>
+                        <Button variant="secondary">Secondary</Button>
                         <Button variant="ghost">Ghost</Button>
-                        <Button variant="danger">Danger</Button>
+                        <Button variant="destructive">Destructive</Button>
                         <Button disabled>Disabled</Button>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                         <Button size="sm">Small</Button>
                         <Button size="md">Medium</Button>
                         <Button size="lg">Large</Button>
-                        <Button variant="accent">
+                        <Button variant="default">
                             <Icons.Play className="size-4" />
                             Replay scenario
                         </Button>
@@ -214,7 +212,7 @@ export default function DesignShowcase() {
                                     Vibration calibrated from operator feedback.
                                 </CardDescription>
                             </CardHeader>
-                            <p className="text-ds-sm text-ds-fg-muted">
+                            <p className="text-sm text-muted-foreground">
                                 Nominal read — no rail. Absence is the default state.
                             </p>
                         </Card>
@@ -256,7 +254,7 @@ export default function DesignShowcase() {
 
                 <section className="space-y-3">
                     <SectionHeader label="Status" size="md" marker="04" />
-                    <div className="flex flex-wrap items-center gap-6 text-ds-sm text-ds-fg-muted">
+                    <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
                         {statuses.map((s) => (
                             <div key={s} className="flex items-center gap-2">
                                 <StatusDot status={s} />
@@ -272,7 +270,7 @@ export default function DesignShowcase() {
 
                 <section className="space-y-3">
                     <SectionHeader label="Keyboard keys" size="md" marker="05" />
-                    <div className="flex items-center gap-2 text-ds-sm text-ds-fg-muted">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>Toggle chat drawer</span>
                         <KbdKey>⌘</KbdKey>
                         <KbdKey>K</KbdKey>
@@ -296,7 +294,7 @@ export default function DesignShowcase() {
                         <div className="mt-4">
                             <TabsContent value="thinking">
                                 <Card padding="sm">
-                                    <p className="text-ds-sm text-ds-fg-muted leading-relaxed">
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
                                         The vibration spike at t-4h correlates with the bearing
                                         temperature increase at t-3h30. Both signals deviated from
                                         nominal at…
@@ -305,7 +303,7 @@ export default function DesignShowcase() {
                             </TabsContent>
                             <TabsContent value="tools">
                                 <Card padding="sm">
-                                    <p className="text-ds-sm text-ds-fg-muted">
+                                    <p className="text-sm text-muted-foreground">
                                         get_signal_trends · get_failure_history · ask_kb_builder ·
                                         submit_rca
                                     </p>
@@ -313,14 +311,14 @@ export default function DesignShowcase() {
                             </TabsContent>
                             <TabsContent value="io">
                                 <Card padding="sm">
-                                    <p className="text-ds-sm text-ds-fg-muted">
+                                    <p className="text-sm text-muted-foreground">
                                         Raw JSON inputs/outputs dev view.
                                     </p>
                                 </Card>
                             </TabsContent>
                             <TabsContent value="memory">
                                 <Card padding="sm">
-                                    <p className="text-ds-sm text-ds-fg-muted">
+                                    <p className="text-sm text-muted-foreground">
                                         Failure history entries consulted during this turn.
                                     </p>
                                 </Card>
@@ -347,7 +345,7 @@ export default function DesignShowcase() {
                                     </Button>
                                 }
                             />
-                            <p className="text-ds-sm text-ds-fg-muted">
+                            <p className="text-sm text-muted-foreground">
                                 Placeholder drawer — the real chat panel lands in M6.5.
                             </p>
                         </div>
@@ -366,7 +364,7 @@ export default function DesignShowcase() {
                 <Hairline weight={2} />
 
                 <footer className="flex items-baseline justify-between pb-10">
-                    <p className="text-ds-sm text-ds-fg-subtle">End of design system</p>
+                    <p className="text-sm text-text-tertiary">End of design system</p>
                     <MetaStrip
                         items={[
                             { label: "Version", value: "v2 · operator-calm" },
@@ -385,10 +383,10 @@ function Palette({ swatches }: { swatches: [string, string][] }) {
             {swatches.map(([name, color]) => (
                 <div key={name}>
                     <div
-                        className="h-14 rounded-ds-md border border-ds-border"
+                        className="h-14 rounded-lg border border-border"
                         style={{ backgroundColor: color }}
                     />
-                    <div className="mt-1.5 text-ds-xs text-ds-fg-muted">{name}</div>
+                    <div className="mt-1.5 text-xs text-muted-foreground">{name}</div>
                 </div>
             ))}
         </div>
@@ -411,11 +409,11 @@ function MotionDemo({
                     variants={variants}
                     initial="hidden"
                     animate="visible"
-                    className="flex h-16 items-center justify-center rounded-ds-sm border text-ds-sm font-medium"
+                    className="flex h-16 items-center justify-center rounded-md border text-sm font-medium"
                     style={{
-                        backgroundColor: "var(--ds-accent-soft)",
-                        borderColor: "color-mix(in oklab, var(--ds-accent), transparent 70%)",
-                        color: "var(--ds-accent)",
+                        backgroundColor: "var(--accent-soft)",
+                        borderColor: "color-mix(in oklab, var(--primary), transparent 70%)",
+                        color: "var(--primary)",
                     }}
                 >
                     {label}
@@ -424,7 +422,7 @@ function MotionDemo({
             <button
                 type="button"
                 onClick={() => setKey((k) => k + 1)}
-                className="mt-1.5 text-ds-sm text-ds-fg-subtle hover:text-ds-fg-muted"
+                className="mt-1.5 text-sm text-text-tertiary hover:text-muted-foreground"
             >
                 Replay →
             </button>

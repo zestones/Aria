@@ -25,14 +25,14 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         { padding = "md", elevated = false, rail, railPulse, className = "", children, ...rest },
         ref,
     ) => {
-        const bg = elevated ? "bg-ds-bg-elevated" : "bg-ds-bg-surface";
+        const bg = elevated ? "bg-muted" : "bg-card";
         const hasRail = rail !== undefined;
         const pulse = railPulse ?? (rail === "critical" || rail === "warning");
-        const railPadding = hasRail ? "pl-[calc(var(--ds-space-rail,14px))]" : "";
+        const railPadding = hasRail ? "pl-[14px]" : "";
         return (
             <div
                 ref={ref}
-                className={`relative ${bg} border border-ds-border rounded-ds-md ${paddings[padding]} ${railPadding} ${className}`}
+                className={`relative ${bg} border border-border rounded-2xl ${paddings[padding]} ${railPadding} ${className}`}
                 {...rest}
             >
                 {hasRail && <StatusRail tone={rail} pulse={pulse} />}
@@ -58,7 +58,7 @@ export function CardTitle({
 }: HTMLAttributes<HTMLHeadingElement>) {
     return (
         <h3
-            className={`text-ds-lg font-semibold leading-tight text-ds-fg-primary ${className}`}
+            className={`text-lg font-medium leading-tight tracking-[-0.02em] text-foreground ${className}`}
             {...rest}
         >
             {children}
@@ -72,7 +72,7 @@ export function CardDescription({
     ...rest
 }: HTMLAttributes<HTMLParagraphElement>) {
     return (
-        <p className={`text-ds-sm text-ds-fg-muted mt-1 ${className}`} {...rest}>
+        <p className={`text-sm text-muted-foreground mt-1 ${className}`} {...rest}>
             {children}
         </p>
     );

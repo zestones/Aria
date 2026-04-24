@@ -3,10 +3,10 @@ import type { SVGAttributes } from "react";
 /**
  * ARIA brand mark — minimal triangle "A" bisected by a telemetry pulse.
  * Default color is `fg-primary` per DESIGN_PLAN_v2 §5.6. Callers opt in to
- * accent tone by passing `className="text-ds-accent"` (rare).
+ * accent tone by passing `className="text-primary"` (rare).
  */
 export function AriaMark({
-    className = "text-ds-fg-primary",
+    className = "text-foreground",
     size = 20,
     ...rest
 }: SVGAttributes<SVGSVGElement> & { size?: number }) {

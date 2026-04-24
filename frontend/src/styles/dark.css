@@ -1,0 +1,91 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   ARIA Dark Theme — "Operator Calm Night"
+   Warm-black base (never jet black) with the same Signal Orange accent as
+   the light theme — keeps brand identity consistent across themes.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root[data-theme="dark"] {
+    /* ─── Surface Hierarchy ─── */
+    --background: #0b0b0f; /* Deep warm-black */
+    --foreground: #ededef;
+
+    --card: #111114;
+    --card-foreground: #ededef;
+
+    --popover: #17171c;
+    --popover-foreground: #ededef;
+
+    --surface-elevated: #17171c;
+
+    /* ─── Brand Colors — Signal Orange ─── */
+    --primary: #f37338; /* Light Signal Orange — better contrast on dark */
+    --primary-foreground: #0b0b0f;
+    --primary-hover: #ff8c52;
+
+    --secondary: #1c1c22;
+    --secondary-foreground: #ededef;
+
+    /* ─── Neutral Tones ─── */
+    --muted: #17171c;
+    --muted-foreground: #9a9aa3;
+
+    --accent: #1c1c22;
+    --accent-foreground: #ededef;
+
+    /* ─── Text Hierarchy ─── */
+    --text-primary: #ffffff;
+    --text-secondary: #c1c1c8;
+    --text-tertiary: #9a9aa3;
+    --text-muted: #64646d;
+
+    /* ─── Semantic Colors ─── */
+    --destructive: #e5484d;
+    --destructive-foreground: #ffffff;
+    --warning: #e5a13a;
+    --warning-foreground: #0b0b0f;
+    --success: #3ecf8e;
+    --success-foreground: #0b0b0f;
+    --info: #5990f8;
+    --info-foreground: #0b0b0f;
+    --status-online: #3ecf8e;
+
+    /* ─── Borders & Inputs ─── */
+    --border: #24242b;
+    --border-muted: #1c1c22;
+    --input: #33333c;
+    --ring: #f37338;
+
+    /* ─── Accent Decoration ─── */
+    --accent-soft: rgb(243 115 56 / 0.12);
+    --accent-arc: #f37338;
+    --watermark: #1c1c22;
+
+    /* ─── Data Visualization ─── */
+    --chart-1: #f37338;
+    --chart-2: #e5a13a;
+    --chart-3: #5990f8;
+    --chart-4: #3ecf8e;
+    --chart-5: #9a9aa3;
+
+    /* ─── Agent Identities ─── */
+    --agent-sentinel: #6b8fcf;
+    --agent-investigator: #a18bdd;
+    --agent-kb-builder: #3ecf8e;
+    --agent-work-order: #d4a24a;
+    --agent-qa: #d17ba9;
+
+    /* ─── Sidebar ─── */
+    --sidebar: #0f0f10;
+    --sidebar-foreground: #ededef;
+    --sidebar-muted-foreground: #9a9aa3;
+    --sidebar-primary: #f37338;
+    --sidebar-primary-foreground: #0b0b0f;
+    --sidebar-accent: #1c1c22;
+    --sidebar-accent-foreground: #ededef;
+    --sidebar-border: #24242b;
+    --sidebar-ring: #f37338;
+
+    color-scheme: dark;
+  }
+}

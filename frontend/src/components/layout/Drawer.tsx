@@ -103,10 +103,10 @@ export function Drawer({ open, width, onToggle, onWidthChange, children, id }: D
             ref={asideRef}
             id={drawerId}
             aria-label="Chat drawer"
-            className="relative h-full overflow-hidden border-l border-ds-border bg-ds-bg-surface"
+            className="relative h-full overflow-hidden border-l border-border bg-card"
             style={{
                 width: open ? `${width}px` : 0,
-                transition: `width var(--ds-motion-base) var(--ds-ease-out)`,
+                transition: `width var(--motion-base) var(--ease-out-soft)`,
             }}
         >
             {open && (
@@ -121,19 +121,19 @@ export function Drawer({ open, width, onToggle, onWidthChange, children, id }: D
                     tabIndex={0}
                     onPointerDown={onHandlePointerDown}
                     onKeyDown={onHandleKeyDown}
-                    className="absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize outline-none focus-visible:bg-ds-accent/60 hover:bg-ds-accent/40"
+                    className="absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize outline-none focus-visible:bg-primary/60 hover:bg-primary/40"
                     style={{ touchAction: "none" }}
                 />
             )}
             {open && (
                 <div className="flex h-full w-full flex-col" style={{ width: `${width}px` }}>
-                    <header className="flex items-center justify-between gap-4 border-b border-ds-border px-4 py-3">
+                    <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
                         <SectionHeader label="Chat" size="sm" />
                         <button
                             type="button"
                             onClick={onToggle}
                             aria-label="Collapse chat drawer"
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-ds-sm text-ds-fg-muted transition-colors duration-ds-fast hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             <Icons.PanelRightClose className="size-4" />
                         </button>
@@ -143,7 +143,7 @@ export function Drawer({ open, width, onToggle, onWidthChange, children, id }: D
                     ) : (
                         <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
                             <Hairline label="Awaiting wire" />
-                            <p className="text-ds-sm text-ds-fg-muted">
+                            <p className="text-sm text-muted-foreground">
                                 Chat shell mounts here in M6.5.
                             </p>
                         </div>

@@ -53,20 +53,20 @@ export function EquipmentInspector({ open, node, onClose }: EquipmentInspectorPr
                     data-testid="equipment-inspector"
                     role="dialog"
                     aria-label={`${node.label} inspector`}
-                    className="absolute left-0 top-0 bottom-0 z-20 flex flex-col border-r border-ds-border bg-ds-bg-surface"
+                    className="absolute left-0 top-0 bottom-0 z-20 flex flex-col border-r border-border bg-card"
                     style={{ width: `${INSPECTOR_DRAWER_WIDTH}px` }}
                     variants={drawerSlideLeft}
                     initial="hidden"
                     animate="visible"
                     exit="exit"
                 >
-                    <header className="flex items-start justify-between gap-3 border-b border-ds-border px-4 py-3">
+                    <header className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
                         <div className="min-w-0">
                             <SectionHeader label={node.label} size="sm" />
                             {node.subLabel && (
                                 <p
-                                    className="mt-1 truncate text-ds-xs"
-                                    style={{ color: "var(--ds-fg-subtle)" }}
+                                    className="mt-1 truncate text-xs"
+                                    style={{ color: "var(--text-tertiary)" }}
                                     title={node.subLabel}
                                 >
                                     {node.subLabel}
@@ -77,7 +77,7 @@ export function EquipmentInspector({ open, node, onClose }: EquipmentInspectorPr
                             type="button"
                             onClick={onClose}
                             aria-label="Close inspector"
-                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-ds-sm text-ds-fg-muted transition-colors duration-ds-fast hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             <Icons.X className="size-4" />
                         </button>
@@ -121,11 +121,11 @@ interface InspectorSectionProps {
 function InspectorSection({ label, children }: InspectorSectionProps) {
     return (
         <section>
-            <h3 className="mb-2 text-ds-sm font-medium" style={{ color: "var(--ds-fg-muted)" }}>
+            <h3 className="mb-2 text-sm font-medium" style={{ color: "var(--muted-foreground)" }}>
                 {label}
             </h3>
             <Card padding="md" elevated>
-                <p className="text-ds-sm text-ds-fg-subtle">{children}</p>
+                <p className="text-sm text-text-tertiary">{children}</p>
             </Card>
         </section>
     );

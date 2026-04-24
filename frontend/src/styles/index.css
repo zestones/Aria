@@ -1,80 +1,107 @@
 @import "tailwindcss";
+@import "@fontsource-variable/sofia-sans";
 
-@import "./tokens.css";
 @import "./base.css";
 
-/* Expose ARIA design-system tokens to Tailwind v4 utilities (@theme inline).
- *
- * Naming follows Tailwind v4's namespace convention so utilities map cleanly:
- *   --color-ds-*    -> bg-ds-*, text-ds-*, border-ds-*, ring-ds-*, fill-ds-*
- *   --radius-ds-*   -> rounded-ds-*
- *   --text-ds-*     -> text-ds-*
- *   --font-*        -> font-*
- *   --shadow-ds-*   -> shadow-ds-*
- *   --ease-ds-*     -> ease-ds-*
- *   --duration-ds-* -> duration-ds-*
- */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Tailwind v4 token bridge — expose all CSS custom properties as utilities.
+
+   Naming follows the standard semantic convention so utilities map cleanly:
+     --color-*    -> bg-*, text-*, border-*, ring-*, fill-*, stroke-*
+     --radius-*   -> rounded-*
+     --font-*     -> font-*
+     --shadow-*   -> shadow-*
+   ───────────────────────────────────────────────────────────────────────────── */
 @theme inline {
-  /* Surfaces & borders */
-  --color-ds-bg-base: var(--ds-bg-base);
-  --color-ds-bg-surface: var(--ds-bg-surface);
-  --color-ds-bg-elevated: var(--ds-bg-elevated);
-  --color-ds-bg-hover: var(--ds-bg-hover);
-  --color-ds-border: var(--ds-border);
-  --color-ds-border-strong: var(--ds-border-strong);
+  /* ─── Surface tokens ─── */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-surface-elevated: var(--surface-elevated);
 
-  /* Foreground */
-  --color-ds-fg-primary: var(--ds-fg-primary);
-  --color-ds-fg-muted: var(--ds-fg-muted);
-  --color-ds-fg-subtle: var(--ds-fg-subtle);
+  /* ─── Brand / accent ─── */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
 
-  /* Accent */
-  --color-ds-accent: var(--ds-accent);
-  --color-ds-accent-hover: var(--ds-accent-hover);
-  --color-ds-accent-fg: var(--ds-accent-fg);
-  --color-ds-accent-soft: var(--ds-accent-soft);
-  --color-ds-accent-ring: var(--ds-accent-ring);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 
-  /* Status */
-  --color-ds-nominal: var(--ds-status-nominal);
-  --color-ds-warning: var(--ds-status-warning);
-  --color-ds-critical: var(--ds-status-critical);
-  --color-ds-info: var(--ds-status-info);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 
-  /* Agent identities */
-  --color-ds-sentinel: var(--ds-agent-sentinel);
-  --color-ds-investigator: var(--ds-agent-investigator);
-  --color-ds-kb-builder: var(--ds-agent-kb-builder);
-  --color-ds-work-order: var(--ds-agent-work-order);
-  --color-ds-qa: var(--ds-agent-qa);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-arc: var(--accent-arc);
+  --color-watermark: var(--watermark);
 
-  /* Radii — rounded-ds-{sm,md,lg} */
-  --radius-ds-sm: var(--ds-radius-sm);
-  --radius-ds-md: var(--ds-radius-md);
-  --radius-ds-lg: var(--ds-radius-lg);
+  /* ─── Text ramp ─── */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
 
-  /* Type scale — text-ds-{xs,sm,base,md,lg,xl,2xl,3xl} */
-  --text-ds-xs: var(--ds-text-xs);
-  --text-ds-sm: var(--ds-text-sm);
-  --text-ds-base: var(--ds-text-base);
-  --text-ds-md: var(--ds-text-md);
-  --text-ds-lg: var(--ds-text-lg);
-  --text-ds-xl: var(--ds-text-xl);
-  --text-ds-2xl: var(--ds-text-2xl);
-  --text-ds-3xl: var(--ds-text-3xl);
+  /* ─── Semantic ─── */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-status-online: var(--status-online);
 
-  /* Fonts */
-  --font-sans: var(--ds-font-sans);
-  --font-mono: var(--ds-font-mono);
+  /* ─── Borders / inputs / focus ─── */
+  --color-border: var(--border);
+  --color-border-muted: var(--border-muted);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  /* Motion — duration-ds-{fast,base,slow}, ease-ds-out */
-  --duration-ds-fast: var(--ds-motion-fast);
-  --duration-ds-base: var(--ds-motion-base);
-  --duration-ds-slow: var(--ds-motion-slow);
-  --ease-ds-out: var(--ds-ease-out);
+  /* ─── Charts ─── */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 
-  /* Elevation — shadow-ds-overlay */
-  --shadow-ds-overlay: var(--ds-shadow-overlay);
+  /* ─── Agent identities ─── */
+  --color-agent-sentinel: var(--agent-sentinel);
+  --color-agent-investigator: var(--agent-investigator);
+  --color-agent-kb-builder: var(--agent-kb-builder);
+  --color-agent-work-order: var(--agent-work-order);
+  --color-agent-qa: var(--agent-qa);
+
+  /* ─── Sidebar ─── */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted-foreground: var(--sidebar-muted-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ─── Radii — editorial pill aesthetic ─── */
+  --radius-cta: 20px;
+  --radius-hero: 40px;
+
+  /* ─── Fonts ─── */
+  --font-sans:
+    "Sofia Sans Variable", "Sofia Sans", "Inter Variable", "Inter", ui-sans-serif, system-ui,
+    -apple-system, sans-serif;
+  --font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ─── Shadows — atmospheric cushion (large spread, low opacity) ─── */
+  --shadow-pill: 0 4px 24px 0 rgb(0 0 0 / 0.04);
+  --shadow-card: 0 24px 48px 0 rgb(0 0 0 / 0.08);
+  --shadow-feature: 0 70px 110px 0 rgb(0 0 0 / 0.25);
 }
 
 @import "../features/work-orders/printable.css";

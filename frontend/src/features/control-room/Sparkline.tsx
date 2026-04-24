@@ -2,8 +2,8 @@
  * Pure-SVG sparkline for KPI tiles. No deps.
  *
  * - Renders the last N points as a polyline inside a 60×20 viewBox.
- * - Stroke uses `--ds-fg-muted` so the line reads as metadata, not feature.
- * - Highlights the last point with a small circle stroked in `--ds-accent`.
+ * - Stroke uses `--muted-foreground` so the line reads as metadata, not feature.
+ * - Highlights the last point with a small circle stroked in `--primary`.
  * - Returns a silent placeholder when data is missing (loading / error).
  */
 
@@ -67,7 +67,7 @@ export function Sparkline({
         >
             <polyline
                 fill="none"
-                stroke="var(--ds-fg-muted)"
+                stroke="var(--muted-foreground)"
                 strokeWidth={1}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -78,8 +78,8 @@ export function Sparkline({
                 cx={lastX}
                 cy={lastY}
                 r={1.5}
-                fill="var(--ds-bg-base)"
-                stroke="var(--ds-accent)"
+                fill="var(--background)"
+                stroke="var(--primary)"
                 strokeWidth={1}
                 vectorEffect="non-scaling-stroke"
             />

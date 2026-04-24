@@ -43,14 +43,14 @@ export default function OnboardingPage() {
     };
 
     return (
-        <div className="min-h-full flex flex-col bg-ds-bg-base">
-            <header className="flex items-center justify-between border-b border-ds-border px-6 py-4">
+        <div className="min-h-full flex flex-col bg-background">
+            <header className="flex items-center justify-between border-b border-border px-6 py-4">
                 <div className="flex items-center gap-2.5">
                     <AriaMark size={20} />
-                    <span className="text-ds-md font-semibold tracking-[-0.01em] text-ds-fg-primary">
+                    <span className="text-base font-semibold tracking-[-0.01em] text-foreground">
                         ARIA
                     </span>
-                    <span className="text-ds-sm text-ds-fg-muted">Onboarding</span>
+                    <span className="text-sm text-muted-foreground">Onboarding</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
@@ -77,7 +77,7 @@ export default function OnboardingPage() {
                                 size="lg"
                                 meta={<span>Cell {cellId} · Step 1 of 3</span>}
                             />
-                            <p className="text-ds-sm text-ds-fg-muted">
+                            <p className="text-sm text-muted-foreground">
                                 Upload the equipment manual as a PDF. KB Builder extracts
                                 thresholds, failure patterns and maintenance procedures, then asks a
                                 few calibration questions.
@@ -88,7 +88,7 @@ export default function OnboardingPage() {
                             <PdfUpload cellId={cellId} onUploaded={handleUploaded} />
 
                             {result && (
-                                <p className="text-ds-sm text-ds-fg-muted">
+                                <p className="text-sm text-muted-foreground">
                                     Extracted{" "}
                                     {Object.keys(result.structured_data?.thresholds ?? {}).length}{" "}
                                     thresholds. Redirecting…
@@ -110,7 +110,7 @@ function CellSelector({ value, onChange }: { value: number; onChange: (v: number
     ];
     return (
         <div className="flex flex-col gap-2">
-            <span className="text-ds-sm font-medium text-ds-fg-muted">Target cell</span>
+            <span className="text-sm font-medium text-muted-foreground">Target cell</span>
             <div className="flex flex-wrap gap-2">
                 {options.map((opt) => {
                     const active = opt.id === value;
@@ -120,10 +120,10 @@ function CellSelector({ value, onChange }: { value: number; onChange: (v: number
                             key={opt.id}
                             onClick={() => onChange(opt.id)}
                             aria-pressed={active}
-                            className={`inline-flex h-8 items-center rounded-ds-md border px-3 text-ds-sm font-medium transition-colors duration-ds-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring ${
+                            className={`inline-flex h-8 items-center rounded-lg border px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                                 active
-                                    ? "border-ds-accent bg-ds-accent-soft text-ds-accent"
-                                    : "border-ds-border bg-ds-bg-surface text-ds-fg-muted hover:bg-ds-bg-hover hover:text-ds-fg-primary"
+                                    ? "border-primary bg-accent-soft text-primary"
+                                    : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
                             }`}
                         >
                             {opt.label}
@@ -144,14 +144,14 @@ function SessionStub({ sessionId }: { sessionId: string }) {
                 size="lg"
                 meta={<Badge variant="code">{sessionId.slice(0, 8)}</Badge>}
             />
-            <p className="text-ds-sm text-ds-fg-muted">
+            <p className="text-sm text-muted-foreground">
                 The extraction succeeded. The multi-turn calibration wizard ships with M8.6 — for
                 now, the session is staged and ready.
             </p>
             <div className="flex flex-wrap gap-2">
                 <Button
                     type="button"
-                    variant="accent"
+                    variant="default"
                     size="md"
                     onClick={() => navigate("/control-room")}
                 >

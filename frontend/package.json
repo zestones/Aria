@@ -19,6 +19,7 @@
         "test:ui": "vitest --ui"
     },
     "dependencies": {
+        "@fontsource-variable/sofia-sans": "^5.2.8",
         "@tailwindcss/vite": "^4.1.18",
         "@tanstack/react-query": "^5.90.21",
         "framer-motion": "^12.38.0",

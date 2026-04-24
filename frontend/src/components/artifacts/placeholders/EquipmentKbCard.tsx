@@ -171,19 +171,19 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
     if (isLoading) {
         return (
             <div
-                className="flex w-full max-w-[440px] items-center justify-center rounded-ds-md border border-ds-border bg-ds-bg-surface p-4"
+                className="flex w-full max-w-[440px] items-center justify-center rounded-lg border border-border bg-card p-4"
                 role="status"
             >
-                <span className="text-ds-xs text-ds-fg-muted">Loading equipment KB…</span>
+                <span className="text-xs text-muted-foreground">Loading equipment KB…</span>
             </div>
         );
     }
 
     if (isError || !kb) {
         return (
-            <div className="w-full max-w-[440px] rounded-ds-md border border-ds-border bg-ds-bg-surface p-3">
-                <div className="mb-1 text-ds-sm font-medium text-ds-fg-primary">Equipment</div>
-                <div className="text-ds-xs text-ds-fg-subtle">No KB data for cell {cell_id}.</div>
+            <div className="w-full max-w-[440px] rounded-lg border border-border bg-card p-3">
+                <div className="mb-1 text-sm font-medium text-foreground">Equipment</div>
+                <div className="text-xs text-text-tertiary">No KB data for cell {cell_id}.</div>
             </div>
         );
     }
@@ -282,35 +282,35 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
     return (
         <section
             aria-label={`Equipment KB for ${displayName}`}
-            className="w-full max-w-[440px] overflow-hidden rounded-ds-md border border-ds-border bg-ds-bg-surface"
+            className="w-full max-w-[440px] overflow-hidden rounded-lg border border-border bg-card"
         >
             {/* Header */}
             <div className="px-4 pt-3 pb-2">
                 <div className="flex items-baseline gap-2">
-                    <span className="text-ds-lg font-semibold text-ds-fg-primary">
-                        {displayName}
-                    </span>
-                    <span className="text-ds-sm text-ds-fg-muted">· {equipmentType}</span>
+                    <span className="text-lg font-semibold text-foreground">{displayName}</span>
+                    <span className="text-sm text-muted-foreground">· {equipmentType}</span>
                 </div>
                 {subParts.length > 0 && (
-                    <div className="mt-0.5 text-ds-xs text-ds-fg-muted">{subParts.join(" · ")}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                        {subParts.join(" · ")}
+                    </div>
                 )}
             </div>
 
-            <div aria-hidden="true" className="h-px w-full bg-ds-border" />
+            <div aria-hidden="true" className="h-px w-full bg-border" />
 
             {/* Thresholds */}
             <details open className="group/thresholds">
-                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-ds-sm font-medium text-ds-fg-primary hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring">
+                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-sm font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span>Thresholds ({thresholdKeys.length})</span>
                     <ChevronDown
-                        className="size-4 text-ds-fg-muted transition-transform [details:not([open])_&]:-rotate-90"
+                        className="size-4 text-muted-foreground transition-transform [details:not([open])_&]:-rotate-90"
                         aria-hidden="true"
                     />
                 </summary>
 
                 {thresholdKeys.length === 0 ? (
-                    <div className="px-4 pb-3 text-ds-xs text-ds-fg-subtle">
+                    <div className="px-4 pb-3 text-xs text-text-tertiary">
                         No thresholds calibrated yet.
                     </div>
                 ) : (
@@ -322,7 +322,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                             );
                             return (
                                 <div key={key} className="py-2">
-                                    <div className="mb-1 text-ds-xs text-ds-fg-muted">
+                                    <div className="mb-1 text-xs text-muted-foreground">
                                         {humanizeThresholdKey(key)}
                                     </div>
                                     <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -337,7 +337,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                                                     key={field}
                                                     className="flex items-baseline gap-1.5"
                                                 >
-                                                    <span className="text-ds-xs text-ds-fg-subtle">
+                                                    <span className="text-xs text-text-tertiary">
                                                         {THRESHOLD_FIELD_LABELS[field]}
                                                     </span>
                                                     {editing ? (
@@ -364,7 +364,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                                                                     cancelEdit(path);
                                                                 }
                                                             }}
-                                                            className="w-16 rounded-ds-sm border border-ds-border-strong bg-ds-bg-elevated px-1.5 py-0.5 font-mono text-ds-sm text-ds-fg-primary tabular-nums focus-visible:border-ds-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
+                                                            className="w-16 rounded-md border border-input bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground tabular-nums focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                         />
                                                     ) : (
                                                         <button
@@ -374,7 +374,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                                                             }
                                                             data-testid={`threshold-value-${path}`}
                                                             onClick={() => startEdit(path, value)}
-                                                            className={`cursor-pointer rounded-ds-sm px-1.5 py-0.5 font-mono text-ds-sm text-ds-fg-primary tabular-nums transition-colors hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring ${highlighted ? "ring-1 ring-ds-accent" : ""}`}
+                                                            className={`cursor-pointer rounded-md px-1.5 py-0.5 font-mono text-sm text-foreground tabular-nums transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${highlighted ? "ring-1 ring-primary" : ""}`}
                                                         >
                                                             {value}
                                                         </button>
@@ -390,42 +390,40 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                 )}
             </details>
 
-            <div aria-hidden="true" className="h-px w-full bg-ds-border" />
+            <div aria-hidden="true" className="h-px w-full bg-border" />
 
             {/* Specifications */}
             <details className="group/specs">
-                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-ds-sm font-medium text-ds-fg-primary hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring">
+                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-sm font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span>Specifications</span>
                     <ChevronDown
-                        className="size-4 text-ds-fg-muted transition-transform [details:not([open])_&]:-rotate-90"
+                        className="size-4 text-muted-foreground transition-transform [details:not([open])_&]:-rotate-90"
                         aria-hidden="true"
                     />
                 </summary>
 
                 {specEntries.length === 0 ? (
-                    <div className="px-4 pb-3 text-ds-xs text-ds-fg-subtle">
+                    <div className="px-4 pb-3 text-xs text-text-tertiary">
                         No specifications recorded.
                     </div>
                 ) : (
                     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 pb-3">
                         {specEntries.map(([k, v]) => (
                             <div key={k} className="contents">
-                                <dt className="text-ds-xs text-ds-fg-muted">
+                                <dt className="text-xs text-muted-foreground">
                                     {SPEC_LABELS[k] ?? humanizeThresholdKey(k)}
                                 </dt>
-                                <dd className="text-ds-xs text-ds-fg-primary">
-                                    {formatSpecValue(v)}
-                                </dd>
+                                <dd className="text-xs text-foreground">{formatSpecValue(v)}</dd>
                             </div>
                         ))}
                     </dl>
                 )}
             </details>
 
-            <div aria-hidden="true" className="h-px w-full bg-ds-border" />
+            <div aria-hidden="true" className="h-px w-full bg-border" />
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-4 py-2 text-ds-xs text-ds-fg-muted">
+            <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
                 <span>
                     {confidencePct !== null ? `Confidence ${confidencePct}%` : "Confidence —"}
                     {" · "}
