@@ -18,7 +18,7 @@
  */
 
 import { useId, useMemo, useState } from "react";
-import { Badge, Card, Hairline, Icons, SectionHeader } from "../../components/ui";
+import { Badge, Card, Hairline, Icons, NativeSelect, SectionHeader } from "../../components/ui";
 import { formatHeaderDate } from "../../lib/date";
 import { getUser } from "../../services/auth";
 import type { LogbookCategory, LogbookEntry, LogbookSeverity } from "../../services/logbook";
@@ -203,7 +203,7 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
                 <label className="font-medium" htmlFor={categoryId}>
                     Category
                 </label>
-                <select
+                <NativeSelect
                     id={categoryId}
                     className={inputClass}
                     value={filters.category}
@@ -217,13 +217,13 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
                             {opt.label}
                         </option>
                     ))}
-                </select>
+                </NativeSelect>
             </div>
             <div className={fieldClass}>
                 <label className="font-medium" htmlFor={severityId}>
                     Severity
                 </label>
-                <select
+                <NativeSelect
                     id={severityId}
                     className={inputClass}
                     value={filters.severity}
@@ -237,7 +237,7 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
                             {opt.label}
                         </option>
                     ))}
-                </select>
+                </NativeSelect>
             </div>
             <div className={fieldClass}>
                 <label className="font-medium" htmlFor={cellId}>

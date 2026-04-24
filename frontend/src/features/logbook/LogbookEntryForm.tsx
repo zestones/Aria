@@ -12,7 +12,7 @@
  */
 
 import { useId, useMemo, useState } from "react";
-import { Button, Card, Hairline, Icons, SectionHeader } from "../../components/ui";
+import { Button, Card, Hairline, Icons, NativeSelect, SectionHeader } from "../../components/ui";
 import { type FlatCell, useFlatHierarchy } from "../../lib/hierarchy";
 import type { LogbookCategory, LogbookSeverity } from "../../services/logbook";
 import { useCreateLogbookEntry } from "./useLogbook";
@@ -110,7 +110,7 @@ export function LogbookEntryForm({ defaultCellId, canCreate, onCreated }: Logboo
                         <label className={labelClass} htmlFor={cellId}>
                             Cell
                         </label>
-                        <select
+                        <NativeSelect
                             id={cellId}
                             className={inputClass}
                             value={form.cellId ?? ""}
@@ -123,20 +123,20 @@ export function LogbookEntryForm({ defaultCellId, canCreate, onCreated }: Logboo
                             disabled={!canCreate}
                             required
                         >
-                            <option value="">Select a cell…</option>
+                            <option value="">Select cell</option>
                             {sortedCells.map((c) => (
                                 <option key={c.cellId} value={c.cellId}>
                                     {c.cellName}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
                         <label className={labelClass} htmlFor={categoryId}>
                             Category
                         </label>
-                        <select
+                        <NativeSelect
                             id={categoryId}
                             className={inputClass}
                             value={form.category}
@@ -153,14 +153,14 @@ export function LogbookEntryForm({ defaultCellId, canCreate, onCreated }: Logboo
                                     {opt.label}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
                         <label className={labelClass} htmlFor={severityId}>
                             Severity
                         </label>
-                        <select
+                        <NativeSelect
                             id={severityId}
                             className={inputClass}
                             value={form.severity}
@@ -177,7 +177,7 @@ export function LogbookEntryForm({ defaultCellId, canCreate, onCreated }: Logboo
                                     {opt.label}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
                 </div>
 

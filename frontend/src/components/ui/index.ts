@@ -13,6 +13,8 @@ export * as Icons from "./icons";
 export type { MetaItem, MetaStripProps } from "./MetaStrip";
 export { MetaStrip } from "./MetaStrip";
 export * as Motion from "./motion";
+export type { NativeSelectProps } from "./NativeSelect";
+export { NativeSelect } from "./NativeSelect";
 export type { SectionHeaderProps } from "./SectionHeader";
 export { SectionHeader } from "./SectionHeader";
 export type { Status, StatusDotProps } from "./StatusDot";

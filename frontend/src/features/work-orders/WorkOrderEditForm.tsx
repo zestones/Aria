@@ -10,7 +10,15 @@
  */
 
 import { useId, useMemo, useState } from "react";
-import { Badge, Button, Card, Hairline, Icons, SectionHeader } from "../../components/ui";
+import {
+    Badge,
+    Button,
+    Card,
+    Hairline,
+    Icons,
+    NativeSelect,
+    SectionHeader,
+} from "../../components/ui";
 import type { WorkOrderUpdatePayload } from "../../services/work-orders";
 import type { WorkOrder } from "./types";
 import { useUpdateWorkOrder } from "./useWorkOrders";
@@ -207,7 +215,7 @@ export function WorkOrderEditForm({ wo, onCancel, onSaved }: WorkOrderEditFormPr
                         <label className={labelClass} htmlFor={ids.priority}>
                             Priority
                         </label>
-                        <select
+                        <NativeSelect
                             id={ids.priority}
                             className={inputClass}
                             value={form.priority}
@@ -218,13 +226,13 @@ export function WorkOrderEditForm({ wo, onCancel, onSaved }: WorkOrderEditFormPr
                                     {p}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
                     <div className="flex flex-col gap-1.5">
                         <label className={labelClass} htmlFor={ids.status}>
                             Status
                         </label>
-                        <select
+                        <NativeSelect
                             id={ids.status}
                             className={inputClass}
                             value={form.status}
@@ -235,7 +243,7 @@ export function WorkOrderEditForm({ wo, onCancel, onSaved }: WorkOrderEditFormPr
                                     {s.replace(/_/g, " ")}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
                     <div className="flex flex-col gap-1.5">
                         <label className={labelClass} htmlFor={ids.duration}>

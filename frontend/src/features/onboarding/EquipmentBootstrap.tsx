@@ -17,7 +17,7 @@
  */
 
 import { useMemo, useState } from "react";
-import { Badge, Button, Card, Hairline, Icons } from "../../components/ui";
+import { Badge, Button, Card, Hairline, Icons, NativeSelect } from "../../components/ui";
 import { type HierarchyTree, useCreateCell, useHierarchyTree } from "../../lib/hierarchy";
 
 const labelClass = "text-xs font-medium text-muted-foreground";
@@ -382,7 +382,7 @@ function CreateNewCell({
                     <label className={labelClass} htmlFor="cell-line">
                         Parent line
                     </label>
-                    <select
+                    <NativeSelect
                         id="cell-line"
                         value={parentLineId ?? ""}
                         onChange={(e) => {
@@ -400,7 +400,7 @@ function CreateNewCell({
                                 {l.path}
                             </option>
                         ))}
-                    </select>
+                    </NativeSelect>
                 </div>
                 <div className="flex flex-col gap-1.5">
                     <label className={labelClass} htmlFor="cell-name">

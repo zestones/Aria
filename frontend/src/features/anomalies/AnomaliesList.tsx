@@ -27,7 +27,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Button, Hairline, Icons, SectionHeader } from "../../components/ui";
+import { Badge, Button, Hairline, Icons, NativeSelect, SectionHeader } from "../../components/ui";
 import { useChatDrawerOpener } from "../chat/chatDrawerStore";
 import { useChatStore } from "../chat/chatStore";
 import { useSignalDefinitions } from "../control-room/useSignalDefinitions";
@@ -192,7 +192,7 @@ export function AnomaliesList() {
                     <label className="font-medium" htmlFor={filterId}>
                         Investigation status
                     </label>
-                    <select
+                    <NativeSelect
                         id={filterId}
                         className="h-8 rounded-md border border-border bg-card px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         value={stateFilter}
@@ -203,7 +203,7 @@ export function AnomaliesList() {
                                 {opt.label}
                             </option>
                         ))}
-                    </select>
+                    </NativeSelect>
                 </div>
                 <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                     <label className="font-medium" htmlFor={cellId}>

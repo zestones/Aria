@@ -9,7 +9,14 @@
 
 import { useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Hairline, Icons, SectionHeader, StatusDot } from "../../components/ui";
+import {
+    Badge,
+    Hairline,
+    Icons,
+    NativeSelect,
+    SectionHeader,
+    StatusDot,
+} from "../../components/ui";
 import { formatHeaderDate } from "../../lib/date";
 import { PRIORITY_RANK, type WorkOrder } from "./types";
 import { useWorkOrders } from "./useWorkOrders";
@@ -236,7 +243,7 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
                 <label className="font-medium" htmlFor={priorityId}>
                     Priority
                 </label>
-                <select
+                <NativeSelect
                     id={priorityId}
                     className={inputClass}
                     value={filters.priority}
@@ -247,13 +254,13 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
                     <option value="low">Low</option>
-                </select>
+                </NativeSelect>
             </div>
             <div className={fieldClass}>
                 <label className="font-medium" htmlFor={statusId}>
                     Status
                 </label>
-                <select
+                <NativeSelect
                     id={statusId}
                     className={inputClass}
                     value={filters.status}
@@ -266,7 +273,7 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
                     <option value="in_progress">In progress</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
-                </select>
+                </NativeSelect>
             </div>
             <div className={fieldClass}>
                 <label className="font-medium" htmlFor={cellId}>
