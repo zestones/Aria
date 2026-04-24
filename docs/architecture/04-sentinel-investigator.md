@@ -143,6 +143,11 @@ At the start of every Investigator run, the recent `failure_history` rows for th
 
 The decision to put memory in the system prompt rather than as a tool call was deliberate — it costs zero turns and zero tool dispatch overhead, and the operator-visible trace ("I noticed this matches failure mode #4 from January") is a strong demo moment.
 
+This is the mechanism behind the "permanently improving" promise: every `submit_rca` call writes a `failure_history` row via `KbRepository.create_failure`, which becomes available to the next Investigator run for the same cell. ARIA genuinely improves with each incident.
+
+> [!NOTE]
+> The `failure_history.signal_patterns` column (migration 007) is not populated by the current `create_failure` call — it only writes `failure_mode` and `root_cause`. Pattern matching therefore operates at the narrative level rather than the quantitative signal level. Populating `signal_patterns` with the breach windows from `submit_rca` would be the next precision improvement.
+
 ---
 
 ## Agent-as-tool handoffs
