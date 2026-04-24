@@ -15,13 +15,8 @@ import RequireAuth from "./auth-guards";
 export function AppRoutes() {
     return (
         <Routes>
-            {/* Public / unauthenticated surfaces — render bare, no shell. */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/design" element={<DesignPage />} />
-
-            {/* Full-screen Agent Workspace — deliberately rendered
-                outside AppShell so the artifact canvas owns the entire
-                viewport. Auth-gated like the rest of the app. */}
             <Route
                 path="/workspace"
                 element={
@@ -31,10 +26,6 @@ export function AppRoutes() {
                 }
             />
 
-            {/* Single global shell for every authenticated page. Mirrors the
-                IAP pattern (RequireAuth wraps AppLayout once) so Sidebar +
-                TopBar stay mounted across navigation and own a single
-                source of truth for sidebar/drawer state. */}
             <Route
                 element={
                     <RequireAuth>

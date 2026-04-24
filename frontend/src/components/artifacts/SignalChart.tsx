@@ -298,7 +298,20 @@ function CustomTooltip({ active, payload, unitName }: CustomTooltipProps) {
 // ---------- Main component ----------
 
 export function SignalChart(props: SignalChartProps) {
-    const { cell_id, signal_def_id, window_hours = 24, mark_anomaly_at, threshold } = props;
+    const {
+        cell_id,
+        signal_def_id,
+        window_hours = 24,
+        mark_anomaly_at,
+        threshold,
+        // Server-side hints from the backend forecast-watch loop / Investigator
+        // enrichment. When present, the chart defers to these values for the
+        // headline ETA and trend caption. The local `computeForecast` still
+        // runs to draw the projected line itself — visualisation is always
+        // client-side, the numbers defer to the server.
+        predicted_breach_hours: serverBreachHours,
+        trend: serverTrend,
+    } = props;
 
     const gradientId = useId();
     const projectedGradientId = useId();
@@ -350,12 +363,30 @@ export function SignalChart(props: SignalChartProps) {
     }
 
     const anomalyValue = mark_anomaly_at ? findValueAtTime(series, mark_anomaly_at) : null;
+
+    // Server-side hints win when present. Local forecast is kept around to
+    // render the projected line in the chart itself — only the caption
+    // defers. `serverTrend === "unknown"` is treated as "no opinion" and
+    // falls back to the local estimate.
+    const effectiveEtaHours =
+        serverBreachHours !== undefined && serverBreachHours >= 0
+            ? serverBreachHours
+            : forecast.etaHours;
+    const effectiveTrend =
+        serverTrend && serverTrend !== "unknown" ? serverTrend : forecast.trend;
+    const etaSource: "server" | "local" | "none" =
+        serverBreachHours !== undefined && serverBreachHours >= 0
+            ? "server"
+            : forecast.etaHours !== null
+              ? "local"
+              : "none";
+
     const etaTone =
-        forecast.etaHours === null
+        effectiveEtaHours === null
             ? "var(--text-tertiary)"
-            : forecast.etaHours <= 2
+            : effectiveEtaHours <= 2
               ? "var(--destructive)"
-              : forecast.etaHours <= 12
+              : effectiveEtaHours <= 12
                 ? "var(--warning)"
                 : "var(--success)";
 
@@ -512,16 +543,20 @@ export function SignalChart(props: SignalChartProps) {
                     />
                     <span>
                         forecast · next {forecast.horizonHours.toFixed(0)}h · trend{" "}
-                        <span className="text-foreground">{forecast.trend}</span>
+                        <span className="text-foreground">{effectiveTrend}</span>
                     </span>
                 </span>
-                {threshold !== undefined && forecast.etaHours !== null ? (
+                {threshold !== undefined && effectiveEtaHours !== null ? (
                     <span
                         className="font-mono font-semibold tabular-nums"
                         style={{ color: etaTone }}
-                        title="Estimated time until the current drift crosses the threshold."
+                        title={
+                            etaSource === "server"
+                                ? "Server-side forecast from the forecast-watch loop."
+                                : "Local linear extrapolation on the visible window."
+                        }
                     >
-                        breach in ~{formatEtaBadge(forecast.etaHours)}
+                        breach in ~{formatEtaBadge(effectiveEtaHours)}
                     </span>
                 ) : threshold !== undefined ? (
                     <span className="text-text-tertiary">no breach within horizon</span>

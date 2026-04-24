@@ -18,6 +18,23 @@ export const SignalChartPropsSchema = z
         window_hours: z.number().optional(),
         mark_anomaly_at: z.string().optional(),
         threshold: z.number().optional(),
+        /**
+         * Optional server-computed hours until the signal is forecast to
+         * cross its threshold at the current drift rate. When present, the
+         * chart's ETA caption uses this value verbatim instead of the
+         * local linear extrapolation. Mirrors the field declared in
+         * `backend/agents/ui_tools.py::RENDER_SIGNAL_CHART`.
+         */
+        predicted_breach_hours: z.number().nonnegative().optional(),
+        /**
+         * Optional server-computed trend direction of the recent tail.
+         * Direction-only vocabulary (`rising` / `falling` / `flat` /
+         * `unknown`) matches both the backend `render_signal_chart` schema
+         * and the `forecast_warning` event on the events bus. When present,
+         * the chart's trend caption uses this value instead of its local
+         * slope estimate.
+         */
+        trend: z.enum(["rising", "falling", "flat", "unknown"]).optional(),
     })
     .passthrough();
 

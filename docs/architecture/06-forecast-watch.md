@@ -66,16 +66,16 @@ flowchart LR
 
 ### Loop structure
 
-| Knob | Value | Reason |
-|---|---|---|
-| Tick interval | `_FORECAST_TICK_SECONDS = 60` | Drift changes slower than single-sample breaches; halves DB pressure compared with Sentinel's 30 s. |
-| Regression window | `_FORECAST_WINDOW_HOURS = 6` | Short enough for fresh drift to dominate the slope, long enough to average out periodic noise. |
-| Forecast horizon | `_FORECAST_HORIZON_HOURS = 12` | Longer horizons compound regression error linearly; 12 h is usable for maintenance-window planning without over-claiming. |
-| Minimum samples | `_FORECAST_MIN_SAMPLES = 20` | Below this, slope is dominated by variance. |
-| Minimum R² | `_FORECAST_MIN_CONFIDENCE = 0.35` | Empirical floor that rejects random-walk signals while still catching monotonic drift. |
-| Minimum drift rate | `_FORECAST_MIN_DRIFT_RATE = 0.005` (0.5 %/h of current value) | Gates out signals that hover near a threshold with effectively zero slope. |
-| Per-signal debounce | `_FORECAST_DEBOUNCE_SECONDS = 1800` (30 min) | Avoids hammering the banner every tick for 12 h straight with the same forecast. |
-| Fetch limit per signal | `_FORECAST_FETCH_LIMIT = 1000` | Downsampling before regression is fine; more rows only cost bandwidth. |
+| Knob                   | Value                                                         | Reason                                                                                                                    |
+|------------------------|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| Tick interval          | `_FORECAST_TICK_SECONDS = 60`                                 | Drift changes slower than single-sample breaches; halves DB pressure compared with Sentinel's 30 s.                       |
+| Regression window      | `_FORECAST_WINDOW_HOURS = 6`                                  | Short enough for fresh drift to dominate the slope, long enough to average out periodic noise.                            |
+| Forecast horizon       | `_FORECAST_HORIZON_HOURS = 12`                                | Longer horizons compound regression error linearly; 12 h is usable for maintenance-window planning without over-claiming. |
+| Minimum samples        | `_FORECAST_MIN_SAMPLES = 20`                                  | Below this, slope is dominated by variance.                                                                               |
+| Minimum R²             | `_FORECAST_MIN_CONFIDENCE = 0.35`                             | Empirical floor that rejects random-walk signals while still catching monotonic drift.                                    |
+| Minimum drift rate     | `_FORECAST_MIN_DRIFT_RATE = 0.005` (0.5 %/h of current value) | Gates out signals that hover near a threshold with effectively zero slope.                                                |
+| Per-signal debounce    | `_FORECAST_DEBOUNCE_SECONDS = 1800` (30 min)                  | Avoids hammering the banner every tick for 12 h straight with the same forecast.                                          |
+| Fetch limit per signal | `_FORECAST_FETCH_LIMIT = 1000`                                | Downsampling before regression is fine; more rows only cost bandwidth.                                                    |
 
 The outer loop wraps every tick body in `try/except` identically to Sentinel. A single bad cell or transient DB error logs and returns; the loop keeps going. The loop is started by the FastAPI lifespan in [backend/main.py](../../backend/main.py) as a sibling task to `sentinel_loop` inside the FastMCP sub-app's lifespan wrapper.
 
@@ -190,11 +190,11 @@ flowchart LR
 
 ### Rules
 
-| Field | Source | Fallback |
-|---|---|---|
-| `past_event_date` | `failure_history.failure_time.isoformat()` | Omit if `failure_time` is null. |
-| `predicted_mttf_hours` | `(resolved_time - failure_time)` in hours, rounded to 1 dp | Conservative 24.0 h default when `resolved_time` is null or not after `failure_time`. |
-| `recommended_action` | First sentence of `failure_history.resolution`, capped at 160 chars | `"Inspect for <failure_mode> before the predicted window closes."` if `resolution` is empty but `failure_mode` is present; otherwise omit. |
+| Field                  | Source                                                              | Fallback                                                                                                                                   |
+|------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `past_event_date`      | `failure_history.failure_time.isoformat()`                          | Omit if `failure_time` is null.                                                                                                            |
+| `predicted_mttf_hours` | `(resolved_time - failure_time)` in hours, rounded to 1 dp          | Conservative 24.0 h default when `resolved_time` is null or not after `failure_time`.                                                      |
+| `recommended_action`   | First sentence of `failure_history.resolution`, capped at 160 chars | `"Inspect for <failure_mode> before the predicted window closes."` if `resolution` is empty but `failure_mode` is present; otherwise omit. |
 
 The enrichment is best-effort. The `_fetch_latest_failure` helper catches every exception and returns `None`; the enrichment shortcut-returns the original args. A missing KB row or malformed `resolution` therefore never breaks the UI frame — the card still renders, just without the predictive rows.
 

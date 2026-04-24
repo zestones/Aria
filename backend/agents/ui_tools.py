@@ -117,8 +117,12 @@ RENDER_SIGNAL_CHART: dict[str, Any] = {
                 "enum": ["rising", "falling", "flat", "unknown"],
                 "description": (
                     "Optional server-computed trend direction of the recent tail. "
-                    "The frontend uses it as the trend caption instead of its "
-                    "local estimate when present."
+                    "Vocabulary matches ``forecast_warning.trend`` on the events "
+                    "bus and is deliberately direction-only: whether ``rising`` "
+                    "means ``improving`` or ``degrading`` depends on the signal, "
+                    "which the operator — not the backend — determines. The "
+                    "frontend uses this value as the trend caption instead of "
+                    "its local estimate when present."
                 ),
             },
         },
