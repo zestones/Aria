@@ -137,9 +137,7 @@ def create_app() -> FastAPI:
     # to ``/mcp/<secret>``.
     from modules.sandbox.app import sandbox_app
 
-    app.mount(
-        f"/sandbox/{settings.aria_mcp_path_secret}", sandbox_app, name="sandbox-secret"
-    )
+    app.mount(f"/sandbox/{settings.aria_mcp_path_secret}", sandbox_app, name="sandbox-secret")
 
     return app
 

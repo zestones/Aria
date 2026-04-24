@@ -51,9 +51,7 @@ async def replay_investigator(
         work_order_id,
     )
     if wo is None:
-        raise HTTPException(
-            status_code=404, detail=f"work_order {work_order_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"work_order {work_order_id} not found")
 
     await conn.execute(
         "UPDATE work_order SET status = 'detected' WHERE id = $1",
