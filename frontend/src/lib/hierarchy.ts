@@ -1,46 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { apiFetch } from "./api";
+import { getHierarchyTree } from "../services/hierarchy";
 
-export interface CellNode {
-    id: number;
-    name: string;
-    disabled: boolean;
-    parent_id: number;
-}
+export type {
+    AreaNode,
+    CellNode,
+    EnterpriseNode,
+    HierarchyTree,
+    LineNode,
+    SiteNode,
+} from "../services/hierarchy";
 
-export interface LineNode {
-    id: number;
-    name: string;
-    disabled: boolean;
-    parent_id: number;
-    cells: CellNode[];
-}
-
-export interface AreaNode {
-    id: number;
-    name: string;
-    disabled: boolean;
-    parent_id: number;
-    lines: LineNode[];
-}
-
-export interface SiteNode {
-    id: number;
-    name: string;
-    disabled: boolean;
-    parent_id: number;
-    areas: AreaNode[];
-}
-
-export interface EnterpriseNode {
-    id: number;
-    name: string;
-    disabled: boolean;
-    sites: SiteNode[];
-}
-
-export type HierarchyTree = EnterpriseNode[];
+import type { HierarchyTree } from "../services/hierarchy";
 
 export interface EquipmentSelection {
     cellId: number;
@@ -81,7 +52,7 @@ export interface GroupedLine {
 export function useHierarchyTree() {
     return useQuery({
         queryKey: ["hierarchy", "tree"],
-        queryFn: () => apiFetch<HierarchyTree>("/hierarchy/tree"),
+        queryFn: () => getHierarchyTree(),
         staleTime: 60_000,
     });
 }

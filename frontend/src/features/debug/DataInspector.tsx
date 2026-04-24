@@ -1,67 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { AriaMark, Badge, Card, Icons, SectionHeader, ThemeToggle } from "../../components/ui";
-import { apiFetch } from "../../lib/api";
 import { getUser, logout } from "../../services/auth";
-
-interface CellStatus {
-    cell_id: number;
-    cell_name: string;
-    line_name?: string;
-    status_name?: string;
-    status_category?: string;
-    is_productive?: boolean;
-    last_status_change?: string;
-}
-
-interface CurrentSignal {
-    cell_id: number;
-    cell_name: string;
-    signal_def_id: number;
-    signal_name: string;
-    display_name?: string;
-    unit_name?: string;
-    raw_value: number;
-    time: string;
-}
-
-interface OeeRow {
-    cell_id: number;
-    cell_name?: string;
-    oee: number;
-    availability: number;
-    performance: number;
-    quality: number;
-    good_pieces?: number;
-    total_pieces?: number;
-}
-
-interface WorkOrder {
-    id: number;
-    title: string;
-    priority: string;
-    status: string;
-    cell_id: number;
-    created_at: string;
-}
-
-interface LogbookEntry {
-    id: number;
-    cell_id: number;
-    cell_name?: string;
-    category: string;
-    severity: string;
-    title: string;
-    body?: string;
-    created_at: string;
-    author_username?: string;
-}
-
-interface TreeNode {
-    id: number;
-    name: string;
-    children?: TreeNode[];
-}
+import { getHierarchyTree } from "../../services/hierarchy";
+import { getOee } from "../../services/kpi";
+import { listLogbookEntries } from "../../services/logbook";
+import { getCurrentStatus } from "../../services/monitoring";
+import { getCurrentShift } from "../../services/shift";
+import { getCurrentSignals } from "../../services/signals";
+import { listWorkOrders } from "../../services/work-orders";
 
 const NOW = () => new Date().toISOString();
 const MINUTES_AGO = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
@@ -99,12 +46,12 @@ export default function DataInspector() {
 
     const tree = useQuery({
         queryKey: ["hierarchy", "tree"],
-        queryFn: () => apiFetch<TreeNode[]>("/hierarchy/tree"),
+        queryFn: () => getHierarchyTree(),
     });
 
     const status = useQuery({
         queryKey: ["monitoring", "current"],
-        queryFn: () => apiFetch<CellStatus[]>("/monitoring/status/current"),
+        queryFn: () => getCurrentStatus(),
         refetchInterval: 5_000,
     });
 
@@ -113,38 +60,31 @@ export default function DataInspector() {
     const signals = useQuery({
         queryKey: ["signals", "current", cellIds],
         enabled: cellIds.length > 0,
-        queryFn: () =>
-            apiFetch<CurrentSignal[]>("/signals/current", { params: { cell_ids: cellIds } }),
+        queryFn: () => getCurrentSignals(cellIds),
         refetchInterval: 5_000,
     });
 
     const oee = useQuery({
         queryKey: ["kpi", "oee", cellIds],
         enabled: cellIds.length > 0,
-        queryFn: () =>
-            apiFetch<OeeRow[]>("/kpi/oee", {
-                params: { cell_ids: cellIds, window_start, window_end },
-            }),
+        queryFn: () => getOee({ cell_ids: cellIds, window_start, window_end }),
         refetchInterval: 15_000,
     });
 
     const workOrders = useQuery({
         queryKey: ["work-orders"],
-        queryFn: () => apiFetch<WorkOrder[]>("/work-orders"),
+        queryFn: () => listWorkOrders(),
     });
 
     const logbook = useQuery({
         queryKey: ["logbook", cellIds],
         enabled: cellIds.length > 0,
-        queryFn: () =>
-            apiFetch<LogbookEntry[]>("/logbook", {
-                params: { window_start, window_end, limit: 20 },
-            }),
+        queryFn: () => listLogbookEntries({ window_start, window_end, limit: 20 }),
     });
 
     const currentShift = useQuery({
         queryKey: ["shifts", "current"],
-        queryFn: () => apiFetch<unknown>("/shifts/current"),
+        queryFn: () => getCurrentShift(),
     });
 
     async function handleLogout() {

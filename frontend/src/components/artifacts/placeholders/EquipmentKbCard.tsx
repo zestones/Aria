@@ -22,7 +22,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import type { EquipmentKB, EquipmentKbOut, ThresholdValue } from "../../../features/onboarding";
-import { apiFetch } from "../../../lib/api";
+import { getEquipmentKb, upsertEquipmentKb } from "../../../services/kb";
 import { ChevronDown } from "../../ui/icons";
 import type { EquipmentKbCardProps } from "../schemas";
 
@@ -115,7 +115,7 @@ const THRESHOLD_FIELD_LABELS: Record<ThresholdNumKey, string> = {
 };
 
 function fetchEquipmentKb(cellId: number): Promise<EquipmentKbOut> {
-    return apiFetch<EquipmentKbOut>(`/kb/equipment/${cellId}`);
+    return getEquipmentKb(cellId);
 }
 
 // ---------- Main component ----------
@@ -140,8 +140,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
     const [edits, setEdits] = useState<Record<string, EditState>>({});
 
     const mutation = useMutation({
-        mutationFn: (body: UpsertBody) =>
-            apiFetch<EquipmentKbOut>("/kb/equipment", { method: "PUT", body }),
+        mutationFn: (body: UpsertBody) => upsertEquipmentKb(body),
         onMutate: async (body) => {
             await queryClient.cancelQueries({ queryKey });
             const prev = queryClient.getQueryData<EquipmentKbOut>(queryKey);

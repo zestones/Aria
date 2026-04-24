@@ -24,23 +24,13 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
-import { apiFetch } from "../../../lib/api";
+import {
+    getSignalData,
+    getSignalDefinition,
+    type SignalDefinition,
+    type SignalPoint,
+} from "../../../services/signals";
 import type { SignalChartProps } from "../schemas";
-
-// ---------- Types ----------
-
-interface SignalDefinition {
-    id: number;
-    cell_id: number;
-    display_name: string;
-    unit_name: string | null;
-    signal_type_name?: string | null;
-}
-
-interface SignalPoint {
-    time: string;
-    raw_value: number;
-}
 
 // ---------- Helpers ----------
 
@@ -94,20 +84,18 @@ function findValueAtTime(series: SignalPoint[] | undefined, iso: string): number
     return best ? best.raw_value : null;
 }
 
-// ---------- Fetchers (use centralised apiFetch) ----------
+// ---------- Fetchers ----------
 
 function fetchSignalDef(id: number): Promise<SignalDefinition> {
-    return apiFetch<SignalDefinition>(`/signals/definitions/${id}`);
+    return getSignalDefinition(id);
 }
 
 function fetchSignalData(id: number, windowHours: number): Promise<SignalPoint[]> {
     const end = new Date();
     const start = new Date(end.getTime() - windowHours * 3600 * 1000);
-    return apiFetch<SignalPoint[]>(`/signals/data/${id}`, {
-        params: {
-            window_start: start.toISOString(),
-            window_end: end.toISOString(),
-        },
+    return getSignalData(id, {
+        window_start: start.toISOString(),
+        window_end: end.toISOString(),
     });
 }
 

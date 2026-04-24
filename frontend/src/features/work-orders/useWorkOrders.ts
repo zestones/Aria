@@ -5,13 +5,13 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "../../lib/api";
+import { getWorkOrder, listWorkOrders } from "../../services/work-orders";
 import type { WorkOrder } from "./types";
 
 export function useWorkOrders() {
     return useQuery<WorkOrder[]>({
         queryKey: ["work-orders"],
-        queryFn: () => apiFetch<WorkOrder[]>("/work-orders", { params: { limit: 500 } }),
+        queryFn: () => listWorkOrders(500),
         staleTime: 10_000,
     });
 }
@@ -20,7 +20,7 @@ export function useWorkOrder(id: number | null | undefined) {
     const enabled = typeof id === "number" && Number.isFinite(id);
     return useQuery<WorkOrder>({
         queryKey: ["work-order", id],
-        queryFn: () => apiFetch<WorkOrder>(`/work-orders/${id}`),
+        queryFn: () => getWorkOrder(id as number),
         enabled,
         staleTime: 10_000,
     });
