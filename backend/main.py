@@ -104,6 +104,15 @@ def create_app() -> FastAPI:
         app.include_router(demo_router)
         log.info("Demo endpoints enabled at /api/v1/demo/*")
 
+        # J-2 hackathon trigger — replay an existing WO through the full
+        # Investigator agent so the demo can show Opus 4.7 extended
+        # thinking on cue. Gated behind the same flag as the memory
+        # scene; removable post-demo by unsetting ARIA_DEMO_ENABLED.
+        from modules.debug.router import router as debug_router
+
+        app.include_router(debug_router)
+        log.info("Debug endpoints enabled at /api/v1/debug/*")
+
     # Mount MCP behind a path-secret gate so the tunneled URL carries its own
     # auth token (hosted MCP does not forward custom headers — see #103).
     # The legacy unsecured ``/mcp`` mount is only kept when hosted MCP is NOT
