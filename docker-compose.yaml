@@ -82,6 +82,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ARIA_MODEL: ${ARIA_MODEL:-sonnet}
       INVESTIGATOR_USE_MANAGED: ${INVESTIGATOR_USE_MANAGED:-false}
+      ARIA_DEMO_ENABLED: ${ARIA_DEMO_ENABLED:-false}
       ARIA_MCP_PATH_SECRET: ${ARIA_MCP_PATH_SECRET}
       ARIA_MCP_PUBLIC_URL: ${ARIA_MCP_PUBLIC_URL:-}
       # ARIA_MCP_URL is intentionally omitted: the internal MCP client

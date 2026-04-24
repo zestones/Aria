@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useId, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import { AgentInspector, useAgentInspectorStore } from "../features/agents";
+import { useAgentTurnsIngest } from "../features/agents/useAgentTurnsIngest";
 import { AnomalyBanner, KpiBar } from "../features/control-room";
+import { DemoReplayButton } from "../features/demo";
 import { EQUIPMENT_KEY, validateEquipmentSelection } from "../lib/equipmentSelection";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
@@ -42,6 +44,10 @@ function isTypingTarget(target: EventTarget | null) {
 }
 
 export function AppShell() {
+    // Singleton bus consumer — keeps the agent turn buffer alive regardless
+    // of the Inspector's open/close state.
+    useAgentTurnsIngest();
+
     const [drawer, setDrawer] = useLocalStorage<ChatDrawerState>(
         CHAT_DRAWER_KEY,
         DEFAULT_DRAWER_STATE,
@@ -133,6 +139,7 @@ export function AppShell() {
                     <ChatPanel />
                 </Drawer>
             </div>
+            {import.meta.env.DEV && <DemoReplayButton />}
         </div>
     );
 }
