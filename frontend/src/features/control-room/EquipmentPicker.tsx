@@ -326,9 +326,7 @@ export function EquipmentPicker({ selection, onChange }: EquipmentPickerProps) {
     );
 
     const triggerLabel = selection?.cellName ?? "Select equipment";
-    const triggerContext = selection
-        ? `${selection.siteName} · ${selection.areaName} · ${selection.lineName}`
-        : "";
+    const triggerContext = selection ? selection.lineName : "";
 
     return (
         <div className="relative flex-none">
