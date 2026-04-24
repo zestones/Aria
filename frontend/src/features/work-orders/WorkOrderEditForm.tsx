@@ -10,15 +10,7 @@
  */
 
 import { useId, useMemo, useState } from "react";
-import {
-    Badge,
-    Button,
-    Card,
-    Hairline,
-    Icons,
-    NativeSelect,
-    SectionHeader,
-} from "../../components/ui";
+import { Badge, Button, Icons, NativeSelect } from "../../components/ui";
 import type { WorkOrderUpdatePayload } from "../../services/work-orders";
 import type { WorkOrder } from "./types";
 import { useUpdateWorkOrder } from "./useWorkOrders";
@@ -169,7 +161,7 @@ export function WorkOrderEditForm({ wo, onCancel, onSaved }: WorkOrderEditFormPr
     const textareaClass =
         "w-full rounded-md border border-border bg-card px-3 py-2 text-sm leading-relaxed text-foreground transition-colors " +
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-    const labelClass = "text-xs font-medium text-muted-foreground";
+    const labelClass = "text-xs font-medium uppercase tracking-wide text-text-tertiary";
 
     const payload = useMemo(() => buildPayload(wo, form), [wo, form]);
     const dirty = Object.keys(payload).length > 0;
@@ -183,222 +175,288 @@ export function WorkOrderEditForm({ wo, onCancel, onSaved }: WorkOrderEditFormPr
     };
 
     return (
-        <Card padding="lg" elevated className="flex flex-col gap-5">
-            <SectionHeader
-                size="sm"
-                label={`Edit work order #${wo.id}`}
-                meta={
-                    <span className="text-xs text-text-tertiary">
-                        Only changed fields are sent to the server
-                    </span>
-                }
-            />
-            <Hairline />
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            {/* Hero card matching view layout — priority bar + title input + chips */}
+            <div
+                className="relative flex flex-col gap-4 overflow-hidden rounded-r-xl border border-border bg-card p-6 pl-7"
+                style={{
+                    boxShadow: `inset 4px 0 0 0 ${priorityBarColor(form.priority)}`,
+                }}
+            >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background py-0.5 pr-1 pl-2 text-xs font-medium text-foreground">
+                            <span className="text-text-tertiary">Priority</span>
+                            <NativeSelect
+                                aria-label="Priority"
+                                value={form.priority}
+                                onChange={(e) =>
+                                    setForm((f) => ({ ...f, priority: e.target.value }))
+                                }
+                                className="h-6 rounded-full border-0 bg-transparent px-1 text-xs font-medium focus-visible:ring-1"
+                            >
+                                {PRIORITIES.map((p) => (
+                                    <option key={p} value={p}>
+                                        {p}
+                                    </option>
+                                ))}
+                            </NativeSelect>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background py-0.5 pr-1 pl-2 text-xs font-medium text-foreground">
+                            <span className="text-text-tertiary">Status</span>
+                            <NativeSelect
+                                aria-label="Status"
+                                value={form.status}
+                                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+                                className="h-6 rounded-full border-0 bg-transparent px-1 text-xs font-medium focus-visible:ring-1"
+                            >
+                                {STATUSES.map((s) => (
+                                    <option key={s} value={s}>
+                                        {s.replace(/_/g, " ")}
+                                    </option>
+                                ))}
+                            </NativeSelect>
+                        </span>
+                    </div>
+                    <span className="font-mono text-sm text-text-tertiary">#{wo.id}</span>
+                </div>
                 <div className="flex flex-col gap-1.5">
-                    <label className={labelClass} htmlFor={ids.title}>
+                    <label className="sr-only" htmlFor={ids.title}>
                         Title
                     </label>
                     <input
                         id={ids.title}
                         type="text"
-                        className={inputClass}
                         value={form.title}
                         onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                         maxLength={200}
                         required
+                        placeholder="Work order title"
+                        className="w-full rounded-md border border-transparent bg-transparent px-1 py-1 text-2xl font-semibold leading-tight tracking-[-0.015em] text-foreground transition-colors hover:border-border focus-visible:border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                 </div>
+            </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="flex flex-col gap-1.5">
-                        <label className={labelClass} htmlFor={ids.priority}>
-                            Priority
-                        </label>
-                        <NativeSelect
-                            id={ids.priority}
-                            className={inputClass}
-                            value={form.priority}
-                            onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
-                        >
-                            {PRIORITIES.map((p) => (
-                                <option key={p} value={p}>
-                                    {p}
-                                </option>
-                            ))}
-                        </NativeSelect>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <label className={labelClass} htmlFor={ids.status}>
-                            Status
-                        </label>
-                        <NativeSelect
-                            id={ids.status}
-                            className={inputClass}
-                            value={form.status}
-                            onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                        >
-                            {STATUSES.map((s) => (
-                                <option key={s} value={s}>
-                                    {s.replace(/_/g, " ")}
-                                </option>
-                            ))}
-                        </NativeSelect>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <label className={labelClass} htmlFor={ids.duration}>
-                            Estimated duration (min)
-                        </label>
-                        <input
-                            id={ids.duration}
-                            type="number"
-                            min={0}
-                            step={5}
-                            className={inputClass}
-                            value={form.estimatedDuration}
-                            onChange={(e) =>
-                                setForm((f) => ({ ...f, estimatedDuration: e.target.value }))
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                    <label className={labelClass} htmlFor={ids.description}>
-                        Description
-                    </label>
-                    <textarea
-                        id={ids.description}
-                        className={`${textareaClass} min-h-[100px]`}
-                        rows={4}
-                        value={form.description}
-                        onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="flex flex-col gap-1.5 md:col-span-1">
-                        <label className={labelClass} htmlFor={ids.actions}>
-                            Recommended actions{" "}
-                            <span className="text-text-tertiary">(one per line)</span>
-                        </label>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                {/* Main column — narrative */}
+                <div className="flex min-w-0 flex-col gap-5">
+                    <FormPanel title="Description">
                         <textarea
-                            id={ids.actions}
+                            id={ids.description}
                             className={`${textareaClass} min-h-[120px]`}
                             rows={5}
+                            value={form.description}
+                            onChange={(e) =>
+                                setForm((f) => ({ ...f, description: e.target.value }))
+                            }
+                        />
+                    </FormPanel>
+
+                    <FormPanel
+                        title="Recommended actions"
+                        meta={<span className="text-xs text-text-tertiary">one per line</span>}
+                    >
+                        <textarea
+                            id={ids.actions}
+                            className={`${textareaClass} min-h-[180px]`}
+                            rows={8}
                             value={form.actions}
                             onChange={(e) => setForm((f) => ({ ...f, actions: e.target.value }))}
                         />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <label className={labelClass} htmlFor={ids.parts}>
-                            Required parts{" "}
-                            <span className="text-text-tertiary">(one per line)</span>
-                        </label>
+                    </FormPanel>
+
+                    <FormPanel title="Root cause analysis">
+                        <textarea
+                            id={ids.rca}
+                            className={`${textareaClass} min-h-[100px]`}
+                            rows={4}
+                            value={form.rcaSummary}
+                            onChange={(e) => setForm((f) => ({ ...f, rcaSummary: e.target.value }))}
+                        />
+                    </FormPanel>
+                </div>
+
+                {/* Sidebar — operational details */}
+                <aside className="flex flex-col gap-5">
+                    <FormPanel
+                        title="Scheduling"
+                        icon={<Icons.Clock className="size-4" aria-hidden />}
+                        compact
+                    >
+                        <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1.5">
+                                <label className={labelClass} htmlFor={ids.start}>
+                                    Suggested start
+                                </label>
+                                <input
+                                    id={ids.start}
+                                    type="datetime-local"
+                                    className={inputClass}
+                                    value={form.suggestedStart}
+                                    onChange={(e) =>
+                                        setForm((f) => ({
+                                            ...f,
+                                            suggestedStart: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className={labelClass} htmlFor={ids.end}>
+                                    Suggested end
+                                </label>
+                                <input
+                                    id={ids.end}
+                                    type="datetime-local"
+                                    className={inputClass}
+                                    value={form.suggestedEnd}
+                                    onChange={(e) =>
+                                        setForm((f) => ({
+                                            ...f,
+                                            suggestedEnd: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className={labelClass} htmlFor={ids.duration}>
+                                    Estimated duration (min)
+                                </label>
+                                <input
+                                    id={ids.duration}
+                                    type="number"
+                                    min={0}
+                                    step={5}
+                                    className={inputClass}
+                                    value={form.estimatedDuration}
+                                    onChange={(e) =>
+                                        setForm((f) => ({
+                                            ...f,
+                                            estimatedDuration: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+                        </div>
+                    </FormPanel>
+
+                    <FormPanel
+                        title="Required parts"
+                        icon={<Icons.Wrench className="size-4" aria-hidden />}
+                        meta={<span className="text-xs text-text-tertiary">one per line</span>}
+                        compact
+                    >
                         <textarea
                             id={ids.parts}
                             className={`${textareaClass} min-h-[120px]`}
                             rows={5}
                             value={form.parts}
                             onChange={(e) => setForm((f) => ({ ...f, parts: e.target.value }))}
+                            placeholder="1 - Bearing 96416086&#10;2 - Gasket"
                         />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <label className={labelClass} htmlFor={ids.skills}>
-                            Required skills{" "}
-                            <span className="text-text-tertiary">(one per line)</span>
-                        </label>
+                    </FormPanel>
+
+                    <FormPanel
+                        title="Required skills"
+                        icon={<Icons.User className="size-4" aria-hidden />}
+                        meta={<span className="text-xs text-text-tertiary">one per line</span>}
+                        compact
+                    >
                         <textarea
                             id={ids.skills}
-                            className={`${textareaClass} min-h-[120px]`}
-                            rows={5}
+                            className={`${textareaClass} min-h-[100px]`}
+                            rows={4}
                             value={form.skills}
                             onChange={(e) => setForm((f) => ({ ...f, skills: e.target.value }))}
                         />
-                    </div>
-                </div>
+                    </FormPanel>
+                </aside>
+            </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                        <label className={labelClass} htmlFor={ids.start}>
-                            Suggested start
-                        </label>
-                        <input
-                            id={ids.start}
-                            type="datetime-local"
-                            className={inputClass}
-                            value={form.suggestedStart}
-                            onChange={(e) =>
-                                setForm((f) => ({ ...f, suggestedStart: e.target.value }))
-                            }
-                        />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <label className={labelClass} htmlFor={ids.end}>
-                            Suggested end
-                        </label>
-                        <input
-                            id={ids.end}
-                            type="datetime-local"
-                            className={inputClass}
-                            value={form.suggestedEnd}
-                            onChange={(e) =>
-                                setForm((f) => ({ ...f, suggestedEnd: e.target.value }))
-                            }
-                        />
-                    </div>
-                </div>
+            {update.isError && (
+                <p className="text-sm text-destructive">
+                    Could not save changes.{" "}
+                    {update.error instanceof Error ? update.error.message : ""}
+                </p>
+            )}
 
-                <div className="flex flex-col gap-1.5">
-                    <label className={labelClass} htmlFor={ids.rca}>
-                        Root cause analysis
-                    </label>
-                    <textarea
-                        id={ids.rca}
-                        className={`${textareaClass} min-h-[100px]`}
-                        rows={4}
-                        value={form.rcaSummary}
-                        onChange={(e) => setForm((f) => ({ ...f, rcaSummary: e.target.value }))}
-                    />
-                </div>
-
-                {update.isError && (
-                    <p className="text-sm text-destructive">
-                        Could not save changes.{" "}
-                        {update.error instanceof Error ? update.error.message : ""}
-                    </p>
+            {/* Sticky footer action bar — anchored to bottom of scroll container */}
+            <div className="sticky bottom-0 -mx-6 mt-2 flex items-center justify-end gap-3 border-t border-border bg-background/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-background/80">
+                {dirty ? (
+                    <Badge variant="accent" className="mr-auto">
+                        Unsaved changes
+                    </Badge>
+                ) : (
+                    <Badge variant="default" className="mr-auto">
+                        No changes
+                    </Badge>
                 )}
-
-                <div className="flex items-center justify-end gap-3">
-                    {!dirty && (
-                        <Badge variant="default" className="mr-auto">
-                            No changes
-                        </Badge>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="md"
+                    onClick={onCancel}
+                    disabled={update.isPending}
+                >
+                    Cancel
+                </Button>
+                <Button type="submit" variant="default" size="md" disabled={!canSubmit}>
+                    {update.isPending ? (
+                        <>
+                            <Icons.Loader2 className="size-4 animate-spin" aria-hidden />
+                            Saving…
+                        </>
+                    ) : (
+                        <>
+                            <Icons.Check className="size-4" aria-hidden />
+                            Save changes
+                        </>
                     )}
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="md"
-                        onClick={onCancel}
-                        disabled={update.isPending}
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" variant="default" size="md" disabled={!canSubmit}>
-                        {update.isPending ? (
-                            <>
-                                <Icons.Loader2 className="size-4 animate-spin" aria-hidden />
-                                Saving…
-                            </>
-                        ) : (
-                            <>
-                                <Icons.Check className="size-4" aria-hidden />
-                                Save changes
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </form>
-        </Card>
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+/** Local left-bar color — kept in sync with WorkOrderDetail's mapping. */
+function priorityBarColor(priority: string): string {
+    if (priority === "critical") return "var(--destructive)";
+    if (priority === "high") return "var(--warning)";
+    if (priority === "medium") return "var(--accent-arc, var(--primary))";
+    return "var(--border)";
+}
+
+function FormPanel({
+    title,
+    icon,
+    meta,
+    compact = false,
+    children,
+}: {
+    title: string;
+    icon?: React.ReactNode;
+    meta?: React.ReactNode;
+    compact?: boolean;
+    children: React.ReactNode;
+}) {
+    return (
+        <section
+            className={`flex flex-col rounded-xl border border-border bg-card ${
+                compact ? "gap-2.5 p-4" : "gap-3 p-5"
+            }`}
+        >
+            <header className="flex items-center justify-between gap-3">
+                <h3
+                    className={`flex items-center gap-2 font-semibold text-foreground ${
+                        compact ? "text-sm" : "text-base"
+                    }`}
+                >
+                    {icon && <span className="text-text-tertiary">{icon}</span>}
+                    {title}
+                </h3>
+                {meta}
+            </header>
+            {children}
+        </section>
     );
 }

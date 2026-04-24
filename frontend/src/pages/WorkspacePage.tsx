@@ -53,10 +53,10 @@ function WorkspaceHeader() {
                 <Link
                     to="/control-room"
                     className="inline-flex h-9 items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent px-3.5 text-sm font-medium text-sidebar-foreground transition-colors duration-150 hover:bg-sidebar-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                    aria-label="Back to control room"
+                    aria-label="Back to Dashboard"
                 >
                     <Icons.ArrowLeft className="size-4" aria-hidden />
-                    Back to control room
+                    Back to Dashboard
                 </Link>
             </div>
         </header>

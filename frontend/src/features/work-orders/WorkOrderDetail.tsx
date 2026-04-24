@@ -11,15 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-    Badge,
-    Button,
-    Hairline,
-    Icons,
-    MetaStrip,
-    SectionHeader,
-    StatusDot,
-} from "../../components/ui";
+import { Badge, Button, Icons, StatusDot } from "../../components/ui";
 import { fadeInUp } from "../../components/ui/motion";
 import { getUser } from "../../services/auth";
 import { PrintableWorkOrder } from "./PrintableWorkOrder";
@@ -47,6 +39,14 @@ function priorityVariant(priority: string): "critical" | "warning" | "accent" | 
     if (priority === "high") return "warning";
     if (priority === "medium") return "accent";
     return "default";
+}
+
+/** Left-bar accent color for the hero card, keyed by priority. */
+function priorityBarColor(priority: string): string {
+    if (priority === "critical") return "var(--destructive)";
+    if (priority === "high") return "var(--warning)";
+    if (priority === "medium") return "var(--accent-arc, var(--primary))";
+    return "var(--border)";
 }
 
 function statusToDotStatus(status: string): "nominal" | "warning" | "critical" | "unknown" {
@@ -288,20 +288,29 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
 
     if (editing) {
         return (
-            <section className="flex h-full flex-col gap-6 overflow-auto p-6 print:hidden">
-                <BackLink />
-                <WorkOrderEditForm
-                    wo={wo}
-                    onCancel={() => setEditing(false)}
-                    onSaved={() => setEditing(false)}
-                />
+            <section className="flex h-full flex-col overflow-auto bg-background print:hidden">
+                <div className="sticky top-0 z-10 flex flex-none items-center justify-between gap-4 border-b border-border bg-background/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-background/80">
+                    <BackLink />
+                    <span className="inline-flex items-center gap-1.5 text-xs text-text-tertiary">
+                        <Icons.FileText className="size-3.5" aria-hidden />
+                        Editing — only changed fields are sent
+                    </span>
+                </div>
+                <div className="px-6 py-6">
+                    <WorkOrderEditForm
+                        wo={wo}
+                        onCancel={() => setEditing(false)}
+                        onSaved={() => setEditing(false)}
+                    />
+                </div>
             </section>
         );
     }
 
     return (
-        <section className="flex h-full flex-col gap-6 overflow-auto p-6 print:hidden">
-            <div className="flex items-start justify-between gap-4">
+        <section className="flex h-full flex-col overflow-auto bg-background print:hidden">
+            {/* Sticky toolbar — back link + prominent action group */}
+            <div className="sticky top-0 z-10 flex flex-none items-center justify-between gap-4 border-b border-border bg-background/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-background/80">
                 <BackLink />
                 <div className="flex items-center gap-2">
                     {canEdit && !agentBusy && (
@@ -315,126 +324,200 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
                             Edit
                         </Button>
                     )}
-                    {canDelete && !agentBusy && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setConfirmingDelete(true)}
-                            className="text-destructive hover:bg-[color-mix(in_oklab,var(--destructive),transparent_90%)] hover:text-destructive"
-                        >
-                            <Icons.X className="size-4" aria-hidden />
-                            Delete
-                        </Button>
-                    )}
                     <button
                         type="button"
                         onClick={() => window.print()}
                         aria-label="Print this work order"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors duration-150 hover:border-input hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-cta border-[1.5px] border-border bg-card px-3 text-sm font-medium text-foreground shadow-pill transition-colors duration-150 hover:border-input hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                         <Icons.Printer className="size-4" aria-hidden />
                         Print
                     </button>
+                    {canDelete && !agentBusy && (
+                        <button
+                            type="button"
+                            onClick={() => setConfirmingDelete(true)}
+                            aria-label="Delete this work order"
+                            className="inline-flex h-9 items-center gap-1.5 rounded-cta border-[1.5px] border-[color-mix(in_oklab,var(--destructive),transparent_70%)] bg-card px-3 text-sm font-medium text-destructive transition-colors duration-150 hover:border-destructive hover:bg-[color-mix(in_oklab,var(--destructive),transparent_92%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <Icons.X className="size-4" aria-hidden />
+                            Delete
+                        </button>
+                    )}
                 </div>
             </div>
-            <SectionHeader
-                label={wo.title}
-                size="lg"
-                meta={
-                    <span className="flex items-center gap-2">
-                        <Badge variant={priorityVariant(wo.priority)}>{wo.priority}</Badge>
-                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                            <StatusDot status={statusToDotStatus(wo.status)} />
-                            <span className="text-foreground">{wo.status.replace(/_/g, " ")}</span>
-                        </span>
-                    </span>
-                }
-            />
-            <MetaStrip
-                items={[
-                    { label: "WO", value: `#${wo.id}` },
-                    { label: "Cell", value: wo.cell_name ?? `#${wo.cell_id}` },
-                    { label: "Created", value: formatDateTime(wo.created_at) },
-                    ...(wo.generated_by_agent
-                        ? [{ label: "Source", value: "Generated by agent" }]
-                        : []),
-                    ...(wo.assigned_to_username
-                        ? [{ label: "Assigned to", value: wo.assigned_to_username }]
-                        : []),
-                ]}
-            />
-            <Hairline />
-            <AgentWorkingBanner status={wo.status} />
-            {wo.description && (
-                <Panel title="Description">
-                    <p className="whitespace-pre-wrap text-sm leading-[1.55] text-foreground">
-                        {wo.description}
-                    </p>
-                </Panel>
-            )}
-            {wo.rca_summary && (
-                <Panel title="Root cause analysis" meta={<Badge variant="accent">RCA ready</Badge>}>
-                    <p className="whitespace-pre-wrap text-sm leading-[1.55] text-foreground">
-                        {wo.rca_summary}
-                    </p>
-                </Panel>
-            )}
-            {actions.length > 0 && (
-                <Panel title="Recommended actions">
-                    <ol className="list-decimal space-y-1.5 pl-5 text-sm leading-[1.55] text-foreground">
-                        {actions.map((a) => (
-                            <li key={a}>{a}</li>
-                        ))}
-                    </ol>
-                </Panel>
-            )}
-            {parts.length > 0 && (
-                <Panel title="Required parts">
-                    <ul className="flex flex-wrap gap-2">
-                        {parts.map((p) => (
-                            <li key={p}>
-                                <Badge variant="default">{p}</Badge>
-                            </li>
-                        ))}
-                    </ul>
-                </Panel>
-            )}
-            {skills.length > 0 && (
-                <Panel title="Required skills">
-                    <ul className="flex flex-wrap gap-2">
-                        {skills.map((s) => (
-                            <li key={s}>
-                                <Badge variant="default">{s}</Badge>
-                            </li>
-                        ))}
-                    </ul>
-                </Panel>
-            )}
-            {(wo.suggested_window_start || wo.estimated_duration_min != null) && (
-                <Panel title="Scheduling">
-                    <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        {wo.suggested_window_start && (
-                            <Field
-                                label="Suggested start"
-                                value={formatDateTime(wo.suggested_window_start)}
-                            />
-                        )}
-                        {wo.suggested_window_end && (
-                            <Field
-                                label="Suggested end"
-                                value={formatDateTime(wo.suggested_window_end)}
-                            />
-                        )}
-                        {wo.estimated_duration_min != null && (
-                            <Field
-                                label="Estimated duration"
-                                value={`${wo.estimated_duration_min} min`}
-                            />
+
+            <div className="flex flex-col gap-6 px-6 py-6">
+                {/* Hero card with priority-coloured left bar */}
+                <div
+                    className="relative flex flex-col gap-4 overflow-hidden rounded-r-xl border border-border bg-card p-6 pl-7"
+                    style={{
+                        boxShadow: `inset 4px 0 0 0 ${priorityBarColor(wo.priority)}`,
+                    }}
+                >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant={priorityVariant(wo.priority)}>{wo.priority}</Badge>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-0.5 text-xs font-medium text-foreground">
+                                <StatusDot status={statusToDotStatus(wo.status)} />
+                                <span>{wo.status.replace(/_/g, " ")}</span>
+                            </span>
+                            {wo.generated_by_agent && (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-text-tertiary">
+                                    <Icons.Sparkles className="size-3" aria-hidden />
+                                    Generated by agent
+                                </span>
+                            )}
+                        </div>
+                        <span className="font-mono text-sm text-text-tertiary">#{wo.id}</span>
+                    </div>
+                    <h2 className="text-2xl font-semibold leading-tight tracking-[-0.015em] text-foreground">
+                        {wo.title}
+                    </h2>
+                    <dl className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                        <HeroMeta label="Cell" value={wo.cell_name ?? `#${wo.cell_id}`} />
+                        <HeroMeta label="Created" value={formatDateTime(wo.created_at)} />
+                        {wo.assigned_to_username && (
+                            <HeroMeta label="Assigned to" value={wo.assigned_to_username} />
                         )}
                     </dl>
-                </Panel>
-            )}
+                </div>
+
+                <AgentWorkingBanner status={wo.status} />
+
+                {!agentBusy && (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                        {/* Main column — narrative content */}
+                        <div className="flex min-w-0 flex-col gap-5">
+                            {wo.description && (
+                                <Panel title="Description">
+                                    <p className="whitespace-pre-wrap text-sm leading-[1.6] text-foreground">
+                                        {wo.description}
+                                    </p>
+                                </Panel>
+                            )}
+                            {wo.rca_summary && (
+                                <Panel
+                                    title="Root cause analysis"
+                                    meta={<Badge variant="accent">RCA ready</Badge>}
+                                >
+                                    <p className="whitespace-pre-wrap text-sm leading-[1.6] text-foreground">
+                                        {wo.rca_summary}
+                                    </p>
+                                </Panel>
+                            )}
+                            {actions.length > 0 && (
+                                <Panel
+                                    title="Recommended actions"
+                                    meta={
+                                        <span className="text-xs text-text-tertiary">
+                                            {actions.length} step{actions.length === 1 ? "" : "s"}
+                                        </span>
+                                    }
+                                >
+                                    <ol className="flex flex-col gap-2">
+                                        {actions.map((a, i) => (
+                                            <li
+                                                key={a}
+                                                className="flex items-start gap-3 rounded-md border border-transparent px-2 py-2 transition-colors hover:border-border hover:bg-background"
+                                            >
+                                                <span
+                                                    aria-hidden
+                                                    className="mt-0.5 inline-flex size-6 flex-none items-center justify-center rounded-full border border-border bg-background text-xs font-semibold tabular-nums text-foreground"
+                                                >
+                                                    {i + 1}
+                                                </span>
+                                                <span className="text-sm leading-[1.55] text-foreground">
+                                                    {a}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                </Panel>
+                            )}
+                        </div>
+
+                        {/* Side rail — operational details */}
+                        <aside className="flex flex-col gap-5">
+                            {(wo.suggested_window_start || wo.estimated_duration_min != null) && (
+                                <Panel
+                                    title="Scheduling"
+                                    icon={<Icons.Clock className="size-4" aria-hidden />}
+                                    compact
+                                >
+                                    <dl className="flex flex-col gap-2.5 text-sm">
+                                        {wo.suggested_window_start && (
+                                            <Field
+                                                label="Suggested start"
+                                                value={formatDateTime(wo.suggested_window_start)}
+                                            />
+                                        )}
+                                        {wo.suggested_window_end && (
+                                            <Field
+                                                label="Suggested end"
+                                                value={formatDateTime(wo.suggested_window_end)}
+                                            />
+                                        )}
+                                        {wo.estimated_duration_min != null && (
+                                            <Field
+                                                label="Estimated duration"
+                                                value={`${wo.estimated_duration_min} min`}
+                                            />
+                                        )}
+                                    </dl>
+                                </Panel>
+                            )}
+                            {parts.length > 0 && (
+                                <Panel
+                                    title="Required parts"
+                                    icon={<Icons.Wrench className="size-4" aria-hidden />}
+                                    meta={
+                                        <span className="text-xs text-text-tertiary">
+                                            {parts.length}
+                                        </span>
+                                    }
+                                    compact
+                                >
+                                    <ul className="flex flex-col divide-y divide-border">
+                                        {parts.map((p) => {
+                                            const { qty, name } = parsePart(p);
+                                            return (
+                                                <li
+                                                    key={p}
+                                                    className="flex items-baseline gap-3 py-2 first:pt-0 last:pb-0"
+                                                >
+                                                    <span className="inline-flex min-w-[2rem] flex-none items-center justify-center rounded-md border border-border bg-background px-1.5 py-0.5 text-xs font-semibold tabular-nums text-foreground">
+                                                        ×{qty}
+                                                    </span>
+                                                    <span className="text-sm leading-snug text-foreground">
+                                                        {name}
+                                                    </span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </Panel>
+                            )}
+                            {skills.length > 0 && (
+                                <Panel
+                                    title="Required skills"
+                                    icon={<Icons.User className="size-4" aria-hidden />}
+                                    compact
+                                >
+                                    <ul className="flex flex-wrap gap-1.5">
+                                        {skills.map((s) => (
+                                            <li key={s}>
+                                                <Badge variant="default">{s}</Badge>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </Panel>
+                            )}
+                        </aside>
+                    </div>
+                )}
+            </div>
+
             {confirmingDelete && (
                 <DeleteConfirmDialog
                     title={wo.title}
@@ -445,6 +528,23 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
                 />
             )}
         </section>
+    );
+}
+
+/** Parse a "1 - Foo bar" / "1x Foo" / "Foo" string into qty + name. */
+function parsePart(raw: string): { qty: string; name: string } {
+    const trimmed = raw.trim();
+    const match = trimmed.match(/^(\d+)\s*(?:-|x|×|\*)\s*(.+)$/i);
+    if (match) return { qty: match[1], name: match[2].trim() };
+    return { qty: "1", name: trimmed };
+}
+
+function HeroMeta({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-baseline gap-1.5">
+            <dt className="text-xs uppercase tracking-wide text-text-tertiary">{label}</dt>
+            <dd className="font-medium text-foreground">{value}</dd>
+        </div>
     );
 }
 
@@ -546,17 +646,32 @@ function BackLink() {
 
 function Panel({
     title,
+    icon,
     meta,
+    compact = false,
     children,
 }: {
     title: string;
+    icon?: React.ReactNode;
     meta?: React.ReactNode;
+    compact?: boolean;
     children: React.ReactNode;
 }) {
     return (
-        <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
+        <section
+            className={`flex flex-col rounded-xl border border-border bg-card ${
+                compact ? "gap-2.5 p-4" : "gap-3 p-5"
+            }`}
+        >
             <header className="flex items-center justify-between gap-3">
-                <h3 className="text-base font-semibold text-foreground">{title}</h3>
+                <h3
+                    className={`flex items-center gap-2 font-semibold text-foreground ${
+                        compact ? "text-sm" : "text-base"
+                    }`}
+                >
+                    {icon && <span className="text-text-tertiary">{icon}</span>}
+                    {title}
+                </h3>
                 {meta}
             </header>
             {children}
@@ -567,8 +682,8 @@ function Panel({
 function Field({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex flex-col gap-0.5">
-            <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className="text-foreground">{value}</dd>
+            <dt className="text-xs uppercase tracking-wide text-text-tertiary">{label}</dt>
+            <dd className="text-sm font-medium text-foreground">{value}</dd>
         </div>
     );
 }
