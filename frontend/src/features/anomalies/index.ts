@@ -1,0 +1,1 @@
+export { AnomaliesList } from "./AnomaliesList";

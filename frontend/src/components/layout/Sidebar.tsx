@@ -45,6 +45,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Operations",
         items: [
             { to: "/control-room", label: "Control room", icon: Icons.Gauge },
+            { to: "/anomalies", label: "Anomalies", icon: Icons.AlertTriangle },
             { to: "/work-orders", label: "Work orders", icon: Icons.Wrench },
             { to: "/onboarding", label: "Onboarding", icon: Icons.Upload },
         ],

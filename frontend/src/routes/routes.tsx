@@ -1,7 +1,14 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "../components/layout";
 import { WorkOrderDetail, WorkOrderList } from "../features/work-orders";
-import { ControlRoomPage, DataPage, DesignPage, LoginPage, OnboardingPage } from "../pages";
+import {
+    AnomaliesPage,
+    ControlRoomPage,
+    DataPage,
+    DesignPage,
+    LoginPage,
+    OnboardingPage,
+} from "../pages";
 import RequireAuth from "./auth-guards";
 
 export function AppRoutes() {
@@ -23,6 +30,7 @@ export function AppRoutes() {
                 }
             >
                 <Route path="/control-room" element={<ControlRoomPage />} />
+                <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/work-orders" element={<WorkOrderList />} />
                 <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
                 <Route path="/data" element={<DataPage />} />

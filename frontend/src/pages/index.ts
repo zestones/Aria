@@ -1,3 +1,4 @@
+export { default as AnomaliesPage } from "./AnomaliesPage";
 export { default as ControlRoomPage } from "./ControlRoomPage";
 export { default as DataPage } from "./DataPage";
 export { default as DesignPage } from "./DesignPage";

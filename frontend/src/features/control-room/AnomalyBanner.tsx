@@ -25,6 +25,7 @@ import { useEffect, useMemo } from "react";
 import { Button } from "../../components/ui/Button";
 import { AlertCircle, AlertTriangle, X } from "../../components/ui/icons";
 import { fadeInUp } from "../../components/ui/motion";
+import { useChatDrawerOpener } from "../chat/chatDrawerStore";
 import { useChatStore } from "../chat/chatStore";
 import type { AnomalyEvent } from "./useAnomalyStream";
 import { useAnomalyStream } from "./useAnomalyStream";
@@ -211,6 +212,7 @@ export function AnomalyBanner({
 
     const sendMessage = useChatStore((s) => s.sendMessage);
     const requestFocus = useChatStore((s) => s.requestFocus);
+    const requestDrawerOpen = useChatDrawerOpener((s) => s.requestOpen);
 
     const latest = stream.latest;
     const cellId = latest?.cell_id;
@@ -242,15 +244,23 @@ export function AnomalyBanner({
     }, [latest, stream]);
 
     const handleInvestigate = (prompt: string) => {
-        // Fire-and-forget — the chat drawer is assumed open (AppShell default).
-        // Drawer auto-open on closed is M7.4+ polish; dropping it here keeps
-        // the M7.3 scope tight. See PR body.
+        // Make sure the chat drawer is visible before sending — AppShell
+        // subscribes to ``useChatDrawerOpener`` and flips its drawer state to
+        // open the next tick. Then send + focus.
+        requestDrawerOpen();
         sendMessage(prompt);
         requestFocus();
     };
 
     return (
-        <div data-testid="anomaly-banner-slot">
+        <div
+            data-testid="anomaly-banner-slot"
+            // Sticky under the TopBar so the banner stays visible even when a
+            // long page (work-orders list, anomalies log) scrolls the inner
+            // content. ``z-30`` keeps it above the page surface but below
+            // the global drawer / inspector / constellation overlays.
+            className="sticky top-0 z-30"
+        >
             <AnimatePresence mode="wait" initial={false}>
                 {latest ? (
                     <BannerBody

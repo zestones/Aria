@@ -7,7 +7,7 @@ import {
     useAgentInspectorStore,
 } from "../../features/agents";
 import { useAgentTurnsIngest } from "../../features/agents/useAgentTurnsIngest";
-import { ChatPanel } from "../../features/chat";
+import { ChatPanel, useChatDrawerOpener } from "../../features/chat";
 import {
     AnomalyBanner,
     EQUIPMENT_KEY,
@@ -101,6 +101,17 @@ export function AppShell() {
         const next = { ...safeDrawer, open: !safeDrawer.open };
         setDrawer(next);
     }, [setDrawer, safeDrawer]);
+
+    // Any feature can request the chat drawer to open via
+    // ``useChatDrawerOpener.requestOpen()`` (e.g. AnomalyBanner Investigate
+    // CTA, AnomaliesList row action). We watch the monotonic counter and
+    // flip the drawer open if it is currently closed.
+    const drawerOpenRequestId = useChatDrawerOpener((s) => s.requestOpenId);
+    useEffect(() => {
+        if (drawerOpenRequestId === 0) return;
+        if (safeDrawer.open) return;
+        setDrawer({ ...safeDrawer, open: true });
+    }, [drawerOpenRequestId, safeDrawer, setDrawer]);
 
     const toggleSidebar = useCallback(() => {
         const next = { collapsed: !safeSidebar.collapsed };

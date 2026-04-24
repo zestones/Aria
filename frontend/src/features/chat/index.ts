@@ -1,5 +1,7 @@
 export { ChatInput } from "./ChatInput";
 export { ChatPanel } from "./ChatPanel";
+export type { ChatDrawerOpenerState } from "./chatDrawerStore";
+export { useChatDrawerOpener } from "./chatDrawerStore";
 export { useChatStore } from "./chatStore";
 export { Markdown } from "./Markdown";
 export { Message } from "./Message";
