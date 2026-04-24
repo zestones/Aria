@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Badge, Card, Icons } from "../ui";
-import { fadeInUp } from "../ui/motion";
+import { popIn } from "../ui/motion";
 import { getArtifactComponent } from "./registry";
 import { type ArtifactComponentName, schemas } from "./schemas";
 
@@ -119,7 +119,7 @@ export function ArtifactRenderer({ component, props }: ArtifactRendererProps) {
 
     return (
         <ArtifactErrorBoundary component={component}>
-            <motion.div variants={fadeInUp} initial="hidden" animate="visible">
+            <motion.div variants={popIn} initial="hidden" animate="visible">
                 <Component {...parseResult.data} />
             </motion.div>
         </ArtifactErrorBoundary>
