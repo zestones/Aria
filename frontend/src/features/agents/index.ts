@@ -1,6 +1,11 @@
+export { ActivityFeed } from "./ActivityFeed";
 export { AgentInspector } from "./AgentInspector";
+export type { ActivityEvent, ActivityEventType, ActivityFeedState } from "./activityFeedStore";
+export { MAX_EVENTS, TTL_MS, useActivityFeedStore } from "./activityFeedStore";
 export type { AgentInspectorState } from "./agentInspectorStore";
 export { useAgentInspectorStore } from "./agentInspectorStore";
 export type { HandoffEvent, ToolRun } from "./types";
+export type { ActivityFeedStatus } from "./useActivityFeedStream";
+export { useActivityFeedStream } from "./useActivityFeedStream";
 export type { AgentStreamStatus, RawAgentEvent, UseAgentStreamResult } from "./useAgentStream";
 export { useAgentStream } from "./useAgentStream";
