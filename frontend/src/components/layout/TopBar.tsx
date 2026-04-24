@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { EquipmentPicker } from "../../features/control-room";
 import type { EquipmentSelection } from "../../lib/hierarchy";
-import { Icons, StatusDot, ThemeToggle } from "../ui";
+import { Icons, StatusDot } from "../ui";
 
 function computeShift(date: Date) {
     const h = date.getHours();
@@ -97,8 +97,6 @@ export function TopBar({
                 <span className="font-medium text-sidebar-foreground">{shift.label}</span>
                 <span className="text-sidebar-muted-foreground">{shift.range}</span>
             </div>
-            <div aria-hidden className="h-5 w-px bg-sidebar-border/60" />
-            <ThemeToggle />
             {onConstellationToggle && (
                 <button
                     type="button"

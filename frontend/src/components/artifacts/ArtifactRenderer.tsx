@@ -37,7 +37,7 @@ function ArtifactFallback({ kind, name, detail }: FallbackProps) {
                         <span className="text-xs text-muted-foreground">{title}</span>
                     </div>
                     {detail && (
-                        <span className="font-mono text-xs text-text-tertiary break-words">
+                        <span className="font-mono text-xs text-text-tertiary wrap-break-word">
                             {detail}
                         </span>
                     )}

@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { type ThemeMode, useTheme } from "../../providers/theme.provider";
 import { getUser, logout } from "../../services/auth";
 import { Icons } from "../ui";
+
+const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+    { value: "light", label: "Light" },
+    { value: "system", label: "System" },
+    { value: "dark", label: "Dark" },
+];
 
 function initialsOf(name: string | undefined, fallback: string): string {
     const source = name?.trim() || fallback;
@@ -61,6 +68,8 @@ export function UserMenu({ compact = false }: UserMenuProps) {
             document.removeEventListener("keydown", onKey);
         };
     }, [open]);
+
+    const { mode: themeMode, setMode: setThemeMode } = useTheme();
 
     const handleLogout = useCallback(async () => {
         if (busy) return;
@@ -149,6 +158,35 @@ export function UserMenu({ compact = false }: UserMenuProps) {
                                     {roleLabel(user.role)}
                                 </span>
                             )}
+                        </div>
+                    </div>
+                    <div className="border-b border-border px-3 py-2.5">
+                        <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+                            Theme
+                        </p>
+                        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5">
+                            {THEME_OPTIONS.map((opt) => {
+                                const active = themeMode === opt.value;
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        role="menuitemradio"
+                                        aria-checked={active}
+                                        aria-label={`Use ${opt.label.toLowerCase()} theme`}
+                                        onClick={() => setThemeMode(opt.value)}
+                                        className={[
+                                            "flex-1 rounded-md py-1 text-xs font-medium transition-colors duration-150",
+                                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                            active
+                                                ? "bg-muted text-foreground"
+                                                : "text-muted-foreground hover:text-foreground",
+                                        ].join(" ")}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                     <div className="p-1">
