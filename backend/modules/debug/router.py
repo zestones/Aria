@@ -81,8 +81,7 @@ async def _replay_full_flow(work_order_id: int, cell_id: int, cell_name: str) ->
                     "cell_id": cell_id,
                     "severity": "alert",
                     "message": (
-                        f"{cell_name}: anomaly replay triggered "
-                        f"— investigator dispatched"
+                        f"{cell_name}: anomaly replay triggered " f"— investigator dispatched"
                     ),
                     "anomaly_id": work_order_id,
                 },
@@ -129,9 +128,7 @@ async def replay_full_flow(
         work_order_id,
     )
     if wo is None:
-        raise HTTPException(
-            status_code=404, detail=f"work_order {work_order_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"work_order {work_order_id} not found")
 
     # Wipe prior RCA + enrichment so the agents have fresh work to do and the
     # audience sees the work order populate from scratch during the demo.
@@ -188,9 +185,7 @@ async def replay_investigator(
         work_order_id,
     )
     if wo is None:
-        raise HTTPException(
-            status_code=404, detail=f"work_order {work_order_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"work_order {work_order_id} not found")
 
     await conn.execute(
         "UPDATE work_order SET status = 'detected' WHERE id = $1",
