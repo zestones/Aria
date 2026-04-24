@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { ArtifactRenderer } from "../../artifacts";
 import { Badge, Icons, StatusDot } from "../../design-system";
+import { useAgentInspectorStore } from "../../features/agents";
 import type { AgentMessage, AgentPart, UserMessage } from "./chatStore";
 import { Markdown } from "./Markdown";
 
@@ -111,10 +112,16 @@ interface AgentRowProps {
 
 function AgentRow({ message, now }: AgentRowProps) {
     const agentKey = KNOWN_AGENTS.has(message.agent) ? (message.agent as never) : undefined;
+    const openInspector = useAgentInspectorStore((s) => s.openForAgent);
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+            <button
+                type="button"
+                onClick={() => openInspector(message.agent)}
+                aria-label={`Open agent inspector for ${formatAgentLabel(message.agent)}`}
+                className="-mx-1 -my-0.5 inline-flex w-fit items-center gap-2 rounded-[var(--ds-radius-sm)] px-1 py-0.5 text-left transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+            >
                 {agentKey ? (
                     <Badge variant="agent" agent={agentKey}>
                         {formatAgentLabel(message.agent)}
@@ -126,7 +133,7 @@ function AgentRow({ message, now }: AgentRowProps) {
                     {formatRelativeTime(message.createdAt, now)}
                 </span>
                 {message.streaming && <StatusDot status="warning" size={6} pulse aria-hidden />}
-            </div>
+            </button>
             <div className="flex flex-col gap-2">
                 {message.parts.length === 0 && message.streaming && (
                     <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)] italic">
