@@ -1,6 +1,10 @@
 import { useCallback, useId } from "react";
 import { Outlet } from "react-router-dom";
-import { AgentInspector, useAgentInspectorStore } from "../../features/agents";
+import {
+    AgentInspector,
+    useActivityFeedStream,
+    useAgentInspectorStore,
+} from "../../features/agents";
 import { useAgentTurnsIngest } from "../../features/agents/useAgentTurnsIngest";
 import { ChatPanel } from "../../features/chat";
 import {
@@ -51,9 +55,12 @@ function sanitizeDrawer(state: ChatDrawerState): ChatDrawerState {
 }
 
 export function AppShell() {
-    // Singleton bus consumer — keeps the agent turn buffer alive regardless
-    // of the Inspector's open/close state.
+    // Singleton bus consumers — keep both buffers (agent turns + activity
+    // feed) alive regardless of whether the Inspector or the Activity modal
+    // is currently mounted. Without this the feed only starts collecting
+    // events the first time the user opens the modal, missing prior handoffs.
     useAgentTurnsIngest();
+    useActivityFeedStream();
 
     const [drawer, setDrawer] = useLocalStorage<ChatDrawerState>(
         CHAT_DRAWER_KEY,
@@ -90,7 +97,7 @@ export function AppShell() {
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
-            <Sidebar collapsed={safeSidebar.collapsed} onToggle={toggleSidebar} />
+            <Sidebar collapsed={safeSidebar.collapsed} />
             <div
                 className="flex min-w-0 flex-1 flex-col"
                 style={{

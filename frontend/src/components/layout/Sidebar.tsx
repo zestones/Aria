@@ -16,8 +16,9 @@ import { UserMenu } from "./UserMenu";
  *   │ User row     │  (edge-to-edge, hover-tints the bottom strip)
  *   └──────────────┘
  *
- * Collapsing the sidebar is exposed through a 6px-wide hover rail on the right
- * edge. Click the rail to toggle.
+ * Collapse/expand is owned by the TopBar `PanelLeft` button (see
+ * {@link TopBar}). The sidebar itself is intentionally chrome-less so the
+ * two click targets don't overlap and fight for the same hit area.
  */
 export const SIDEBAR_WIDTH_EXPANDED = 240;
 export const SIDEBAR_WIDTH_COLLAPSED = 64;
@@ -60,10 +61,9 @@ const NAV_GROUPS: NavGroup[] = [
 
 export interface SidebarProps {
     collapsed: boolean;
-    onToggle: () => void;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed }: SidebarProps) {
     const isDev = import.meta.env.DEV;
     const visibleGroups = NAV_GROUPS.map((group) => ({
         ...group,
@@ -71,37 +71,32 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     })).filter((group) => group.items.length > 0);
 
     return (
-        <div className="relative flex-none">
-            <aside
-                aria-label="Primary navigation"
-                className="flex h-full flex-col bg-sidebar"
-                style={{
-                    width: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED,
-                    transition: "width var(--motion-base) var(--ease-out-soft)",
-                }}
+        <aside
+            aria-label="Primary navigation"
+            className="flex h-full flex-none flex-col bg-sidebar"
+            style={{
+                width: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED,
+                transition: "width var(--motion-base) var(--ease-out-soft)",
+            }}
+        >
+            <SidebarHeader collapsed={collapsed} />
+
+            <nav
+                aria-label="Sections"
+                className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto py-4"
             >
-                <SidebarHeader collapsed={collapsed} />
+                {visibleGroups.map((group, idx) => (
+                    <SidebarSection
+                        key={group.id}
+                        group={group}
+                        collapsed={collapsed}
+                        isFirst={idx === 0}
+                    />
+                ))}
+            </nav>
 
-                <nav
-                    aria-label="Sections"
-                    className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto py-4"
-                >
-                    {visibleGroups.map((group, idx) => (
-                        <SidebarSection
-                            key={group.id}
-                            group={group}
-                            collapsed={collapsed}
-                            isFirst={idx === 0}
-                        />
-                    ))}
-                </nav>
-
-                <SidebarFooter collapsed={collapsed} />
-            </aside>
-
-            {/* Hover-to-toggle rail along the right edge. */}
-            <SidebarRail collapsed={collapsed} onToggle={onToggle} />
-        </div>
+            <SidebarFooter collapsed={collapsed} />
+        </aside>
     );
 }
 
@@ -216,26 +211,6 @@ function SidebarLink({ item, collapsed }: SidebarLinkProps) {
                 </>
             )}
         </NavLink>
-    );
-}
-
-// ─── Rail (hover-to-toggle) ─────────────────────────────────────────────────
-
-function SidebarRail({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
-    return (
-        <button
-            type="button"
-            tabIndex={-1}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            onClick={onToggle}
-            className={[
-                "group absolute inset-y-0 -right-3 z-20 w-6 cursor-col-resize",
-                "after:absolute after:inset-y-0 after:left-1/2 after:w-px after:-translate-x-1/2",
-                "after:bg-transparent after:transition-colors after:duration-150",
-                "hover:after:bg-primary/40",
-            ].join(" ")}
-        />
     );
 }
 

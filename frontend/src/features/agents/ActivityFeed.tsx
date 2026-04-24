@@ -15,7 +15,6 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { Badge, Icons, StatusDot } from "../../components/ui";
 import { type ActivityEvent, TTL_MS, useActivityFeedStore } from "./activityFeedStore";
 import { useAgentInspectorStore } from "./agentInspectorStore";
-import { useActivityFeedStream } from "./useActivityFeedStream";
 
 const KNOWN_AGENTS = ["sentinel", "investigator", "kb_builder", "work_order", "qa"] as const;
 type KnownAgent = (typeof KNOWN_AGENTS)[number];
@@ -60,7 +59,6 @@ function agentColorVar(agent: string): string | null {
 }
 
 export function ActivityFeed() {
-    useActivityFeedStream();
     const events = useActivityFeedStore((s) => s.events);
     const openForAgent = useAgentInspectorStore((s) => s.openForAgent);
     const [filter, setFilter] = useState<"all" | KnownAgent>("all");

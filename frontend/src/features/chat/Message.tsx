@@ -55,7 +55,7 @@ function UserRow({ message, now, investigatingWith }: UserRowProps) {
 function renderArgs(args: Record<string, unknown>): string {
     try {
         const json = JSON.stringify(args);
-        return json.length > 80 ? `${json.slice(0, 77)}…` : json;
+        return json.length > 120 ? `${json.slice(0, 117)}…` : json;
     } catch {
         return "{…}";
     }
@@ -65,20 +65,29 @@ interface ToolCallRowProps {
     part: Extract<AgentPart, { kind: "tool_call" }>;
 }
 
+/**
+ * Tool-call card. Stacked layout (icon + name on row 1, args / summary on
+ * row 2) so long tool names and JSON arg blobs wrap inside the chat width
+ * instead of pushing the bubble past the drawer edge.
+ */
 function ToolCallRow({ part }: ToolCallRowProps) {
     const running = part.status === "running";
     return (
-        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+        <div className="flex w-full min-w-0 items-start gap-2 rounded-md border border-border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
             {running ? (
-                <Icons.Activity className="size-3.5 flex-none animate-pulse text-text-tertiary" />
+                <Icons.Activity className="mt-0.5 size-3.5 flex-none animate-pulse text-text-tertiary" />
             ) : (
-                <Icons.Check className="size-3.5 flex-none text-success" />
+                <Icons.Check className="mt-0.5 size-3.5 flex-none text-success" />
             )}
-            <span className="font-mono text-foreground">{part.name}</span>
-            <span className="truncate font-mono text-text-tertiary">{renderArgs(part.args)}</span>
-            {part.summary && (
-                <span className="ml-auto flex-none text-muted-foreground">{part.summary}</span>
-            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate font-mono text-foreground">{part.name}</span>
+                <span className="font-mono text-[11px] text-text-tertiary break-all">
+                    {renderArgs(part.args)}
+                </span>
+                {part.summary && (
+                    <span className="text-muted-foreground break-words">{part.summary}</span>
+                )}
+            </div>
         </div>
     );
 }
