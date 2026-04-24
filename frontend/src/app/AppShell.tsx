@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import { AnomalyBanner, KpiBar } from "../features/control-room";
+import { EQUIPMENT_KEY, validateEquipmentSelection } from "../lib/equipmentSelection";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
 import { ChatPanel } from "./chat/ChatPanel";
@@ -14,7 +15,6 @@ interface ChatDrawerState {
 }
 
 const CHAT_DRAWER_KEY = "aria.chatDrawer";
-const EQUIPMENT_KEY = "aria.selectedEquipment";
 
 const DEFAULT_DRAWER_STATE: ChatDrawerState = {
     open: true,
@@ -29,15 +29,6 @@ function sanitizeDrawer(state: ChatDrawerState): ChatDrawerState {
             Math.min(DRAWER_MAX_WIDTH, Math.round(state.width ?? DRAWER_DEFAULT_WIDTH)),
         ),
     };
-}
-
-function validateEquipmentSelection(raw: unknown): EquipmentSelection | null {
-    if (!raw || typeof raw !== "object") return null;
-    const r = raw as Record<string, unknown>;
-    if (typeof r.cellId !== "number" || typeof r.lineId !== "number") return null;
-    if (typeof r.cellName !== "string" || typeof r.lineName !== "string") return null;
-    if (typeof r.areaName !== "string" || typeof r.siteName !== "string") return null;
-    return raw as EquipmentSelection;
 }
 
 function isTypingTarget(target: EventTarget | null) {

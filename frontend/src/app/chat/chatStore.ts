@@ -83,6 +83,8 @@ interface InternalState {
     handle: ChatWsClient | null;
     currentAgentMessageId: string | null;
     idCounter: number;
+    /** FIFO of user messages queued while the socket is CONNECTING. */
+    pendingSends: string[];
 }
 
 function nextId(internal: InternalState, prefix: string): string {
@@ -95,6 +97,7 @@ export const useChatStore = create<ChatState>((set, get) => {
         handle: null,
         currentAgentMessageId: null,
         idCounter: 0,
+        pendingSends: [],
     };
 
     const upsertAgentMessage = (update: (msg: AgentMessage) => AgentMessage) => {
@@ -234,20 +237,37 @@ export const useChatStore = create<ChatState>((set, get) => {
         void (type as any);
     };
 
+    const flushPending = () => {
+        const handle = internal.handle;
+        if (!handle) return;
+        while (internal.pendingSends.length > 0) {
+            const content = internal.pendingSends.shift() as string;
+            handle.send({ type: "user", content });
+        }
+    };
+
     const ensureConnected = () => {
         if (internal.handle) return;
         set({ status: "connecting", error: null });
         internal.handle = createChatWsClient<ChatMap>({
             url: CHAT_WS_URL,
-            onOpen: () => set({ status: "open", error: null }),
+            onOpen: () => {
+                set({ status: "open", error: null });
+                // Defensive: avoid microtask busy-loop while CONNECTING — event-driven flush on open.
+                flushPending();
+            },
             onClose: (code) => {
+                internal.pendingSends.length = 0;
                 if (code === 4401) {
                     set({ status: "error", error: AUTH_EXPIRED_MESSAGE });
                     return;
                 }
                 set({ status: "closed" });
             },
-            onError: (err) => set({ status: "error", error: err.message }),
+            onError: (err) => {
+                internal.pendingSends.length = 0;
+                set({ status: "error", error: err.message });
+            },
             onEvent: handleEvent,
         });
     };
@@ -264,6 +284,7 @@ export const useChatStore = create<ChatState>((set, get) => {
             internal.handle?.close(1000, "disconnect");
             internal.handle = null;
             internal.currentAgentMessageId = null;
+            internal.pendingSends.length = 0;
             set({ status: "closed" });
         },
 
@@ -291,28 +312,22 @@ export const useChatStore = create<ChatState>((set, get) => {
 
             set((state) => ({ messages: [...state.messages, userMsg, agentMsg] }));
 
-            // Drain after OPEN — socket may still be connecting on first send.
-            // Guard with a microtask retry until we hit OPEN or the store
-            // transitions to an error state (cookie rejected, exhausted
-            // reconnect attempts, etc.).
-            const dispatch = () => {
-                const handle = internal.handle;
-                if (!handle) return;
-                const status = get().status;
-                if (status === "open") {
-                    handle.send({ type: "user", content: trimmed });
-                    return;
-                }
-                if (status === "error" || status === "closed") return;
-                queueMicrotask(dispatch);
-            };
-            dispatch();
+            const handle = internal.handle;
+            const status = get().status;
+            if (handle && status === "open") {
+                handle.send({ type: "user", content: trimmed });
+                return;
+            }
+            if (status === "error" || status === "closed") return;
+            // Socket still CONNECTING — queue; flushed event-driven on onOpen.
+            internal.pendingSends.push(trimmed);
         },
 
         reset: () => {
             internal.handle?.close(1000, "reset");
             internal.handle = null;
             internal.currentAgentMessageId = null;
+            internal.pendingSends.length = 0;
             set({ messages: [], status: "idle", error: null });
         },
 

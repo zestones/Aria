@@ -7,19 +7,10 @@ import {
     type InspectorNode,
     useEquipmentList,
 } from "../features/control-room";
+import { formatHeaderDate } from "../lib/date";
+import { EQUIPMENT_KEY, validateEquipmentSelection } from "../lib/equipmentSelection";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
-
-const EQUIPMENT_KEY = "aria.selectedEquipment";
-
-function validateEquipmentSelection(raw: unknown): EquipmentSelection | null {
-    if (!raw || typeof raw !== "object") return null;
-    const r = raw as Record<string, unknown>;
-    if (typeof r.cellId !== "number" || typeof r.lineId !== "number") return null;
-    if (typeof r.cellName !== "string" || typeof r.lineName !== "string") return null;
-    if (typeof r.areaName !== "string" || typeof r.siteName !== "string") return null;
-    return raw as EquipmentSelection;
-}
 
 /**
  * Control room landing page — M7.1 refactor (#40).
@@ -56,13 +47,18 @@ export default function ControlRoomPage() {
     }, [selectedNodeId, entries]);
 
     const scopeLabel = selection?.lineName ?? "All lines";
+    const today = useMemo(() => formatHeaderDate(), []);
 
     return (
         <section className="flex h-full flex-col gap-6 p-6">
             <SectionHeader
                 label="Control room"
                 size="lg"
-                meta={<span>{scopeLabel} · Apr 23, 2026</span>}
+                meta={
+                    <span>
+                        {scopeLabel} · {today}
+                    </span>
+                }
             />
             <Hairline />
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]">
