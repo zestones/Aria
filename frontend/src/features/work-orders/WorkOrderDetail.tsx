@@ -8,15 +8,26 @@
  */
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, useParams } from "react-router-dom";
-import { Badge, Hairline, Icons, MetaStrip, SectionHeader, StatusDot } from "../../components/ui";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+    Badge,
+    Button,
+    Hairline,
+    Icons,
+    MetaStrip,
+    SectionHeader,
+    StatusDot,
+} from "../../components/ui";
 import { fadeInUp } from "../../components/ui/motion";
+import { getUser } from "../../services/auth";
 import { PrintableWorkOrder } from "./PrintableWorkOrder";
 import type { WorkOrder } from "./types";
-import { useWorkOrder } from "./useWorkOrders";
+import { useDeleteWorkOrder, useWorkOrder } from "./useWorkOrders";
 import { useWorkOrdersStream } from "./useWorkOrdersStream";
 import { parseList } from "./utils";
+import { WorkOrderEditForm } from "./WorkOrderEditForm";
 
 function formatDateTime(ts: string | null | undefined): string {
     if (!ts) return "—";
@@ -259,20 +270,73 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
     const actions = parseList(wo.recommended_actions);
     const parts = parseList(wo.required_parts);
     const skills = parseList(wo.required_skills);
+    const navigate = useNavigate();
+    const user = getUser();
+    const canEdit = user?.role === "admin" || user?.role === "operator";
+    const canDelete = user?.role === "admin";
+    const agentBusy = wo.status === "detected" || wo.status === "analyzed";
+
+    const [editing, setEditing] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const deleteMutation = useDeleteWorkOrder();
+
+    const handleDelete = () => {
+        deleteMutation.mutate(wo.id, {
+            onSuccess: () => navigate("/work-orders", { replace: true }),
+        });
+    };
+
+    if (editing) {
+        return (
+            <section className="flex h-full flex-col gap-6 overflow-auto p-6 print:hidden">
+                <BackLink />
+                <WorkOrderEditForm
+                    wo={wo}
+                    onCancel={() => setEditing(false)}
+                    onSaved={() => setEditing(false)}
+                />
+            </section>
+        );
+    }
 
     return (
         <section className="flex h-full flex-col gap-6 overflow-auto p-6 print:hidden">
             <div className="flex items-start justify-between gap-4">
                 <BackLink />
-                <button
-                    type="button"
-                    onClick={() => window.print()}
-                    aria-label="Print this work order"
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors duration-150 hover:border-input hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                    <Icons.Printer className="size-4" aria-hidden />
-                    Print
-                </button>
+                <div className="flex items-center gap-2">
+                    {canEdit && !agentBusy && (
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setEditing(true)}
+                        >
+                            <Icons.FileText className="size-4" aria-hidden />
+                            Edit
+                        </Button>
+                    )}
+                    {canDelete && !agentBusy && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmingDelete(true)}
+                            className="text-destructive hover:bg-[color-mix(in_oklab,var(--destructive),transparent_90%)] hover:text-destructive"
+                        >
+                            <Icons.X className="size-4" aria-hidden />
+                            Delete
+                        </Button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => window.print()}
+                        aria-label="Print this work order"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors duration-150 hover:border-input hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        <Icons.Printer className="size-4" aria-hidden />
+                        Print
+                    </button>
+                </div>
             </div>
             <SectionHeader
                 label={wo.title}
@@ -371,7 +435,100 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
                     </dl>
                 </Panel>
             )}
+            {confirmingDelete && (
+                <DeleteConfirmDialog
+                    title={wo.title}
+                    pending={deleteMutation.isPending}
+                    error={deleteMutation.error}
+                    onCancel={() => setConfirmingDelete(false)}
+                    onConfirm={handleDelete}
+                />
+            )}
         </section>
+    );
+}
+
+function DeleteConfirmDialog({
+    title,
+    pending,
+    error,
+    onCancel,
+    onConfirm,
+}: {
+    title: string;
+    pending: boolean;
+    error: unknown;
+    onCancel: () => void;
+    onConfirm: () => void;
+}) {
+    return (
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wo-delete-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4 print:hidden"
+            onClick={(e) => {
+                if (e.target === e.currentTarget && !pending) onCancel();
+            }}
+            onKeyDown={(e) => {
+                if (e.key === "Escape" && !pending) onCancel();
+            }}
+        >
+            <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-pill">
+                <div className="flex items-start gap-3">
+                    <div
+                        aria-hidden
+                        className="flex size-10 flex-none items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--destructive),transparent_85%)] text-destructive"
+                    >
+                        <Icons.AlertTriangle className="size-5" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <h3
+                            id="wo-delete-title"
+                            className="text-base font-semibold text-foreground"
+                        >
+                            Delete this work order?
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            “{title}” will be permanently removed. This cannot be undone.
+                        </p>
+                    </div>
+                </div>
+                {error instanceof Error && (
+                    <p className="text-sm text-destructive">Could not delete: {error.message}</p>
+                )}
+                <div className="flex items-center justify-end gap-3">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="md"
+                        onClick={onCancel}
+                        disabled={pending}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="md"
+                        onClick={onConfirm}
+                        disabled={pending}
+                    >
+                        {pending ? (
+                            <>
+                                <Icons.Loader2 className="size-4 animate-spin" aria-hidden />
+                                Deleting…
+                            </>
+                        ) : (
+                            <>
+                                <Icons.X className="size-4" aria-hidden />
+                                Delete
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </div>
+        </div>
     );
 }
 

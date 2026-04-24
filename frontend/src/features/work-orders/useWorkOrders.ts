@@ -4,8 +4,14 @@
  * on `work_order_ready` / `rca_ready` — same key shape here.
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { getWorkOrder, listWorkOrders } from "../../services/work-orders";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    deleteWorkOrder,
+    getWorkOrder,
+    listWorkOrders,
+    updateWorkOrder,
+    type WorkOrderUpdatePayload,
+} from "../../services/work-orders";
 import type { WorkOrder } from "./types";
 
 export function useWorkOrders() {
@@ -23,5 +29,27 @@ export function useWorkOrder(id: number | null | undefined) {
         queryFn: () => getWorkOrder(id as number),
         enabled,
         staleTime: 10_000,
+    });
+}
+
+export function useUpdateWorkOrder(id: number) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: WorkOrderUpdatePayload) => updateWorkOrder(id, payload),
+        onSuccess: (data) => {
+            qc.setQueryData(["work-order", id], data);
+            qc.invalidateQueries({ queryKey: ["work-orders"] });
+        },
+    });
+}
+
+export function useDeleteWorkOrder() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: number) => deleteWorkOrder(id),
+        onSuccess: (_data, id) => {
+            qc.removeQueries({ queryKey: ["work-order", id] });
+            qc.invalidateQueries({ queryKey: ["work-orders"] });
+        },
     });
 }
