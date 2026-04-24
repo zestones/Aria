@@ -10,6 +10,9 @@ export type {
     EquipmentStatus,
 } from "./EquipmentNode";
 export { EquipmentNode } from "./EquipmentNode";
+export type { EquipmentPickerProps } from "./EquipmentPicker";
+export { EquipmentPicker } from "./EquipmentPicker";
+export { EQUIPMENT_KEY, validateEquipmentSelection } from "./equipmentSelection";
 export type { KpiBarProps } from "./KpiBar";
 export { KpiBar } from "./KpiBar";
 export type { SparklineProps } from "./Sparkline";

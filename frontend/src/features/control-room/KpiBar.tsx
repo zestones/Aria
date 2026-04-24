@@ -15,7 +15,7 @@
  */
 
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { StatusDot } from "../../design-system";
+import { StatusDot } from "../../components/ui";
 import type { EquipmentSelection } from "../../lib/hierarchy";
 import { Sparkline } from "./Sparkline";
 import { useKpiData } from "./useKpiData";

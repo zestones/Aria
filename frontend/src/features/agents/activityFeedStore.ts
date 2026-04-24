@@ -10,7 +10,7 @@
  */
 
 import { create } from "zustand";
-import type { EventBusMap } from "../../lib/ws.types";
+import type { EventBusMap } from "../../lib/ws";
 
 export const MAX_EVENTS = 100;
 export const TTL_MS = 5 * 60 * 1000;

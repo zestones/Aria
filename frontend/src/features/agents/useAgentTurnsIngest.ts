@@ -10,8 +10,8 @@
  * typed `createWsClient` with an AbortController-based cleanup.
  */
 import { useEffect } from "react";
+import type { EventBusMap } from "../../lib/ws";
 import { createWsClient } from "../../lib/ws";
-import type { EventBusMap } from "../../lib/ws.types";
 import { useAgentTurnsStore } from "./agentTurnsStore";
 
 const EVENTS_WS_URL = "/api/v1/events";

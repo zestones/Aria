@@ -1,7 +1,7 @@
 import { type FormEvent, useId, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AriaMark, ThemeToggle } from "../design-system";
-import { login } from "../lib/auth";
+import { AriaMark, ThemeToggle } from "../components/ui";
+import { login } from "../services/auth";
 
 const DEV = import.meta.env.DEV;
 

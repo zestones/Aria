@@ -22,10 +22,10 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo } from "react";
-import { useChatStore } from "../../app/chat/chatStore";
-import { Button } from "../../design-system/Button";
-import { AlertCircle, AlertTriangle, X } from "../../design-system/icons";
-import { fadeInUp } from "../../design-system/motion";
+import { Button } from "../../components/ui/Button";
+import { AlertCircle, AlertTriangle, X } from "../../components/ui/icons";
+import { fadeInUp } from "../../components/ui/motion";
+import { useChatStore } from "../chat/chatStore";
 import type { AnomalyEvent } from "./useAnomalyStream";
 import { useAnomalyStream } from "./useAnomalyStream";
 import { useSignalDefinitions } from "./useSignalDefinitions";

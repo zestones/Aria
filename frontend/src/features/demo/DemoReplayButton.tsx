@@ -20,7 +20,7 @@
  */
 
 import { useState } from "react";
-import { Icons } from "../../design-system";
+import { Icons } from "../../components/ui";
 
 interface RecentWorkOrder {
     id: number;

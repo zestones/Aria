@@ -17,8 +17,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import type { EventBusMap } from "../../lib/ws";
 import { createWsClient } from "../../lib/ws";
-import type { EventBusMap } from "../../lib/ws.types";
 import type { WorkOrder } from "./types";
 
 const EVENTS_WS_URL = "/api/v1/events";

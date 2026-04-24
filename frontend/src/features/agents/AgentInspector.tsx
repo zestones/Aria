@@ -13,7 +13,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useEffect, useMemo, useRef } from "react";
-import { Badge, Icons, Tabs, TabsContent, TabsList, TabsTrigger } from "../../design-system";
+import { Badge, Icons, Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui";
 import { useAgentInspectorStore } from "./agentInspectorStore";
 import type { HandoffEvent, ToolRun } from "./types";
 import type { RawAgentEvent } from "./useAgentStream";

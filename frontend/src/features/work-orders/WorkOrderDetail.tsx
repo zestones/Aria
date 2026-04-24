@@ -9,7 +9,7 @@
 
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
-import { Badge, Hairline, Icons, MetaStrip, SectionHeader, StatusDot } from "../../design-system";
+import { Badge, Hairline, Icons, MetaStrip, SectionHeader, StatusDot } from "../../components/ui";
 import { PrintableWorkOrder } from "./PrintableWorkOrder";
 import type { WorkOrder } from "./types";
 import { useWorkOrder } from "./useWorkOrders";

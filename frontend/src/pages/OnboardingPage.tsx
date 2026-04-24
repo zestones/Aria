@@ -17,9 +17,8 @@ import {
     Icons,
     SectionHeader,
     ThemeToggle,
-} from "../design-system";
-import { PdfUpload } from "../features/onboarding/PdfUpload";
-import type { EquipmentKbOut } from "../lib/kb.types";
+} from "../components/ui";
+import { type EquipmentKbOut, PdfUpload } from "../features/onboarding";
 
 const DEFAULT_CELL_ID = 2;
 

@@ -16,7 +16,7 @@
  * tab can render the raw event log even long after the turn ended.
  */
 import { create } from "zustand";
-import type { EventBusMap } from "../../lib/ws.types";
+import type { EventBusMap } from "../../lib/ws";
 import type { HandoffEvent, ToolRun } from "./types";
 
 export interface RawAgentEvent {

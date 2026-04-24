@@ -1,5 +1,5 @@
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
-import { Card } from "../../design-system";
+import { Card } from "../../components/ui";
 
 /**
  * Node live status. M7.1 refactor (#40) hardcodes every node to `nominal` —

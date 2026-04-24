@@ -1,4 +1,4 @@
-import type { EventBusMap } from "../../lib/ws.types";
+import type { EventBusMap } from "../../lib/ws";
 
 export type AgentStreamAgentId = string;
 

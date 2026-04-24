@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
-import { Card, Hairline, Icons, SectionHeader } from "../../design-system";
+import { Card, Hairline, Icons, SectionHeader } from "../../components/ui";
 
 /**
  * Minimal node descriptor surfaced by the diagram when a node is clicked.

@@ -21,8 +21,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { EventBusMap } from "../../lib/ws";
 import { createWsClient } from "../../lib/ws";
-import type { EventBusMap } from "../../lib/ws.types";
 
 const EVENTS_WS_URL = "/api/v1/events";
 const FIFO_CAP = 20;

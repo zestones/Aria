@@ -12,7 +12,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useEffect, useMemo, useState } from "react";
-import { Badge, Icons, StatusDot } from "../../design-system";
+import { Badge, Icons, StatusDot } from "../../components/ui";
 import { type ActivityEvent, TTL_MS, useActivityFeedStore } from "./activityFeedStore";
 import { useAgentInspectorStore } from "./agentInspectorStore";
 import { useActivityFeedStream } from "./useActivityFeedStream";

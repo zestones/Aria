@@ -9,7 +9,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Hairline, Icons, SectionHeader, StatusDot } from "../../design-system";
+import { Badge, Hairline, Icons, SectionHeader, StatusDot } from "../../components/ui";
 import { formatHeaderDate } from "../../lib/date";
 import { PRIORITY_RANK, type WorkOrder } from "./types";
 import { useWorkOrders } from "./useWorkOrders";

@@ -14,9 +14,9 @@
 
 import { motion } from "framer-motion";
 import { type DragEvent, useCallback, useEffect, useId, useRef, useState } from "react";
-import { Button, Icons } from "../../design-system";
-import type { EquipmentKbOut } from "../../lib/kb.types";
+import { Button, Icons } from "../../components/ui";
 import { pdfjsLib } from "../../lib/pdfjs";
+import type { EquipmentKbOut } from ".";
 
 const MAX_BYTES = 50 * 1024 * 1024;
 

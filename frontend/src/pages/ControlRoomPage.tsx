@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
-import { Hairline, SectionHeader } from "../design-system";
+import { Hairline, SectionHeader } from "../components/ui";
 import {
+    EQUIPMENT_KEY,
     EquipmentGrid,
     EquipmentInspector,
     INSPECTOR_DRAWER_WIDTH,
     type InspectorNode,
     useEquipmentList,
+    validateEquipmentSelection,
 } from "../features/control-room";
 import { formatHeaderDate } from "../lib/date";
-import { EQUIPMENT_KEY, validateEquipmentSelection } from "../lib/equipmentSelection";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
 

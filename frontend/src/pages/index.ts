@@ -1,0 +1,5 @@
+export { default as ControlRoomPage } from "./ControlRoomPage";
+export { default as DataPage } from "./DataPage";
+export { default as DesignPage } from "./DesignPage";
+export { default as LoginPage } from "./LoginPage";
+export { default as OnboardingPage } from "./OnboardingPage";
