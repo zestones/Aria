@@ -1,6 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { getHierarchyTree } from "../services/hierarchy";
+import {
+    type CreateCellPayload,
+    createArea,
+    createCell,
+    createEnterprise,
+    createLine,
+    createSite,
+    getHierarchyTree,
+} from "../services/hierarchy";
 
 export type {
     AreaNode,
@@ -54,6 +62,60 @@ export function useHierarchyTree() {
         queryKey: ["hierarchy", "tree"],
         queryFn: () => getHierarchyTree(),
         staleTime: 60_000,
+    });
+}
+
+// ---------------------------------------------------------------------------
+// CRUD mutations — every successful create invalidates the tree so the
+// `EquipmentBootstrap` picker, the global `EquipmentPicker`, and any other
+// surface bound to `["hierarchy", "tree"]` refetch immediately.
+// ---------------------------------------------------------------------------
+
+function useInvalidateHierarchy() {
+    const qc = useQueryClient();
+    return () => qc.invalidateQueries({ queryKey: ["hierarchy", "tree"] });
+}
+
+export function useCreateEnterprise() {
+    const invalidate = useInvalidateHierarchy();
+    return useMutation({
+        mutationFn: (name: string) => createEnterprise(name),
+        onSuccess: invalidate,
+    });
+}
+
+export function useCreateSite() {
+    const invalidate = useInvalidateHierarchy();
+    return useMutation({
+        mutationFn: (vars: { name: string; parentid: number }) =>
+            createSite(vars.name, vars.parentid),
+        onSuccess: invalidate,
+    });
+}
+
+export function useCreateArea() {
+    const invalidate = useInvalidateHierarchy();
+    return useMutation({
+        mutationFn: (vars: { name: string; parentid: number }) =>
+            createArea(vars.name, vars.parentid),
+        onSuccess: invalidate,
+    });
+}
+
+export function useCreateLine() {
+    const invalidate = useInvalidateHierarchy();
+    return useMutation({
+        mutationFn: (vars: { name: string; parentid: number }) =>
+            createLine(vars.name, vars.parentid),
+        onSuccess: invalidate,
+    });
+}
+
+export function useCreateCell() {
+    const invalidate = useInvalidateHierarchy();
+    return useMutation({
+        mutationFn: (payload: CreateCellPayload) => createCell(payload),
+        onSuccess: invalidate,
     });
 }
 
