@@ -27,7 +27,13 @@ from datetime import datetime, timezone
 from typing import Any
 
 import pytest
-from agents import sentinel as sentinel_mod
+
+# Sentinel is now a package; the two loops live in sibling submodules and the
+# tests patch at the site-of-use rather than the package __init__ (monkeypatch
+# on the __init__ would leave the submodule's own ``db`` / ``ws_manager``
+# bindings untouched — a real foot-gun worth avoiding).
+from agents.sentinel import forecast as forecast_mod
+from agents.sentinel import service as sentinel_mod
 
 # ---------------------------------------------------------------------------
 # Fakes
@@ -524,7 +530,7 @@ def _make_rising_series(
 def test_ols_recovers_clean_slope() -> None:
     """Clean rising series → slope matches generator, r² ≈ 1.0."""
     samples = _make_rising_series(count=60, slope_per_hour=2.0, start_value=10.0)
-    result = sentinel_mod._ordinary_least_squares(samples)
+    result = forecast_mod._ordinary_least_squares(samples)
     assert result is not None
     slope, _intercept, r_squared, _last_x, last_value = result
     assert abs(slope - 2.0) < 1e-6
@@ -538,13 +544,13 @@ def test_ols_rejects_constant_series() -> None:
 
     now = datetime.now(timezone.utc)
     samples = [{"time": now - timedelta(minutes=i), "raw_value": 7.0} for i in range(30)]
-    assert sentinel_mod._ordinary_least_squares(samples) is None
+    assert forecast_mod._ordinary_least_squares(samples) is None
 
 
 def test_pick_first_breach_returns_nearest_reachable() -> None:
     """With two reachable thresholds, pick the one crossed first."""
     # Value at 10, slope +1/h → alert=15 reached in 5h, trip=25 reached in 15h.
-    pick = sentinel_mod._pick_first_breach(
+    pick = forecast_mod._pick_first_breach(
         thresholds={"alert": 15.0, "trip": 25.0},
         last_value=10.0,
         slope=1.0,
@@ -559,7 +565,7 @@ def test_pick_first_breach_returns_nearest_reachable() -> None:
 
 def test_pick_first_breach_rejects_drift_away() -> None:
     """Rising slope, threshold below current → unreachable."""
-    pick = sentinel_mod._pick_first_breach(
+    pick = forecast_mod._pick_first_breach(
         thresholds={"low_alert": 5.0},
         last_value=10.0,
         slope=1.0,
@@ -570,7 +576,7 @@ def test_pick_first_breach_rejects_drift_away() -> None:
 
 def test_pick_first_breach_rejects_beyond_horizon() -> None:
     """Reachable threshold but ETA past the horizon window → no forecast."""
-    pick = sentinel_mod._pick_first_breach(
+    pick = forecast_mod._pick_first_breach(
         thresholds={"alert": 100.0},
         last_value=10.0,
         slope=1.0,
@@ -580,14 +586,14 @@ def test_pick_first_breach_rejects_beyond_horizon() -> None:
 
 
 def test_parse_thresholds_accepts_dict_and_json_and_none() -> None:
-    assert sentinel_mod._parse_thresholds({"alert": 1.0, "trip": 2.0, "note": "x"}) == {
+    assert forecast_mod._parse_thresholds({"alert": 1.0, "trip": 2.0, "note": "x"}) == {
         "alert": 1.0,
         "trip": 2.0,
     }
-    assert sentinel_mod._parse_thresholds('{"alert": 3.5}') == {"alert": 3.5}
-    assert sentinel_mod._parse_thresholds(None) == {}
+    assert forecast_mod._parse_thresholds('{"alert": 3.5}') == {"alert": 3.5}
+    assert forecast_mod._parse_thresholds(None) == {}
     # Booleans are numbers in Python but meaningless as thresholds — skipped.
-    assert sentinel_mod._parse_thresholds({"alert": True}) == {}
+    assert forecast_mod._parse_thresholds({"alert": True}) == {}
 
 
 # -- End-to-end forecast tick -------------------------------------------------
@@ -658,9 +664,10 @@ def patch_forecast(monkeypatch: pytest.MonkeyPatch):
         conn = _ForecastFakeConn(signals=signals, samples_by_signal=samples_by_signal)
         db_fake = _ForecastFakeDB(pool=_ForecastFakePool(conn))
         ws = _FakeWS()
-        monkeypatch.setattr(sentinel_mod, "db", db_fake)
-        monkeypatch.setattr(sentinel_mod, "ws_manager", ws)
-        sentinel_mod._forecast_last_emit.clear()
+        # Patch the forecast submodule's bindings at the site-of-use.
+        monkeypatch.setattr(forecast_mod, "db", db_fake)
+        monkeypatch.setattr(forecast_mod, "ws_manager", ws)
+        forecast_mod._forecast_last_emit.clear()
         return ws, conn
 
     return _install
@@ -685,7 +692,7 @@ async def test_forecast_tick_emits_warning_on_rising_drift(patch_forecast) -> No
     ]
     ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: samples})
 
-    await sentinel_mod._forecast_watch_tick()
+    await forecast_mod._forecast_watch_tick()
 
     forecast_events = [e for e in ws.events if e[0] == "forecast_warning"]
     assert len(forecast_events) == 1
@@ -719,7 +726,7 @@ async def test_forecast_tick_skips_when_too_few_samples(patch_forecast) -> None:
     ]
     ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: short})
 
-    await sentinel_mod._forecast_watch_tick()
+    await forecast_mod._forecast_watch_tick()
     assert [e for e in ws.events if e[0] == "forecast_warning"] == []
 
 
@@ -745,7 +752,7 @@ async def test_forecast_tick_skips_flat_series(patch_forecast) -> None:
     ]
     ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: flat})
 
-    await sentinel_mod._forecast_watch_tick()
+    await forecast_mod._forecast_watch_tick()
     assert [e for e in ws.events if e[0] == "forecast_warning"] == []
 
 
@@ -766,7 +773,7 @@ async def test_forecast_tick_skips_when_threshold_unreachable(patch_forecast) ->
     ]
     ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: samples})
 
-    await sentinel_mod._forecast_watch_tick()
+    await forecast_mod._forecast_watch_tick()
     assert [e for e in ws.events if e[0] == "forecast_warning"] == []
 
 
@@ -786,8 +793,8 @@ async def test_forecast_tick_debounces_second_emission(patch_forecast) -> None:
     ]
     ws, _conn = patch_forecast(signals=signals, samples_by_signal={10: samples})
 
-    await sentinel_mod._forecast_watch_tick()
-    await sentinel_mod._forecast_watch_tick()
+    await forecast_mod._forecast_watch_tick()
+    await forecast_mod._forecast_watch_tick()
 
     forecast_events = [e for e in ws.events if e[0] == "forecast_warning"]
     assert len(forecast_events) == 1
