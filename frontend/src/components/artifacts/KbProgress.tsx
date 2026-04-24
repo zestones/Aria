@@ -7,8 +7,8 @@
  * skipped (dashed). No animation loops per §9.
  */
 
-import { Badge, Card, Icons } from "../../ui";
-import type { KbProgressProps } from "../schemas";
+import { Badge, Card, Icons } from "../ui";
+import type { KbProgressProps } from "./schemas";
 
 type StepStatus = "pending" | "in_progress" | "done" | "skipped";
 

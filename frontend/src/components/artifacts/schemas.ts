@@ -53,6 +53,17 @@ export const PatternMatchPropsSchema = z
         current_event: z.string(),
         past_event_ref: z.string(),
         similarity: z.number().min(0).max(1),
+        /**
+         * Optional predicted mean-time-to-failure in hours, derived from the
+         * matched past incident's time-to-failure. When present, the card
+         * reframes from "we recognise this pattern" to "we predict failure in
+         * ~X hours / days".
+         */
+        predicted_mttf_hours: z.number().nonnegative().optional(),
+        /** Optional one-line recommended action the operator can take now. */
+        recommended_action: z.string().optional(),
+        /** Optional ISO date of the past incident, rendered inline in the UI. */
+        past_event_date: z.string().optional(),
     })
     .passthrough();
 

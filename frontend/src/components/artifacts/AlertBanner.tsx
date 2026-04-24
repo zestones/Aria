@@ -9,8 +9,8 @@
 
 import type { LucideProps } from "lucide-react";
 import type { ComponentType } from "react";
-import { Icons } from "../../ui";
-import type { AlertBannerProps } from "../schemas";
+import { Icons } from "../ui";
+import type { AlertBannerProps } from "./schemas";
 
 type Severity = "info" | "alert" | "trip";
 

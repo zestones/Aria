@@ -8,10 +8,10 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import type { WorkOrder } from "../../../features/work-orders/types";
-import { getWorkOrder } from "../../../services/work-orders/work-orders.service";
-import { Badge, Button, Card, CardTitle, Icons } from "../../ui";
-import type { WorkOrderCardProps } from "../schemas";
+import type { WorkOrder } from "../../features/work-orders/types";
+import { getWorkOrder } from "../../services/work-orders/work-orders.service";
+import { Badge, Button, Card, CardTitle, Icons } from "../ui";
+import type { WorkOrderCardProps } from "./schemas";
 
 type PriorityVariant = "nominal" | "warning" | "critical" | "default";
 

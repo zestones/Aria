@@ -24,7 +24,7 @@ vi.mock("recharts", async () => {
     };
 });
 
-import { SignalChart } from "@/components/artifacts/placeholders/SignalChart";
+import { SignalChart } from "@/components/artifacts/SignalChart";
 
 // ---------- Helpers ----------
 

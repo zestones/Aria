@@ -1,13 +1,13 @@
 import type { ComponentType } from "react";
-import { AlertBanner } from "./placeholders/AlertBanner";
-import { BarChart } from "./placeholders/BarChart";
-import { DiagnosticCard } from "./placeholders/DiagnosticCard";
-import { EquipmentKbCard } from "./placeholders/EquipmentKbCard";
-import { KbProgress } from "./placeholders/KbProgress";
-import { PatternMatch } from "./placeholders/PatternMatch";
-import { SignalChart } from "./placeholders/SignalChart";
-import { WorkOrderCard } from "./placeholders/WorkOrderCard";
+import { AlertBanner } from "./AlertBanner";
+import { BarChart } from "./BarChart";
+import { DiagnosticCard } from "./DiagnosticCard";
+import { EquipmentKbCard } from "./EquipmentKbCard";
+import { KbProgress } from "./KbProgress";
+import { PatternMatch } from "./PatternMatch";
+import { SignalChart } from "./SignalChart";
 import type { ArtifactComponentName } from "./schemas";
+import { WorkOrderCard } from "./WorkOrderCard";
 
 /**
  * Component type used by the registry — each entry validates its own props
@@ -23,8 +23,8 @@ export type ArtifactComponent = ComponentType<any>;
  * Component keys match the backend tool name **without** the `render_` prefix
  * (the orchestrator strips it — see `backend/agents/ui_tools.py:50`).
  *
- * Adding a new artifact: add a Zod schema in `schemas.ts`, add a placeholder
- * under `placeholders/`, wire both through here. One entry per type — no
+ * Adding a new artifact: add a Zod schema in `schemas.ts`, add the component
+ * file under `artifacts/`, wire both through here. One entry per type — no
  * dynamic imports, no auto-registration.
  */
 export const registry: Record<ArtifactComponentName, ArtifactComponent> = {

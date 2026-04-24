@@ -6,8 +6,8 @@
  * root cause, contributing factors, and a CTA to spawn a work order.
  */
 
-import { Badge, Button, Card, CardTitle, Icons } from "../../ui";
-import type { DiagnosticCardProps } from "../schemas";
+import { Badge, Button, Card, CardTitle, Icons } from "../ui";
+import type { DiagnosticCardProps } from "./schemas";
 
 function confidenceColor(conf: number): string {
     if (conf >= 0.8) return "var(--success)";

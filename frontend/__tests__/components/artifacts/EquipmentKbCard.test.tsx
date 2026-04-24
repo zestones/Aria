@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EquipmentKbCard } from "@/components/artifacts/placeholders/EquipmentKbCard";
+import { EquipmentKbCard } from "@/components/artifacts/EquipmentKbCard";
 
 // ---------- Helpers ----------
 

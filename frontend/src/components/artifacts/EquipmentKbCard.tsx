@@ -21,10 +21,10 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import type { EquipmentKB, EquipmentKbOut, ThresholdValue } from "../../../features/onboarding";
-import { getEquipmentKb, upsertEquipmentKb } from "../../../services/kb";
-import { ChevronDown } from "../../ui/icons";
-import type { EquipmentKbCardProps } from "../schemas";
+import type { EquipmentKB, EquipmentKbOut, ThresholdValue } from "../../features/onboarding";
+import { getEquipmentKb, upsertEquipmentKb } from "../../services/kb";
+import { ChevronDown } from "../ui/icons";
+import type { EquipmentKbCardProps } from "./schemas";
 
 // ---------- Types ----------
 
