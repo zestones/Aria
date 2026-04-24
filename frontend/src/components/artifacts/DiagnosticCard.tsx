@@ -76,7 +76,7 @@ export function DiagnosticCard(props: DiagnosticCardProps) {
         props;
 
     return (
-        <Card className="w-full max-w-[460px]" padding="md">
+        <Card className="w-full" padding="md">
             <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">

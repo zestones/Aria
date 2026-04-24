@@ -48,7 +48,7 @@ export function KbProgress(props: KbProgressProps) {
     const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
     return (
-        <Card className="w-full max-w-[440px]" padding="md">
+        <Card className="w-full" padding="md">
             <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <Badge variant="agent" agent="kb_builder" size="sm">

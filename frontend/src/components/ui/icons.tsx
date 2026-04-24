@@ -5,6 +5,7 @@ import {
     AlertTriangle as RawAlertTriangle,
     ArrowLeft as RawArrowLeft,
     ArrowRight as RawArrowRight,
+    ArrowUp as RawArrowUp,
     BookOpen as RawBookOpen,
     Building2 as RawBuilding2,
     Check as RawCheck,
@@ -72,6 +73,7 @@ export const AlertTriangle = styled(RawAlertTriangle, "AlertTriangle");
 export const ArrowLeft = styled(RawArrowLeft, "ArrowLeft");
 export const BookOpen = styled(RawBookOpen, "BookOpen");
 export const ArrowRight = styled(RawArrowRight, "ArrowRight");
+export const ArrowUp = styled(RawArrowUp, "ArrowUp");
 export const Building2 = styled(RawBuilding2, "Building2");
 export const Check = styled(RawCheck, "Check");
 export const ChevronDown = styled(RawChevronDown, "ChevronDown");

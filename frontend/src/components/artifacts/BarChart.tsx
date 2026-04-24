@@ -46,7 +46,7 @@ export function BarChart(props: BarChartProps) {
     const data = bars.map((b) => ({ label: b.label, value: b.value }));
 
     return (
-        <Card className="w-full max-w-[460px]" padding="md">
+        <Card className="w-full" padding="md">
             <div className="mb-2 flex items-baseline justify-between gap-2">
                 <h3 className="text-sm font-medium tracking-[-0.01em] text-foreground">{title}</h3>
                 {cell_id !== undefined && (

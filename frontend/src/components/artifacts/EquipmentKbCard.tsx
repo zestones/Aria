@@ -171,7 +171,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
     if (isLoading) {
         return (
             <div
-                className="flex w-full max-w-[440px] items-center justify-center rounded-lg border border-border bg-card p-4"
+                className="flex w-full items-center justify-center rounded-lg border border-border bg-card p-4"
                 role="status"
             >
                 <span className="text-xs text-muted-foreground">Loading equipment KB…</span>
@@ -181,7 +181,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
 
     if (isError || !kb) {
         return (
-            <div className="w-full max-w-[440px] rounded-lg border border-border bg-card p-3">
+            <div className="w-full rounded-lg border border-border bg-card p-3">
                 <div className="mb-1 text-sm font-medium text-foreground">Equipment</div>
                 <div className="text-xs text-text-tertiary">No KB data for cell {cell_id}.</div>
             </div>
@@ -282,7 +282,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
     return (
         <section
             aria-label={`Equipment KB for ${displayName}`}
-            className="w-full max-w-[440px] overflow-hidden rounded-lg border border-border bg-card"
+            className="w-full overflow-hidden rounded-lg border border-border bg-card"
         >
             {/* Header */}
             <div className="px-4 pt-3 pb-2">

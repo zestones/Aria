@@ -31,7 +31,6 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
     ref,
 ) {
     const [value, setValue] = useState("");
-    const [focused, setFocused] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useImperativeHandle(
@@ -74,9 +73,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
                 e.preventDefault();
                 submit();
             }}
-            className="flex flex-none flex-col gap-1 px-3 pb-3 pt-2"
+            className="flex flex-none flex-col gap-1.5"
         >
-            <div className="flex items-center gap-2 rounded-cta border border-border bg-muted px-3 py-1.5 transition-colors duration-150 focus-within:border-input focus-within:bg-card focus-within:ring-2 focus-within:ring-ring">
+            <div className="flex items-end gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[0_2px_20px_rgba(0,0,0,0.08)] transition-shadow duration-150 focus-within:shadow-[0_2px_24px_rgba(0,0,0,0.13)] focus-within:border-input">
                 <textarea
                     ref={textareaRef}
                     value={value}
@@ -85,29 +84,22 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
                         autoResize(e.target);
                     }}
                     onKeyDown={onKeyDown}
-                    onFocus={() => setFocused(true)}
-                    onBlur={() => setFocused(false)}
                     placeholder={placeholder}
                     disabled={disabled}
                     rows={1}
                     spellCheck
                     aria-label="Message input"
-                    className="block min-h-[20px] flex-1 resize-none self-center bg-transparent text-sm leading-5 text-foreground placeholder:text-text-tertiary focus:outline-none disabled:opacity-50"
+                    className="block min-h-[28px] flex-1 resize-none bg-transparent text-base leading-7 text-foreground placeholder:text-text-tertiary focus:outline-none disabled:opacity-50"
                 />
                 <button
                     type="submit"
                     disabled={!canSubmit}
                     aria-label="Send message"
-                    className="inline-flex h-7 w-7 flex-none items-center justify-center self-end rounded-md bg-primary text-primary-foreground transition-colors duration-150 hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-accent disabled:text-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="mb-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-150 hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-muted disabled:text-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                    <Icons.ArrowRight className="size-3.5" aria-hidden />
+                    <Icons.ArrowUp className="size-4" aria-hidden />
                 </button>
             </div>
-            {focused && (
-                <p className="px-1 text-[11px] text-text-tertiary">
-                    Enter to send · Shift + Enter for new line
-                </p>
-            )}
         </form>
     );
 });

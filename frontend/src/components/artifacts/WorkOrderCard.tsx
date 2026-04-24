@@ -42,7 +42,7 @@ export function WorkOrderCard(props: WorkOrderCardProps) {
 
     if (isLoading) {
         return (
-            <Card className="w-full max-w-[440px]" padding="md">
+            <Card className="w-full" padding="md">
                 <div className="flex h-24 items-center justify-center">
                     <span className="text-xs text-muted-foreground">Loading work order…</span>
                 </div>
@@ -52,7 +52,7 @@ export function WorkOrderCard(props: WorkOrderCardProps) {
 
     if (isError || !wo) {
         return (
-            <Card className="w-full max-w-[440px]" padding="md" rail="critical">
+            <Card className="w-full" padding="md" rail="critical">
                 <CardTitle className="text-base">{formatWoNumber(work_order_id)}</CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
                     Unable to load work order for cell {cell_id}.
@@ -70,7 +70,7 @@ export function WorkOrderCard(props: WorkOrderCardProps) {
         variant === "critical" ? "critical" : variant === "warning" ? "warning" : "nominal";
 
     return (
-        <Card className="w-full max-w-[440px]" padding="md" rail={railTone} railPulse={false}>
+        <Card className="w-full" padding="md" rail={railTone} railPulse={false}>
             <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">

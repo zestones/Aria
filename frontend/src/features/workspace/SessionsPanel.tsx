@@ -69,37 +69,37 @@ export function SessionsPanel() {
             aria-label="Chat sessions"
             className="flex h-full min-h-0 flex-col border-r border-border bg-sidebar/40"
         >
-            <header className="flex h-12 flex-none items-center gap-2 border-b border-border px-4">
-                <Icons.MessageSquare className="size-3.5 text-text-tertiary" aria-hidden />
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-text-tertiary">
+            <header className="flex h-14 flex-none items-center gap-2 border-b border-border px-4">
+                <Icons.MessageSquare className="size-4 text-text-tertiary" aria-hidden />
+                <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-text-tertiary">
                     Sessions
                 </h2>
-                <span className="ml-auto text-[11px] text-text-tertiary tabular-nums">
+                <span className="ml-auto text-xs text-text-tertiary tabular-nums">
                     {filtered.length}
                 </span>
             </header>
 
-            <div className="flex flex-none flex-col gap-2 border-b border-border px-3 py-3">
+            <div className="flex flex-none flex-col gap-2.5 border-b border-border px-3 py-3">
                 <button
                     type="button"
                     onClick={handleNew}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-foreground transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                    <Icons.Plus className="size-3.5" aria-hidden />
+                    <Icons.Plus className="size-4" aria-hidden />
                     New session
                 </button>
                 <SessionsSearch value={searchQuery} onChange={setSearchQuery} />
             </div>
 
-            <div className="flex-1 overflow-y-auto px-3 py-3">
+            <div className="flex-1 overflow-y-auto px-2.5 py-3">
                 {filtered.length === 0 ? (
-                    <p className="px-1 py-6 text-xs text-text-tertiary">
+                    <p className="px-2 py-6 text-sm text-text-tertiary leading-relaxed">
                         {searchQuery
                             ? "No sessions match that search."
                             : "No sessions yet — start a conversation to save one."}
                     </p>
                 ) : (
-                    <ol className="flex flex-col gap-1">
+                    <ol className="flex flex-col gap-0.5">
                         {filtered.map((session) => (
                             <SessionRow
                                 key={session.id}
@@ -121,7 +121,7 @@ function SessionsSearch({ value, onChange }: { value: string; onChange: (v: stri
     return (
         <div className="relative">
             <Icons.Search
-                className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-text-tertiary"
+                className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-tertiary"
                 aria-hidden
             />
             <input
@@ -129,7 +129,7 @@ function SessionsSearch({ value, onChange }: { value: string; onChange: (v: stri
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder="Search sessions"
-                className="h-8 w-full rounded-md border border-border bg-card pl-7 pr-2 text-[12px] text-foreground placeholder:text-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-10 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
         </div>
     );
@@ -160,17 +160,15 @@ function SessionRow({
                 onClick={() => onOpen(session)}
                 aria-current={active ? "true" : undefined}
                 className={[
-                    "group flex w-full flex-col gap-0.5 rounded-md border-l-[2.5px] px-2 py-2 text-left transition-colors duration-150",
-                    active
-                        ? "border-primary bg-card"
-                        : "border-transparent hover:border-border hover:bg-card",
+                    "group flex w-full flex-col gap-1 rounded-lg px-3 py-2.5 text-left transition-colors duration-150",
+                    active ? "bg-accent" : "hover:bg-accent/60",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 ].join(" ")}
             >
-                <span className="line-clamp-1 pr-6 text-[12px] font-medium text-foreground">
+                <span className="line-clamp-1 pr-6 text-sm font-medium text-foreground">
                     {session.title}
                 </span>
-                <span className="flex items-center gap-2 text-[10px] text-text-tertiary">
+                <span className="flex items-center gap-2 text-xs text-text-tertiary">
                     <span className="tabular-nums">
                         {session.messageCount} msg
                         {session.messageCount === 1 ? "" : "s"}
@@ -187,9 +185,9 @@ function SessionRow({
                         onDelete(session.id);
                     }}
                     aria-label={`Delete session ${session.title}`}
-                    className="absolute right-1.5 top-1.5 inline-flex size-5 items-center justify-center rounded text-text-tertiary transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute right-2 top-2.5 inline-flex size-6 items-center justify-center rounded-md text-text-tertiary transition-colors duration-150 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                    <Icons.X className="size-3" aria-hidden />
+                    <Icons.X className="size-3.5" aria-hidden />
                 </button>
             )}
         </li>

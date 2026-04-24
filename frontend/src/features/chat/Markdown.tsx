@@ -6,16 +6,16 @@ const ANCHOR_CLASS =
     "underline underline-offset-2 text-primary hover:text-primary-hover transition-colors duration-150";
 
 const CODE_INLINE_CLASS =
-    "font-mono bg-muted text-foreground px-1.5 py-0.5 rounded-md text-xs border border-border";
+    "font-mono bg-muted text-foreground px-1.5 py-0.5 rounded-md text-[0.9em] border border-border";
 
 const CODE_BLOCK_CLASS =
-    "font-mono bg-muted text-foreground p-3 rounded-lg overflow-x-auto text-xs leading-relaxed border border-border";
+    "font-mono bg-muted text-foreground p-4 rounded-lg overflow-x-auto text-[0.9em] leading-relaxed border border-border";
 
 type CodeProps = ComponentPropsWithoutRef<"code"> & { inline?: boolean };
 
 const components: Components = {
     p: ({ children, ...rest }) => (
-        <p {...rest} className="mb-2 last:mb-0 leading-[1.55] text-sm text-foreground">
+        <p {...rest} className="mb-3 last:mb-0 leading-[1.7] text-foreground">
             {children}
         </p>
     ),
@@ -37,7 +37,7 @@ const components: Components = {
     ul: ({ children, ...rest }) => (
         <ul
             {...rest}
-            className="mb-2 last:mb-0 ml-4 list-disc space-y-1 text-sm marker:text-text-tertiary"
+            className="mb-3 last:mb-0 ml-5 list-disc space-y-1.5 marker:text-text-tertiary"
         >
             {children}
         </ul>
@@ -45,20 +45,20 @@ const components: Components = {
     ol: ({ children, ...rest }) => (
         <ol
             {...rest}
-            className="mb-2 last:mb-0 ml-5 list-decimal space-y-1 text-sm marker:text-text-tertiary"
+            className="mb-3 last:mb-0 ml-6 list-decimal space-y-1.5 marker:text-text-tertiary"
         >
             {children}
         </ol>
     ),
     li: ({ children, ...rest }) => (
-        <li {...rest} className="leading-[1.55] text-foreground">
+        <li {...rest} className="leading-[1.7] text-foreground pl-1">
             {children}
         </li>
     ),
     h1: ({ children, ...rest }) => (
         <h1
             {...rest}
-            className="mb-2 mt-3 first:mt-0 text-lg font-semibold tracking-[-0.01em] text-foreground"
+            className="mb-3 mt-5 first:mt-0 text-[1.4em] font-semibold tracking-[-0.02em] text-foreground"
         >
             {children}
         </h1>
@@ -66,28 +66,28 @@ const components: Components = {
     h2: ({ children, ...rest }) => (
         <h2
             {...rest}
-            className="mb-2 mt-3 first:mt-0 text-base font-semibold tracking-[-0.01em] text-foreground"
+            className="mb-3 mt-5 first:mt-0 text-[1.2em] font-semibold tracking-[-0.015em] text-foreground"
         >
             {children}
         </h2>
     ),
     h3: ({ children, ...rest }) => (
-        <h3 {...rest} className="mb-1.5 mt-2 first:mt-0 text-sm font-semibold text-foreground">
+        <h3 {...rest} className="mb-2 mt-4 first:mt-0 text-[1.05em] font-semibold text-foreground">
             {children}
         </h3>
     ),
     blockquote: ({ children, ...rest }) => (
         <blockquote
             {...rest}
-            className="mb-2 last:mb-0 border-l-2 border-input pl-3 text-muted-foreground italic"
+            className="mb-3 last:mb-0 border-l-2 border-input pl-4 text-muted-foreground italic"
         >
             {children}
         </blockquote>
     ),
-    hr: () => <hr className="my-3 border-t border-border" />,
+    hr: () => <hr className="my-4 border-t border-border" />,
     table: ({ children, ...rest }) => (
-        <div className="mb-2 last:mb-0 overflow-x-auto rounded-md border border-border">
-            <table {...rest} className="w-full border-collapse text-xs text-foreground">
+        <div className="mb-3 last:mb-0 overflow-x-auto rounded-md border border-border">
+            <table {...rest} className="w-full border-collapse text-[0.9em] text-foreground">
                 {children}
             </table>
         </div>
@@ -100,18 +100,18 @@ const components: Components = {
     th: ({ children, ...rest }) => (
         <th
             {...rest}
-            className="border-b border-border px-2.5 py-1.5 font-medium text-muted-foreground"
+            className="border-b border-border px-3 py-2 font-medium text-muted-foreground"
         >
             {children}
         </th>
     ),
     td: ({ children, ...rest }) => (
-        <td {...rest} className="border-b border-border px-2.5 py-1.5 align-top last:border-b-0">
+        <td {...rest} className="border-b border-border px-3 py-2 align-top last:border-b-0">
             {children}
         </td>
     ),
     pre: ({ children, ...rest }) => (
-        <pre {...rest} className={`mb-2 last:mb-0 ${CODE_BLOCK_CLASS}`}>
+        <pre {...rest} className={`mb-3 last:mb-0 ${CODE_BLOCK_CLASS}`}>
             {children}
         </pre>
     ),

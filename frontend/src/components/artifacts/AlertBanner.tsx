@@ -49,7 +49,7 @@ export function AlertBanner(props: AlertBannerProps) {
 
     return (
         <div
-            className={`flex w-full max-w-[460px] gap-3 rounded-md border border-border border-l-4 p-3 ${cfg.tintClass}`}
+            className={`flex w-full gap-3 rounded-md border border-border border-l-4 p-3 ${cfg.tintClass}`}
             style={{ borderLeftColor: cfg.color }}
             role={severity === "trip" ? "alert" : "status"}
         >
