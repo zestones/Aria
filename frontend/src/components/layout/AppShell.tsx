@@ -136,7 +136,7 @@ export function AppShell() {
                         width={safeDrawer.width}
                         onWidthChange={setDrawerWidth}
                     >
-                        <ChatPanel />
+                        <ChatPanel selection={selection} />
                     </Drawer>
                 </div>
             </div>

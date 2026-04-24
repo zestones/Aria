@@ -26,9 +26,11 @@ function formatRelativeTime(ts: number, now: number): string {
 interface UserRowProps {
     message: UserMessage;
     now: number;
+    /** When set, render a "… is investigating…" hint below this bubble. */
+    investigatingWith?: string;
 }
 
-function UserRow({ message, now }: UserRowProps) {
+function UserRow({ message, now, investigatingWith }: UserRowProps) {
     return (
         <div className="flex flex-col items-end gap-1">
             <div className="max-w-[80%] rounded-lg bg-muted border border-border px-3 py-2 text-sm leading-[1.55] text-foreground whitespace-pre-wrap break-words">
@@ -37,6 +39,15 @@ function UserRow({ message, now }: UserRowProps) {
             <span className="text-xs text-text-tertiary">
                 {formatRelativeTime(message.createdAt, now)}
             </span>
+            {investigatingWith && (
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Icons.Sparkles
+                        className="size-3 flex-none animate-pulse text-primary"
+                        aria-hidden
+                    />
+                    <span>{formatAgentLabel(investigatingWith)} is investigating…</span>
+                </div>
+            )}
         </div>
     );
 }
@@ -76,29 +87,44 @@ interface HandoffRowProps {
     part: Extract<AgentPart, { kind: "handoff" }>;
 }
 
+/**
+ * Inline handoff card. The previous treatment was a thin dashed pill that
+ * read as a debug log line; this version renders the routing decision as a
+ * proper card so judges *see* the multi-agent moment in the conversation.
+ * The destination agent gets the prominent badge — the "who is now on it"
+ * is what the operator cares about.
+ */
 function HandoffRow({ part }: HandoffRowProps) {
     const fromAgent = KNOWN_AGENTS.has(String(part.from)) ? (part.from as never) : undefined;
     const toAgent = KNOWN_AGENTS.has(String(part.to)) ? (part.to as never) : undefined;
     return (
-        <div className="flex items-center gap-2 rounded-md border border-dashed border-border bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground">
-            <Icons.ArrowRight className="size-3.5 flex-none text-text-tertiary" />
-            <span>Handoff</span>
-            {fromAgent ? (
-                <Badge variant="agent" agent={fromAgent}>
-                    {formatAgentLabel(part.from)}
-                </Badge>
-            ) : (
-                <span className="font-mono">{part.from}</span>
-            )}
-            <Icons.ChevronRight className="size-3 flex-none text-text-tertiary" />
-            {toAgent ? (
-                <Badge variant="agent" agent={toAgent}>
-                    {formatAgentLabel(part.to)}
-                </Badge>
-            ) : (
-                <span className="font-mono">{part.to}</span>
-            )}
-            <span className="ml-1 truncate text-text-tertiary">· {part.reason}</span>
+        <div className="flex items-start gap-2.5 rounded-cta border border-border bg-muted/40 px-3 py-2 text-xs">
+            <div
+                className="flex size-6 flex-none items-center justify-center rounded-full bg-primary/10 text-primary"
+                aria-hidden
+            >
+                <Icons.ArrowRight className="size-3" />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-1.5 text-foreground">
+                    <span className="font-medium">Handed off to</span>
+                    {toAgent ? (
+                        <Badge variant="agent" agent={toAgent}>
+                            {formatAgentLabel(part.to)}
+                        </Badge>
+                    ) : (
+                        <Badge variant="default">{formatAgentLabel(part.to)}</Badge>
+                    )}
+                    {fromAgent && (
+                        <span className="text-text-tertiary">
+                            from {formatAgentLabel(part.from)}
+                        </span>
+                    )}
+                </div>
+                {part.reason && (
+                    <p className="leading-relaxed text-muted-foreground">{part.reason}</p>
+                )}
+            </div>
         </div>
     );
 }
@@ -171,15 +197,20 @@ function AgentRow({ message, now }: AgentRowProps) {
 interface MessageProps {
     message: UserMessage | AgentMessage;
     now: number;
+    /** Forwarded to `UserRow` so the latest user bubble can show an active sub-agent hint. */
+    investigatingWith?: string;
 }
 
-function MessageImpl({ message, now }: MessageProps) {
-    if (message.role === "user") return <UserRow message={message} now={now} />;
+function MessageImpl({ message, now, investigatingWith }: MessageProps) {
+    if (message.role === "user") {
+        return <UserRow message={message} now={now} investigatingWith={investigatingWith} />;
+    }
     return <AgentRow message={message} now={now} />;
 }
 
 export const Message = memo(MessageImpl, (prev, next) => {
     if (prev.message !== next.message) return false;
+    if (prev.investigatingWith !== next.investigatingWith) return false;
     // Relative timestamp re-renders on parent tick; suppress if within the same bucket.
     const prevBucket = Math.floor((prev.now - prev.message.createdAt) / 60_000);
     const nextBucket = Math.floor((next.now - next.message.createdAt) / 60_000);

@@ -8,9 +8,11 @@ const TIMESTAMP_TICK_MS = 30_000;
 
 interface MessageListProps {
     messages: ChatMessage[];
+    /** Sub-agent currently mid-handoff — surfaced as a hint on the last user bubble. */
+    activeSubAgent?: string;
 }
 
-export function MessageList({ messages }: MessageListProps) {
+export function MessageList({ messages, activeSubAgent }: MessageListProps) {
     const scrollRef = useRef<HTMLDivElement | null>(null);
     const messagesLenRef = useRef(messages.length);
     const { isPaused, pendingCount, jumpToBottom, notifyContentGrew, notifyMessageAppended } =
@@ -46,11 +48,20 @@ export function MessageList({ messages }: MessageListProps) {
                     <EmptyState />
                 ) : (
                     <ol className="flex flex-col gap-5">
-                        {messages.map((m) => (
-                            <li key={m.id}>
-                                <Message message={m} now={now} />
-                            </li>
-                        ))}
+                        {messages.map((m, i) => {
+                            const isLastUser =
+                                m.role === "user" &&
+                                !messages.slice(i + 1).some((later) => later.role === "user");
+                            return (
+                                <li key={m.id}>
+                                    <Message
+                                        message={m}
+                                        now={now}
+                                        investigatingWith={isLastUser ? activeSubAgent : undefined}
+                                    />
+                                </li>
+                            );
+                        })}
                     </ol>
                 )}
             </div>

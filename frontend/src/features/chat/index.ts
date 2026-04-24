@@ -4,5 +4,6 @@ export { useChatStore } from "./chatStore";
 export { Markdown } from "./Markdown";
 export { Message } from "./Message";
 export { MessageList } from "./MessageList";
+export { QuickPrompts } from "./QuickPrompts";
 export { useAutoScroll } from "./useAutoScroll";
 export { useThrottledMessages } from "./useThrottledMessages";

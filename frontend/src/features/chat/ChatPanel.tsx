@@ -1,20 +1,25 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { type Status, StatusDot } from "../../components/ui";
+import type { EquipmentSelection } from "../../lib/hierarchy";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
-import { useChatStore } from "./chatStore";
+import { type ChatMessage, useChatStore } from "./chatStore";
 import { MessageList } from "./MessageList";
+import { QuickPrompts } from "./QuickPrompts";
 import { useThrottledMessages } from "./useThrottledMessages";
 
+export interface ChatPanelProps {
+    /** Operator's currently-scoped equipment — drives quick-prompt suggestions. */
+    selection: EquipmentSelection | null;
+}
+
 /**
- * Chat panel — conversation surface only.
- *
- * Header is a single quiet strip: product label + connection dot. No close
- * button (the TopBar chat toggle is the canonical control), no Activity
- * toggle (agent observability lives in `AgentInspector`, not stuffed into
- * the chat). Body is just message history → input.
+ * Chat panel — conversation surface. Header + message list + quick-prompt
+ * launchpad + composer. The launchpad sits between the message list and
+ * the composer so judges immediately see how to talk to ARIA *and* see
+ * that it knows what equipment they're scoped to (audit §4.3).
  */
-export function ChatPanel() {
+export function ChatPanel({ selection }: ChatPanelProps) {
     const messages = useThrottledMessages();
     const { status, sendMessage, connect, focusRequestId } = useChatStore(
         useShallow((s) => ({
@@ -39,6 +44,8 @@ export function ChatPanel() {
 
     const dotStatus = statusToDot(status);
     const statusLabel = statusToLabel(status);
+    const activeSubAgent = useMemo(() => computeActiveSubAgent(messages), [messages]);
+    const disabled = status === "error";
 
     return (
         <div className="flex h-full min-h-0 flex-col bg-card">
@@ -50,11 +57,34 @@ export function ChatPanel() {
                 <span className="sr-only">{statusLabel}</span>
             </header>
 
-            <MessageList messages={messages} />
+            <MessageList messages={messages} activeSubAgent={activeSubAgent} />
 
-            <ChatInput ref={inputRef} onSubmit={sendMessage} disabled={status === "error"} />
+            <QuickPrompts selection={selection} onPick={sendMessage} disabled={disabled} />
+
+            <ChatInput ref={inputRef} onSubmit={sendMessage} disabled={disabled} />
         </div>
     );
+}
+
+/**
+ * Walk back through the message log to find the agent that's *currently*
+ * working a sub-task. Returns the `to` agent of the last `handoff` part on
+ * the latest still-streaming agent message, or `undefined` if no handoff
+ * is in flight. Used by `MessageList` to attach the "Investigator is
+ * investigating…" hint to the operator's last bubble.
+ */
+function computeActiveSubAgent(messages: ChatMessage[]): string | undefined {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+        const m = messages[i];
+        if (m.role !== "agent") continue;
+        if (!m.streaming) return undefined;
+        for (let j = m.parts.length - 1; j >= 0; j -= 1) {
+            const part = m.parts[j];
+            if (part.kind === "handoff") return part.to;
+        }
+        return undefined;
+    }
+    return undefined;
 }
 
 function statusToDot(status: string): Status {
