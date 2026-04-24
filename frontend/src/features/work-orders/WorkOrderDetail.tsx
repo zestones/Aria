@@ -7,6 +7,7 @@
  * (see `PrintableWorkOrder`) so the printed page uses the dedicated layout.
  */
 
+import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { Badge, Hairline, Icons, MetaStrip, SectionHeader, StatusDot } from "../../design-system";
 import { PrintableWorkOrder } from "./PrintableWorkOrder";
@@ -83,7 +84,13 @@ export default function WorkOrderDetail() {
     return (
         <>
             <ScreenView wo={wo} />
-            <PrintableWorkOrder wo={wo} />
+            {/* Portal the printable sheet as a direct child of <body> so the
+                AppShell layout chain (grid, flex, overflow-hidden, fixed
+                viewport height) cannot constrain the printed pagination —
+                see issue #51 follow-up v4. */}
+            {typeof document !== "undefined"
+                ? createPortal(<PrintableWorkOrder wo={wo} />, document.body)
+                : null}
         </>
     );
 }
