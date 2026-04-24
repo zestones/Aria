@@ -9,7 +9,7 @@
 @media print {
     @page {
         size: A4 portrait;
-        margin: 16mm 14mm;
+        margin: 12mm 12mm;
     }
 
     /* Neutralize the AppShell layout chain. The live UI wraps the printable
@@ -24,6 +24,11 @@
     #root {
         width: 100% !important;
         height: auto !important;
+        /* `base.css` sets `min-height: 100vh` on these, which in print
+           context keeps reserving a full viewport-sized block even when
+           the content is short — Chromium then appends a trailing blank
+           page to honour the reserved height. Zero it out. */
+        min-height: 0 !important;
         overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -45,6 +50,7 @@
         width: 100% !important;
         max-width: none !important;
         height: auto !important;
+        min-height: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
     }
@@ -145,8 +151,12 @@
     }
 
     .pw-section {
-        margin: 14pt 0;
+        margin: 10pt 0;
         break-inside: avoid;
+    }
+
+    .pw-section:last-of-type {
+        margin-bottom: 0 !important;
     }
 
     .pw-section-title {
@@ -204,8 +214,8 @@
         justify-content: space-between;
         align-items: flex-end;
         gap: 16pt;
-        margin-top: 24pt;
-        padding-top: 10pt;
+        margin-top: 8pt;
+        padding-top: 6pt;
         border-top: 0.5pt solid #888888;
     }
 
@@ -230,16 +240,14 @@
     }
 
     /* Prevent a trailing blank page: Chromium sometimes emits an extra A4
-       when the last flex/grid child sits a hair below the bottom margin.
-       Trim the last descendant's trailing space and tell the print engine
-       to avoid paginating after it. */
+       when the last flex/grid child sits a hair below the bottom margin
+       OR when the shell's `min-height: 100vh` forces an over-allocation.
+       Zero trailing space on the final child and tell the print engine
+       not to paginate after it. */
     .printable-work-order > *:last-child {
         margin-bottom: 0 !important;
         padding-bottom: 0 !important;
         page-break-after: avoid;
         break-after: avoid;
-    }
-    .printable-work-order > .pw-footer {
-        margin-top: 14pt;
     }
 }
