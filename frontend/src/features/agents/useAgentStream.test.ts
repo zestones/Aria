@@ -1,202 +1,148 @@
+/**
+ * Tests for the `useAgentStream` selector.
+ *
+ * M8.5 refactor: the hook no longer owns a WebSocket subscription. It
+ * reads from the global `useAgentTurnsStore` which is fed by
+ * `useAgentTurnsIngest`. Tests drive the store directly to exercise
+ * the selector.
+ */
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { installMockWebSocket, MockWebSocket, restoreWebSocket } from "../../test/mock-websocket";
+import { afterEach, describe, expect, it } from "vitest";
+import { useAgentTurnsStore } from "./agentTurnsStore";
 import { useAgentStream } from "./useAgentStream";
 
-beforeEach(() => {
-    installMockWebSocket();
-});
-
-afterEach(() => {
-    restoreWebSocket();
-});
-
 describe("useAgentStream", () => {
-    it("is idle when agent is null (no socket opened)", () => {
+    afterEach(() => {
+        useAgentTurnsStore.getState().clearAll();
+    });
+
+    type IngestType = Parameters<ReturnType<typeof useAgentTurnsStore.getState>["ingest"]>[0];
+
+    function ingest(type: IngestType, payload: Record<string, unknown>): void {
+        useAgentTurnsStore.getState().ingest(type, payload);
+    }
+
+    it("returns empty state when agent is null", () => {
         const { result } = renderHook(() => useAgentStream(null));
-        expect(result.current.isStreaming).toBe(false);
         expect(result.current.turnId).toBeNull();
         expect(result.current.thinking).toBe("");
-        expect(result.current.connectionStatus).toBe("closed");
+        expect(result.current.tools).toEqual([]);
+        expect(result.current.isStreaming).toBe(false);
     });
 
-    it("opens a turn and accumulates thinking for the tracked agent", () => {
+    it("returns empty state when no turn has been recorded for agent", () => {
+        const { result } = renderHook(() => useAgentStream("investigator"));
+        expect(result.current.turnId).toBeNull();
+    });
+
+    it("picks up an agent_start and exposes turnId + isStreaming", () => {
         const { result } = renderHook(() => useAgentStream("investigator"));
         act(() => {
-            MockWebSocket.last.simulateOpen();
-            MockWebSocket.last.simulateMessage({
-                type: "agent_start",
-                agent: "investigator",
-                turn_id: "turn-1",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
-                agent: "investigator",
-                content: "Observing ",
-                turn_id: "turn-1",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
-                agent: "investigator",
-                content: "vibration spike.",
-                turn_id: "turn-1",
-            });
+            ingest("agent_start", { agent: "investigator", turn_id: "t1" });
         });
-
-        expect(result.current.turnId).toBe("turn-1");
-        expect(result.current.thinking).toBe("Observing vibration spike.");
+        expect(result.current.turnId).toBe("t1");
         expect(result.current.isStreaming).toBe(true);
-    });
-
-    it("flips isStreaming off on agent_end but keeps buffers", () => {
-        const { result } = renderHook(() => useAgentStream("investigator"));
-        act(() => {
-            MockWebSocket.last.simulateOpen();
-            MockWebSocket.last.simulateMessage({
-                type: "agent_start",
-                agent: "investigator",
-                turn_id: "turn-1",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
-                agent: "investigator",
-                content: "done.",
-                turn_id: "turn-1",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "agent_end",
-                agent: "investigator",
-                turn_id: "turn-1",
-                finish_reason: "end_turn",
-            });
-        });
-
-        expect(result.current.isStreaming).toBe(false);
-        expect(result.current.thinking).toBe("done.");
-    });
-
-    it("ignores events for other agents on the shared bus", () => {
-        const { result } = renderHook(() => useAgentStream("investigator"));
-        act(() => {
-            MockWebSocket.last.simulateOpen();
-            MockWebSocket.last.simulateMessage({
-                type: "agent_start",
-                agent: "sentinel",
-                turn_id: "other-turn",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
-                agent: "sentinel",
-                content: "nope",
-                turn_id: "other-turn",
-            });
-        });
-
-        expect(result.current.turnId).toBeNull();
         expect(result.current.thinking).toBe("");
-        expect(result.current.isStreaming).toBe(false);
     });
 
-    it("ignores events with a stale turn_id for the same agent", () => {
+    it("accumulates thinking deltas on the active turn", () => {
         const { result } = renderHook(() => useAgentStream("investigator"));
         act(() => {
-            MockWebSocket.last.simulateOpen();
-            MockWebSocket.last.simulateMessage({
-                type: "agent_start",
+            ingest("agent_start", { agent: "investigator", turn_id: "t1" });
+            ingest("thinking_delta", {
                 agent: "investigator",
-                turn_id: "turn-2",
+                turn_id: "t1",
+                content: "Hmm, ",
             });
-            // Stray event from a previous turn leaking in.
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
+            ingest("thinking_delta", {
                 agent: "investigator",
-                content: "stale",
-                turn_id: "turn-1",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
-                agent: "investigator",
-                content: "current",
-                turn_id: "turn-2",
+                turn_id: "t1",
+                content: "pressure is pinned.",
             });
         });
-
-        expect(result.current.turnId).toBe("turn-2");
-        expect(result.current.thinking).toBe("current");
+        expect(result.current.thinking).toBe("Hmm, pressure is pinned.");
     });
 
-    it("tracks tool call lifecycle with duration on completion", () => {
+    it("records tool_call lifecycle with FIFO matching", () => {
         const { result } = renderHook(() => useAgentStream("investigator"));
         act(() => {
-            MockWebSocket.last.simulateOpen();
-            MockWebSocket.last.simulateMessage({
-                type: "agent_start",
+            ingest("agent_start", { agent: "investigator", turn_id: "t1" });
+            ingest("tool_call_started", {
                 agent: "investigator",
-                turn_id: "turn-1",
+                turn_id: "t1",
+                tool_name: "get_signal_trend",
+                args: { cell_id: 1 },
             });
-            MockWebSocket.last.simulateMessage({
-                type: "tool_call_started",
+            ingest("tool_call_started", {
                 agent: "investigator",
-                tool_name: "get_equipment_kb",
+                turn_id: "t1",
+                tool_name: "get_signal_trend",
                 args: { cell_id: 2 },
-                turn_id: "turn-1",
             });
-        });
-
-        expect(result.current.tools).toHaveLength(1);
-        expect(result.current.tools[0].status).toBe("running");
-        expect(result.current.tools[0].toolName).toBe("get_equipment_kb");
-
-        act(() => {
-            MockWebSocket.last.simulateMessage({
-                type: "tool_call_completed",
+            ingest("tool_call_completed", {
                 agent: "investigator",
-                tool_name: "get_equipment_kb",
-                duration_ms: 123,
-                turn_id: "turn-1",
+                turn_id: "t1",
+                tool_name: "get_signal_trend",
+                duration_ms: 42,
             });
         });
-
+        expect(result.current.tools).toHaveLength(2);
+        // First (oldest running) tool is the one that gets sealed.
         expect(result.current.tools[0].status).toBe("done");
-        expect(result.current.tools[0].durationMs).toBe(123);
+        expect(result.current.tools[0].durationMs).toBe(42);
+        expect(result.current.tools[1].status).toBe("running");
     });
 
-    it("resets buffers when a new turn starts for the same agent", () => {
+    it("flips isStreaming to false on agent_end", () => {
         const { result } = renderHook(() => useAgentStream("investigator"));
         act(() => {
-            MockWebSocket.last.simulateOpen();
-            MockWebSocket.last.simulateMessage({
-                type: "agent_start",
+            ingest("agent_start", { agent: "investigator", turn_id: "t1" });
+            ingest("agent_end", {
                 agent: "investigator",
-                turn_id: "turn-1",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
-                agent: "investigator",
-                content: "first",
-                turn_id: "turn-1",
-            });
-            MockWebSocket.last.simulateMessage({
-                type: "agent_end",
-                agent: "investigator",
-                turn_id: "turn-1",
+                turn_id: "t1",
                 finish_reason: "end_turn",
             });
-            MockWebSocket.last.simulateMessage({
-                type: "agent_start",
+        });
+        expect(result.current.isStreaming).toBe(false);
+        expect(result.current.turnId).toBe("t1"); // still readable after end
+    });
+
+    it("survives the Inspector closing + reopening (persistence)", () => {
+        // First mount — simulates Inspector open during the run.
+        const first = renderHook(() => useAgentStream("investigator"));
+        act(() => {
+            ingest("agent_start", { agent: "investigator", turn_id: "t1" });
+            ingest("thinking_delta", {
                 agent: "investigator",
-                turn_id: "turn-2",
+                turn_id: "t1",
+                content: "Diagnosing...",
             });
-            MockWebSocket.last.simulateMessage({
-                type: "thinking_delta",
+            ingest("agent_end", {
                 agent: "investigator",
-                content: "second",
-                turn_id: "turn-2",
+                turn_id: "t1",
+                finish_reason: "end_turn",
             });
         });
+        first.unmount();
 
-        expect(result.current.turnId).toBe("turn-2");
-        expect(result.current.thinking).toBe("second");
-        expect(result.current.isStreaming).toBe(true);
+        // Second mount — simulates Inspector reopened after the turn.
+        const second = renderHook(() => useAgentStream("investigator"));
+        expect(second.result.current.turnId).toBe("t1");
+        expect(second.result.current.thinking).toBe("Diagnosing...");
+        expect(second.result.current.isStreaming).toBe(false);
+    });
+
+    it("ignores events for a different agent", () => {
+        const { result } = renderHook(() => useAgentStream("investigator"));
+        act(() => {
+            ingest("agent_start", { agent: "kb_builder", turn_id: "t99" });
+            ingest("thinking_delta", {
+                agent: "kb_builder",
+                turn_id: "t99",
+                content: "KB work",
+            });
+        });
+        expect(result.current.turnId).toBeNull();
+        expect(result.current.thinking).toBe("");
     });
 });
