@@ -59,7 +59,7 @@ export default function OnboardingPage() {
     return (
         <div className="min-h-full flex flex-col bg-background">
             <main className="flex flex-1 items-start justify-center px-6 py-10">
-                <div className="w-full max-w-4xl space-y-6">
+                <div className="w-full space-y-6">
                     <SectionHeader
                         label="Enrol equipment"
                         size="lg"
