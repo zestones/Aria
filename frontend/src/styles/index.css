@@ -36,3 +36,5 @@
   --font-sans: var(--ds-font-sans);
   --font-mono: var(--ds-font-mono);
 }
+
+@import "../features/work-orders/printable.css";

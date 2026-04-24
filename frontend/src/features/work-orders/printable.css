@@ -1,0 +1,196 @@
+/* Print layout for WorkOrder (M9.1). Print mode is an explicit exception to
+   DESIGN_PLAN §2 — black-on-white is mandatory for paper. On screen the
+   `.printable-work-order` root is hidden, only rendered for @media print. */
+
+.printable-work-order {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 16mm 14mm;
+    }
+
+    html,
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    /* Hide everything on the page, then un-hide the printable article. */
+    body * {
+        visibility: hidden;
+    }
+    .printable-work-order,
+    .printable-work-order * {
+        visibility: visible;
+    }
+
+    .printable-work-order {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: #ffffff;
+        color: #000000;
+        font-family: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+        font-size: 11pt;
+        line-height: 1.45;
+    }
+
+    .pw-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16pt;
+        padding-bottom: 10pt;
+        border-bottom: 1pt solid #000000;
+    }
+
+    .pw-title {
+        font-size: 18pt;
+        font-weight: 700;
+        margin: 0 0 3pt 0;
+        letter-spacing: -0.01em;
+    }
+
+    .pw-subtitle {
+        font-size: 10pt;
+        margin: 0;
+        color: #333333;
+    }
+
+    .pw-header-right {
+        text-align: right;
+    }
+
+    .pw-brand {
+        font-size: 12pt;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.02em;
+    }
+
+    .pw-date {
+        font-size: 9pt;
+        margin: 2pt 0 0 0;
+        color: #333333;
+    }
+
+    .pw-meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10pt 24pt;
+        margin: 14pt 0;
+        padding-bottom: 10pt;
+        border-bottom: 0.5pt solid #888888;
+    }
+
+    .pw-field {
+        display: flex;
+        flex-direction: column;
+        gap: 2pt;
+    }
+
+    .pw-field-label {
+        font-size: 8pt;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #555555;
+    }
+
+    .pw-field-value {
+        font-size: 11pt;
+        font-weight: 500;
+        color: #000000;
+    }
+
+    .pw-section {
+        margin: 14pt 0;
+        break-inside: avoid;
+    }
+
+    .pw-section-title {
+        font-size: 12pt;
+        font-weight: 600;
+        margin: 0 0 6pt 0;
+        padding-bottom: 3pt;
+        border-bottom: 0.5pt solid #888888;
+    }
+
+    .pw-paragraph {
+        font-size: 11pt;
+        margin: 0;
+        white-space: pre-wrap;
+    }
+
+    .pw-ordered,
+    .pw-bulleted {
+        font-size: 11pt;
+        margin: 0;
+        padding-left: 18pt;
+    }
+
+    .pw-ordered li,
+    .pw-bulleted li {
+        margin: 2pt 0;
+    }
+
+    .pw-signoff {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14pt 24pt;
+        margin-top: 4pt;
+    }
+
+    .pw-signoff-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4pt;
+    }
+
+    .pw-signoff-label {
+        font-size: 9pt;
+        color: #555555;
+    }
+
+    .pw-signoff-line {
+        display: block;
+        height: 1.2em;
+        border-bottom: 0.75pt solid #000000;
+    }
+
+    .pw-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16pt;
+        margin-top: 24pt;
+        padding-top: 10pt;
+        border-top: 0.5pt solid #888888;
+    }
+
+    .pw-footer-title {
+        font-size: 9pt;
+        font-weight: 600;
+        margin: 0 0 2pt 0;
+        color: #333333;
+    }
+
+    .pw-footer-url {
+        font-size: 10pt;
+        margin: 0;
+        font-family: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, Menlo, monospace;
+        color: #000000;
+    }
+
+    .pw-qr {
+        width: 26mm;
+        height: 26mm;
+        border: 0.5pt solid #000000;
+    }
+}
