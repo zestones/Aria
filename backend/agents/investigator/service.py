@@ -385,6 +385,23 @@ async def handle_submit_rca(
             "turn_id": turn_id,
         },
     )
+    # Make the Investigator → Work Order Generator delegation visible in
+    # the Activity Feed / Agent Constellation. Work Order Generator runs
+    # in a background task with its own turn_id; this handoff frame just
+    # signals intent so the frontend can render the edge.
+    await ws_manager.broadcast(
+        "agent_handoff",
+        {
+            "from_agent": "investigator",
+            "to_agent": "work_order_generator",
+            "reason": (
+                rca_summary[:240] + ("…" if len(rca_summary) > 240 else "")
+                if rca_summary
+                else "RCA submitted — generate work order"
+            ),
+            "turn_id": turn_id,
+        },
+    )
     handoff.spawn_work_order_generator(work_order_id)
     return "rca submitted", False
 

@@ -275,8 +275,9 @@ async def test_fresh_breach_creates_wo_and_broadcasts(patch_sentinel) -> None:
 
     # Exactly one work_order was created.
     assert len(conn.created_wo) == 1
-    # Exactly two broadcasts, in order: anomaly_detected, ui_render.
-    assert [e[0] for e in ws.events] == ["anomaly_detected", "ui_render"]
+    # Exactly three broadcasts, in order: anomaly_detected, ui_render,
+    # agent_handoff (Sentinel → Investigator visibility frame).
+    assert [e[0] for e in ws.events] == ["anomaly_detected", "ui_render", "agent_handoff"]
 
     _anomaly_type, anomaly_payload = ws.events[0]
     assert anomaly_payload["cell_id"] == 2

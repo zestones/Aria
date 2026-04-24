@@ -74,11 +74,14 @@ def build(mode: str = "demo") -> dict:
                 "noise": 0.08,
                 "unit": "mm/s",
                 # Bearing wear: monotonic upward drift while running.
+                # Cap raised so the bearing scenario actually breaches the KB
+                # ``vibration_mm_s.alert`` (4.5 mm/s) target on its intended
+                # signal — demo path: 2.2 → 5.6 mm/s over the run.
                 "drift": {
                     "rate_run": vib_drift_rate,
                     "rate_stop": 0.0,
                     "min": 0.0,
-                    "max": 1.4,  # cap drift at +1.4 → asymptote 3.6 mm/s
+                    "max": 3.4,  # cap drift at +3.4 → asymptote 5.6 mm/s
                 },
                 "on_stop": {"mode": "decay_to", "target": 0.5, "rate": 0.05},
                 # Trip vibration above 4.5 mm/s (alarm threshold from KB)

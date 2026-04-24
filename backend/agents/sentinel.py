@@ -225,6 +225,23 @@ async def _handle_breach(*, cell_id: int, cell_name: str, breach: dict[str, Any]
         },
     )
 
+    # Make the Sentinel → Investigator delegation visible in the Activity
+    # Feed / Agent Constellation. The Investigator runs in a background
+    # task with its own turn_id; this handoff frame just signals intent so
+    # the frontend can render the edge between the two agents.
+    await ws_manager.broadcast(
+        "agent_handoff",
+        {
+            "from_agent": "sentinel",
+            "to_agent": "investigator",
+            "reason": (
+                f"{breach['display_name']} on {cell_name} = {breach['peak_value']} "
+                f"({breach['threshold_field']} {breach['threshold_value']}) — investigate root cause"
+            ),
+            "turn_id": turn_id,
+        },
+    )
+
     _spawn_investigator(wo_id)
 
 
@@ -237,7 +254,8 @@ def _spawn_investigator(work_order_id: int) -> None:
     simply stays in ``status='detected'`` with no RCA attached.
     """
     try:
-        from agents.investigator import run_investigator  # type: ignore[import-not-found]
+        from agents.investigator import \
+            run_investigator  # type: ignore[import-not-found]
     except ImportError:
         log.info(
             "Sentinel: Investigator not yet implemented (#25) — WO %d left in status=detected",
@@ -248,4 +266,5 @@ def _spawn_investigator(work_order_id: int) -> None:
     asyncio.create_task(
         run_investigator(work_order_id),
         name=f"investigator-wo-{work_order_id}",
+    )
     )
