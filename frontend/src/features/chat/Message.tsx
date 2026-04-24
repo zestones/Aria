@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { ArtifactRenderer } from "../../components/artifacts";
 import { Badge, Icons, StatusDot } from "../../components/ui";
 import { useAgentInspectorStore } from "../../features/agents";
@@ -33,7 +33,7 @@ interface UserRowProps {
 function UserRow({ message, now, investigatingWith }: UserRowProps) {
     return (
         <div className="flex flex-col items-end gap-1">
-            <div className="max-w-[80%] rounded-lg bg-muted border border-border px-3 py-2 text-sm leading-[1.55] text-foreground whitespace-pre-wrap break-words">
+            <div className="max-w-[80%] rounded-lg bg-muted border border-border px-3 py-2 text-sm leading-[1.55] text-foreground whitespace-pre-wrap wrap-break-word">
                 {message.content}
             </div>
             <span className="text-xs text-text-tertiary">
@@ -66,28 +66,51 @@ interface ToolCallRowProps {
 }
 
 /**
- * Tool-call card. Stacked layout (icon + name on row 1, args / summary on
- * row 2) so long tool names and JSON arg blobs wrap inside the chat width
- * instead of pushing the bubble past the drawer edge.
+ * Tool-call row — collapsible like the workspace. Auto-expands while running,
+ * auto-collapses when done. User can re-open to inspect args.
  */
 function ToolCallRow({ part }: ToolCallRowProps) {
     const running = part.status === "running";
+    const [open, setOpen] = useState(running);
+    const prevRunning = useRef(running);
+    useEffect(() => {
+        if (prevRunning.current && !running) setOpen(false);
+        prevRunning.current = running;
+    }, [running]);
+
     return (
-        <div className="flex w-full min-w-0 items-start gap-2 rounded-md border border-border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
-            {running ? (
-                <Icons.Activity className="mt-0.5 size-3.5 flex-none animate-pulse text-text-tertiary" />
-            ) : (
-                <Icons.Check className="mt-0.5 size-3.5 flex-none text-success" />
-            )}
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate font-mono text-foreground">{part.name}</span>
-                <span className="font-mono text-[11px] text-text-tertiary break-all">
-                    {renderArgs(part.args)}
-                </span>
-                {part.summary && (
-                    <span className="text-muted-foreground break-words">{part.summary}</span>
+        <div className="overflow-hidden rounded-md border border-border bg-muted/30">
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+                {running ? (
+                    <Icons.Activity
+                        className="size-3 flex-none animate-pulse text-warning"
+                        aria-hidden
+                    />
+                ) : (
+                    <Icons.Check className="size-3 flex-none text-success" aria-hidden />
                 )}
-            </div>
+                <span className="flex-1 truncate font-mono text-xs text-text-secondary">
+                    {part.name}
+                </span>
+                <Icons.ChevronRight
+                    className={`size-3 flex-none text-text-tertiary transition-transform duration-150 ${open ? "rotate-90" : ""}`}
+                    aria-hidden
+                />
+            </button>
+            {open && (
+                <div className="border-t border-border bg-muted/20 px-2.5 py-2">
+                    <pre className="whitespace-pre-wrap font-mono text-[10px] text-text-tertiary break-all">
+                        {renderArgs(part.args)}
+                    </pre>
+                    {part.summary && (
+                        <p className="mt-1 text-[11px] text-muted-foreground">{part.summary}</p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
