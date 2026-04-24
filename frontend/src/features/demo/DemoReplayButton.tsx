@@ -1,22 +1,25 @@
 /**
  * DEV-only demo trigger (hackathon J-2).
  *
- * Calls the backend debug endpoint `/api/v1/debug/replay-investigator/{id}`
- * to re-spawn the Investigator agent on an existing work order — unblocks
- * the demo pitch by firing Opus 4.7 extended thinking + Agent Inspector +
- * Activity Feed on cue, instead of waiting for a natural Sentinel
- * detection.
+ * Calls the backend debug endpoint `/api/v1/debug/replay-full-flow/{id}`
+ * to replay the full multi-agent choreography on an existing work order:
+ *
+ * 1. Sentinel broadcasts `anomaly_detected` + `ui_render(alert_banner)` —
+ *    the operator console lights up with the red banner.
+ * 2. Investigator spawns (Opus 4.7 extended thinking) — streaming
+ *    `thinking_delta` + tool calls + render artifacts + `submit_rca`.
+ * 3. Work Order Generator auto-chains post-RCA — enriches the WO with
+ *    recommended actions, required parts, skills, scheduling hints.
+ * 4. Optional handoff to KB Builder if the Investigator needs a threshold
+ *    lookup.
  *
  * Gated on `import.meta.env.DEV` so production builds strip the button
  * entirely (Vite tree-shakes the consumer when the gate is false). The
- * backend endpoint itself is gated server-side behind `ARIA_DEMO_ENABLED`,
- * so even a leaked bundle can't trigger it in prod.
+ * backend endpoint itself is gated server-side behind `ARIA_DEMO_ENABLED`.
  *
- * Mounted as a fixed floating control in the bottom-right of the viewport
- * so it is reachable from any page (Control Room, Work Orders, etc.)
- * without collision with TopBar / Chat drawer / Agent Inspector.
- *
- * Remove post-demo along with `backend/modules/debug/`.
+ * Mounted as a fixed floating control in the bottom-left of the viewport
+ * so it is reachable from any page without collision with TopBar / Chat
+ * drawer / Agent Inspector.
  */
 
 import { useState } from "react";
@@ -29,10 +32,19 @@ interface RecentWorkOrder {
     title: string;
 }
 
+interface FullFlowResponse {
+    work_order_id: number;
+    cell_id: number;
+    cell_name: string;
+    previous_status: string;
+    title: string;
+    spawned: boolean;
+}
+
 export function DemoReplayButton() {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [lastSpawned, setLastSpawned] = useState<RecentWorkOrder | null>(null);
+    const [lastSpawned, setLastSpawned] = useState<FullFlowResponse | null>(null);
 
     async function replay() {
         setBusy(true);
@@ -50,14 +62,15 @@ export function DemoReplayButton() {
             }
             const wo = wos[0];
 
-            const replayResp = await fetch(`/api/v1/debug/replay-investigator/${wo.id}`, {
+            const replayResp = await fetch(`/api/v1/debug/replay-full-flow/${wo.id}`, {
                 method: "POST",
                 credentials: "include",
             });
             if (!replayResp.ok) {
                 throw new Error(`replay ${replayResp.status}`);
             }
-            setLastSpawned(wo);
+            const spawned = (await replayResp.json()) as FullFlowResponse;
+            setLastSpawned(spawned);
         } catch (e) {
             setError(e instanceof Error ? e.message : "replay failed");
         } finally {
@@ -72,16 +85,16 @@ export function DemoReplayButton() {
                     type="button"
                     onClick={replay}
                     disabled={busy}
-                    aria-label="Replay Investigator on the most recent work order (demo trigger)"
+                    aria-label="Replay the full multi-agent flow on the most recent work order (demo trigger)"
                     className="inline-flex h-7 items-center gap-1.5 rounded-[var(--ds-radius-sm)] bg-transparent px-2 text-[var(--ds-text-xs)] font-medium text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-accent-soft)] hover:text-[var(--ds-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] disabled:opacity-60"
                 >
                     <Icons.Play className="size-3" aria-hidden />
-                    {busy ? "Replaying…" : "Replay last investigation"}
+                    {busy ? "Replaying full flow…" : "Replay full agent flow"}
                     <span className="text-[var(--ds-fg-subtle)]">· dev</span>
                 </button>
                 {lastSpawned != null && !error && (
                     <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
-                        → WO #{lastSpawned.id} (cell {lastSpawned.cell_id})
+                        → WO #{lastSpawned.work_order_id} ({lastSpawned.cell_name})
                     </span>
                 )}
                 {error && (
