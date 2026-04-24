@@ -32,6 +32,8 @@ export interface TopBarProps {
     onSidebarToggle: () => void;
     /** Placeholder slot for KpiBar — wired in M7.2. */
     kpiSlot?: React.ReactNode;
+    /** Toggle the full-screen Agent Constellation overlay (hotkey `A`). */
+    onConstellationToggle?: () => void;
 }
 
 /**
@@ -54,6 +56,7 @@ export function TopBar({
     sidebarCollapsed,
     onSidebarToggle,
     kpiSlot,
+    onConstellationToggle,
 }: TopBarProps) {
     const shift = useShift();
     const [activityOpen, setActivityOpen] = useState(false);
@@ -103,6 +106,17 @@ export function TopBar({
                 </div>
                 <div aria-hidden className="h-5 w-px bg-sidebar-border/60" />
                 <ThemeToggle />
+                {onConstellationToggle && (
+                    <button
+                        type="button"
+                        onClick={onConstellationToggle}
+                        aria-label="Open agent constellation (A)"
+                        title="Agent constellation (A)"
+                        className={ChromeButton}
+                    >
+                        <Icons.Sparkles className="size-4" aria-hidden />
+                    </button>
+                )}
                 <button
                     type="button"
                     onClick={() => setActivityOpen(true)}

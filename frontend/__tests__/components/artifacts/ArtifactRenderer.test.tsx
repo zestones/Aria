@@ -26,8 +26,8 @@ describe("ArtifactRenderer", () => {
                 }}
             />,
         );
-        expect(screen.getByText(/Alert banner/i)).toBeInTheDocument();
-        expect(screen.getByText(/cell 3 · alert/i)).toBeInTheDocument();
+        expect(screen.getByText(/Vibration exceeded threshold/i)).toBeInTheDocument();
+        expect(screen.getByText(/Anomaly #77/i)).toBeInTheDocument();
     });
 
     it("renders an invalid-props fallback when the schema rejects the payload", () => {

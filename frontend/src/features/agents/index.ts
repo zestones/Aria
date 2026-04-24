@@ -1,4 +1,6 @@
 export { ActivityFeed } from "./ActivityFeed";
+export type { AgentConstellationProps } from "./AgentConstellation";
+export { AgentConstellation } from "./AgentConstellation";
 export { AgentInspector } from "./AgentInspector";
 export type { ActivityEvent, ActivityEventType, ActivityFeedState } from "./activityFeedStore";
 export { MAX_EVENTS, TTL_MS, useActivityFeedStore } from "./activityFeedStore";

@@ -1,6 +1,7 @@
-import { useCallback, useId } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
+    AgentConstellation,
     AgentInspector,
     useActivityFeedStream,
     useAgentInspectorStore,
@@ -73,6 +74,24 @@ export function AppShell() {
         { validator: validateEquipmentSelection },
     );
     const inspectorAgent = useAgentInspectorStore((s) => s.agent);
+    const [constellationOpen, setConstellationOpen] = useState(false);
+
+    // Hotkey `A` toggles the constellation overlay. Ignored while typing in
+    // inputs/textareas/contenteditable so the letter still types normally.
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key !== "a" && e.key !== "A") return;
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
+            const t = e.target as HTMLElement | null;
+            if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
+                return;
+            }
+            e.preventDefault();
+            setConstellationOpen((prev) => !prev);
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
 
     const safeDrawer = sanitizeDrawer(drawer);
     const safeSidebar = sanitizeSidebar(sidebar);
@@ -115,6 +134,7 @@ export function AppShell() {
                     sidebarCollapsed={safeSidebar.collapsed}
                     onSidebarToggle={toggleSidebar}
                     kpiSlot={<KpiBar selection={selection} />}
+                    onConstellationToggle={() => setConstellationOpen((prev) => !prev)}
                 />
                 <AnomalyBanner />
                 <div
@@ -150,6 +170,10 @@ export function AppShell() {
                 </div>
             </div>
             {import.meta.env.DEV && <DemoReplayButton />}
+            <AgentConstellation
+                open={constellationOpen}
+                onClose={() => setConstellationOpen(false)}
+            />
         </div>
     );
 }
