@@ -13,6 +13,7 @@
 3. [The plant — five machines, one bottle](#3-the-plant--five-machines-one-bottle)
 4. [The story a judge sees, in plain English](#4-the-story-a-judge-sees-in-plain-english)
 5. [Scene-by-scene narration script](#5-scene-by-scene-narration-script)
+5bis. [The Opus 4.7 visibility layer — the video-critical beat](#5bis-the-opus-47-visibility-layer--the-video-critical-beat)
 6. [Seed data plan](#6-seed-data-plan)
 7. [Demo endpoint plan](#7-demo-endpoint-plan)
 8. [Onboarding PDF choice](#8-onboarding-pdf-choice)
@@ -141,7 +142,7 @@ Judges see "Motor shake is rising" instead of "RMS vibration on the discharge fl
 
 Uncut version, one paragraph. This is the script the voice-over memorises; every screen the demo produces must stay consistent with it.
 
-> *This is a small plant that bottles drinking water for about fifty thousand people. Five machines, one after the other: a pump brings water up from the well, UV light sterilises it, a filler fills the bottles, a capper seals them, a labeler puts the labels on. ARIA watches all five. Right now, ARIA is telling us the Bottle Filler is going to fail in about two hours — not because anything is broken yet, but because the motor is shaking more every hour. That's a prediction, not an alarm. In a few minutes the motor will actually cross its safe limit, and ARIA is going to catch the real failure live. Watch the right-hand side of the screen — that's five AI agents, built on Claude Opus 4.7, passing the problem between themselves. One detects the breach, one investigates the cause — you can literally see it think — one remembers we saw this exact pattern last January on the Bottle Capper, one writes the work order, one prints it. Two minutes ago the Filler looked fine. Eight minutes from now the technician has a printable repair order with the recommended action, the estimated time to failure, and a reference to the previous incident. That is what ARIA does. Now let me show you the new machine coming online — the Bottle Labeler — you upload its manual and ARIA reads it cover to cover and starts monitoring it in two minutes."*
+> *This is a small plant that bottles drinking water for about fifty thousand people. Five machines, one after the other: a pump brings water up from the well, UV light sterilises it, a filler fills the bottles, a capper seals them, a labeler puts the labels on. ARIA watches all five. Right now, ARIA is telling us the Bottle Filler is going to fail in about two hours — not because anything is broken yet, but because the motor is shaking more every hour. That's a prediction, not an alarm. In a few minutes the motor will actually cross its safe limit, and ARIA is going to catch the real failure live. Watch the right-hand side of the screen — that's five AI agents, built on Claude Opus 4.7, passing the problem between themselves. One detects the breach, one investigates the cause — you can literally see it write Python, run it inside Anthropic's cloud sandbox, and cite the numbers it got back — one remembers we saw this exact pattern last January on the Bottle Capper, one writes the work order, one prints it. Two minutes ago the Filler looked fine. Eight minutes from now the technician has a printable repair order with the recommended action, the estimated time to failure, and a reference to the previous incident. That is what ARIA does. Now let me show you the new machine coming online — the Bottle Labeler — you upload its manual and ARIA reads it cover to cover and starts monitoring it in two minutes."*
 
 That paragraph is the demo. Everything below is how to make it happen.
 
@@ -160,7 +161,8 @@ Seven beats, ten minutes. The left column is what the judge's eyes are on; the r
 | 2    | Back to Control Room, forecast banner appears      | "ARIA is telling us the Filler will breach its safe limit in ~2 hours. Nothing is broken yet. This is a *forecast*."                                                 |
 | 3    | Forecast banner turns into an anomaly banner       | "There's the real breach. Sentinel caught it."                                                                                                                       |
 | 3    | Chat drawer opens; Investigator thinking streams   | "The Investigator is thinking. That's extended thinking on Opus 4.7 — you are watching the reasoning live."                                                          |
-| 3    | Diagnostic card renders inline                     | "Bearing wear on the Filler drive motor. Confidence 87 percent."                                                                                                     |
+| 3    | **Sandbox execution card** renders inline (Python script + numerical output + "ran in Anthropic sandbox" chip) | "This is the part that cannot happen without Managed Agents — the agent just wrote Python, ran it in Anthropic's cloud sandbox, and pulled back `slope_per_hour=0.024, r²=0.91, eta_to_trip_hours=4.2`. Not token math. Real Python." |
+| 3    | Diagnostic card renders inline                     | "Bearing wear on the Filler drive motor. Confidence 87 percent. And the RCA text starts with the exact numbers — `Sandbox: ...` — first-class numerical evidence."                                    |
 | 4    | Work Order card renders; navigate to detail; print | "The repair order is already written. Technician gets this on paper."                                                                                                |
 | 5    | Fire the memory scene on the Capper                | "Now watch — another anomaly, on the Capper this time."                                                                                                              |
 | 5    | Pattern Match card renders with MTTF + action      | "ARIA remembers it saw this same pattern on the Capper in January. It is predicting four hours to failure and telling the operator exactly what fixed it last time." |
@@ -170,6 +172,73 @@ Seven beats, ten minutes. The left column is what the judge's eyes are on; the r
 | 7    | Hit `A` → Constellation                            | "Five agents, one MCP server, predictive plus diagnostic plus prescriptive. Built in a week on Opus 4.7."                                                            |
 
 Every spoken line passes the Grandparent Test. Every screen-labelled word ("Filler", "Capper", "Motor shake", "Water pressure") passes the Grandparent Test.
+
+---
+
+## 5bis. The Opus 4.7 visibility layer — the video-critical beat
+
+> [!IMPORTANT]
+> This subsection exists because the first end-to-end dry-run of #105 produced a correct-but-invisible outcome: the agent pulled data, computed numerical ratios, and cited them in the RCA — but the prose-level RCA was indistinguishable from a Messages API token-math RCA. The visibility layer below is what makes the Managed-Agents-only capability **legible** to a judge watching a 3-minute video.
+
+### What ships in the visibility layer
+
+Three concrete pieces land on top of the raw capability (see [docs/architecture/](../../architecture/) for the underlying architecture):
+
+1. **`render_sandbox_execution` artifact.** After the agent runs bash/Python in the cloud container and before it calls `submit_rca`, it emits this render tool. The frontend renders an inline card in chat with:
+   - the verbatim Python script in a monospaced block
+   - the verbatim `key=value` output the script printed
+   - a small chip reading **"Ran in Anthropic sandbox"**
+   - metadata footer: cell, window, signal IDs pulled
+   Source: [backend/agents/ui_tools.py::RENDER_SANDBOX_EXECUTION](../../../backend/agents/ui_tools.py), [frontend SandboxExecution.tsx](../../../frontend/src/components/artifacts/SandboxExecution.tsx).
+
+2. **`Sandbox:` RCA prefix — mandatory.** Every bash-driven RCA must begin with a single `Sandbox: k1=v1, k2=v2, ...` line in `submit_rca.root_cause`, followed by ` Root cause: ...`. The numerical evidence then lives in the work-order text itself, not only on the card. See [backend/agents/investigator/prompts.py::SANDBOX_DIAGNOSTICS_SECTION](../../../backend/agents/investigator/prompts.py).
+
+3. **Failure-mode-keyed rules.** The prompt no longer says "you may use bash"; it mandates:
+   - **Drift-class** (`bearing_wear`, `thermal_degradation`, `fouling`): **must** fit `np.polyfit` on a 6 h window and cite `slope_per_hour`, `r_squared`, `eta_hours_to_trip`.
+   - **Coupling-class** (`seal_leak`, `cavitation`, multi-signal modes): **must** compute Pearson correlation between the breached signal and a related one; cite `rho`, `n_samples`.
+   - **Spike-class** (`impeller_imbalance`, `instrumentation_fault`): bash optional.
+
+### Why this matters in the 3-min video
+
+```mermaid
+flowchart LR
+    Claim["Pitch: 'Runs on Opus 4.7, agent writes Python in a sandbox'"]
+    Proof1["SandboxExecution card<br/>(verbatim script + output, cyan chip)"]
+    Proof2["Sandbox: prefix in RCA text<br/>(same numbers, different surface)"]
+    Proof3["Thinking-delta stream<br/>(agent narrates bash call)"]
+    Judge["Judge internalises: this is not<br/>something Messages API can do"]
+
+    Claim --> Proof1
+    Claim --> Proof2
+    Claim --> Proof3
+    Proof1 --> Judge
+    Proof2 --> Judge
+    Proof3 --> Judge
+```
+
+The three surfaces corroborate the same evidence at three different parts of the screen — the card, the RCA prose, and the thinking stream. A judge watching the video for 15 seconds sees at least two of them. That is the "jaw-drop moment" the issue #105 spec promised.
+
+### What the video *must* frame
+
+At ~0:45 of the 3-minute cut, during scene 3, the presenter must:
+
+1. Be close-up on the chat stream.
+2. Wait until the `SandboxExecution` card renders (the cyan "Ran in Anthropic sandbox" chip is the visual anchor).
+3. Narrate verbatim a variant of: *"That script just ran as real Python inside Anthropic's cloud container — not inside the model. Look at the output."*
+4. Hold the frame for two beats so the code block is readable, then pan down to the `DiagnosticCard` with the `Sandbox:` prefix visible in the RCA text.
+
+### Reliability — what happens if bash doesn't fire
+
+The agent has discretion. If the anomaly is trivially diagnosable from prose (e.g. pressure 111 % above nominal — ratio arithmetic is sufficient), the agent may skip bash. Mitigations, in order of effectiveness:
+
+1. **Pre-seed a drift scenario** that forces the drift-class rule to fire. The simulator's default `p02_bearing_failure` demo mode produces vibration drift over 4 min — ideal. Rehearse by triggering one drift breach via `/api/v1/demo/scene/seed-forecast` + `trigger-breach` (see §7) before recording.
+2. **If the first take produces a prose-only RCA**, reset the light state and retry. The prompt now forces bash on drift-class failures; the agent complying is a near-certainty once failure_mode is drift-like.
+3. **If all else fails**, the recorded video can use the take where bash fired. The capability is real; the visibility is capture-able.
+
+### Verification before recording
+
+> [!TIP]
+> Before hitting record on the 3-minute video, run one dry-run of the full demo and confirm **all three** surfaces fire: the cyan sandbox card in chat, the `Sandbox:` prefix in the RCA text on `/work-orders/{id}`, and the agent-thinking references to the bash call in the chat stream. If any one is missing, reset and retry — the three corroborate each other and the story lands hollow with only one.
 
 ---
 
@@ -482,6 +551,7 @@ Reply with four yes/no answers (and any copy-edits to machine names / operator n
 - Hackathon scoring: [docs/hackathon/rules.md](../../hackathon/rules.md)
 - Forecast-watch architecture: [docs/architecture/06-forecast-watch.md](../../architecture/06-forecast-watch.md)
 - Sentinel architecture: [docs/architecture/04-sentinel-investigator.md](../../architecture/04-sentinel-investigator.md)
+- Sandbox execution capability (M5.7 / #105): [backend/agents/investigator/prompts.py](../../../backend/agents/investigator/prompts.py) (`SANDBOX_DIAGNOSTICS_SECTION`), [backend/agents/ui_tools.py](../../../backend/agents/ui_tools.py) (`RENDER_SANDBOX_EXECUTION`), [frontend SandboxExecution.tsx](../../../frontend/src/components/artifacts/SandboxExecution.tsx)
 
 ---
 
