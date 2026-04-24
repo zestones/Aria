@@ -93,10 +93,11 @@
 
   /* ─── Fonts ─── */
   --font-sans:
-    "Sofia Sans Variable", "Sofia Sans", "Inter Variable", "Inter", ui-sans-serif, system-ui,
-    -apple-system, sans-serif;
+    "Sofia Sans Variable", "Sofia Sans", "Inter Variable", "Inter",
+    ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono:
-    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular,
+    Menlo, monospace;
 
   /* ─── Shadows — atmospheric cushion (large spread, low opacity) ─── */
   --shadow-pill: 0 4px 24px 0 rgb(0 0 0 / 0.04);

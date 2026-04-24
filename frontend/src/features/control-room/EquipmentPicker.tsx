@@ -9,7 +9,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { Hairline, Icons, KbdKey, Motion, StatusRail } from "../../components/ui";
+import { Hairline, Icons, Motion, StatusRail } from "../../components/ui";
 import {
     allContainerKeys,
     ancestorsForCell,
@@ -34,33 +34,6 @@ export interface EquipmentPickerProps {
 const TRIGGER_WIDTH = 320;
 const POPOVER_WIDTH = 460;
 const POPOVER_MAX_HEIGHT = 520;
-
-function useKeyboardShortcut(onOpen: () => void) {
-    useEffect(() => {
-        function onKey(e: KeyboardEvent) {
-            const isMac =
-                typeof navigator !== "undefined" &&
-                navigator.platform.toLowerCase().includes("mac");
-            const mod = isMac ? e.metaKey : e.ctrlKey;
-            if (!mod || !e.shiftKey) return;
-            if (e.key.toLowerCase() !== "e") return;
-            const target = e.target;
-            if (target instanceof HTMLElement) {
-                const tag = target.tagName;
-                if (
-                    (tag === "INPUT" || tag === "TEXTAREA") &&
-                    !target.dataset.equipmentPickerInput
-                ) {
-                    return;
-                }
-            }
-            e.preventDefault();
-            onOpen();
-        }
-        window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
-    }, [onOpen]);
-}
 
 export function EquipmentPicker({ selection, onChange }: EquipmentPickerProps) {
     const [open, setOpen] = useState(false);
@@ -90,8 +63,6 @@ export function EquipmentPicker({ selection, onChange }: EquipmentPickerProps) {
         setOpen(false);
         setQuery("");
     }, []);
-
-    useKeyboardShortcut(openPopover);
 
     // Auto-select first viable cell when hierarchy loads without a selection.
     useEffect(() => {
@@ -381,7 +352,6 @@ export function EquipmentPicker({ selection, onChange }: EquipmentPickerProps) {
                         </span>
                     )}
                 </span>
-                <KbdKey className="flex-none">⌘⇧E</KbdKey>
                 <Icons.ChevronDown
                     className={`size-4 flex-none text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`}
                 />
@@ -808,27 +778,7 @@ interface PickerFooterProps {
 
 function PickerFooter({ shown, total }: PickerFooterProps) {
     return (
-        <div className="flex items-center justify-between gap-3 px-3 py-2">
-            <div className="flex items-center gap-3 text-xs text-text-tertiary">
-                <span className="flex items-center gap-1">
-                    <KbdKey>↑</KbdKey>
-                    <KbdKey>↓</KbdKey>
-                    <span>Navigate</span>
-                </span>
-                <span className="flex items-center gap-1">
-                    <KbdKey>→</KbdKey>
-                    <KbdKey>←</KbdKey>
-                    <span>Expand</span>
-                </span>
-                <span className="flex items-center gap-1">
-                    <KbdKey>↵</KbdKey>
-                    <span>Select</span>
-                </span>
-                <span className="flex items-center gap-1">
-                    <KbdKey>Esc</KbdKey>
-                    <span>Close</span>
-                </span>
-            </div>
+        <div className="flex items-center justify-end gap-3 px-3 py-2">
             <span className="text-xs text-text-tertiary">
                 {total > 0 ? `${shown} cell${shown === 1 ? "" : "s"}` : "—"}
             </span>

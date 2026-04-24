@@ -11,10 +11,11 @@
    * shadows). Theme-specific colour tokens live in light.css / dark.css. */
   :root {
     --font-sans:
-      "Sofia Sans Variable", "Sofia Sans", "Inter Variable", "Inter", ui-sans-serif, system-ui,
-      -apple-system, sans-serif;
+      "Sofia Sans Variable", "Sofia Sans", "Inter Variable", "Inter",
+      ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-mono:
-      "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular,
+      Menlo, monospace;
 
     --motion-fast: 150ms;
     --motion-base: 220ms;
@@ -63,7 +64,12 @@
   }
 
   /* Editorial display: tight negative tracking on every heading. */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-weight: 500;
     letter-spacing: -0.02em;
   }
@@ -114,7 +120,12 @@ select {
 
   *:hover,
   *:focus-within {
-    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent) transparent;
+    scrollbar-color: color-mix(
+        in srgb,
+        var(--muted-foreground) 40%,
+        transparent
+      )
+      transparent;
   }
 
   ::-webkit-scrollbar {
@@ -132,11 +143,19 @@ select {
   }
 
   *:hover::-webkit-scrollbar-thumb {
-    background-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--muted-foreground) 40%,
+      transparent
+    );
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in srgb, var(--muted-foreground) 60%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--muted-foreground) 60%,
+      transparent
+    );
   }
 
   ::-webkit-scrollbar-corner {
@@ -147,7 +166,12 @@ select {
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent) transparent;
+    scrollbar-color: color-mix(
+        in srgb,
+        var(--muted-foreground) 40%,
+        transparent
+      )
+      transparent;
   }
 
   /* Subtle press effect — primary buttons "compress" on active. */

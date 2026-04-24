@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { EquipmentPicker } from "../../features/control-room";
 import type { EquipmentSelection } from "../../lib/hierarchy";
-import { Icons, KbdKey, StatusDot, ThemeToggle } from "../ui";
+import { Icons, StatusDot, ThemeToggle } from "../ui";
 
 function computeShift(date: Date) {
     const h = date.getHours();
@@ -66,7 +66,6 @@ export function TopBar({
                 className="inline-flex h-8 flex-none items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-muted-foreground transition-colors duration-150 hover:border-input hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
                 <DrawerIcon className="size-4" />
-                <KbdKey className="ml-1">⌘K</KbdKey>
             </button>
         </header>
     );

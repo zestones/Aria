@@ -10,7 +10,6 @@ export { Drawer } from "./Drawer";
 export type { HairlineProps } from "./Hairline";
 export { Hairline } from "./Hairline";
 export * as Icons from "./icons";
-export { KbdKey } from "./KbdKey";
 export type { MetaItem, MetaStripProps } from "./MetaStrip";
 export { MetaStrip } from "./MetaStrip";
 export * as Motion from "./motion";

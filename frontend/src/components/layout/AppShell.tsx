@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useId } from "react";
 import { Outlet } from "react-router-dom";
 import { AgentInspector, useAgentInspectorStore } from "../../features/agents";
 import { useAgentTurnsIngest } from "../../features/agents/useAgentTurnsIngest";
-import { ChatPanel, useChatStore } from "../../features/chat";
+import { ChatPanel } from "../../features/chat";
 import {
     AnomalyBanner,
     EQUIPMENT_KEY,
@@ -50,14 +50,6 @@ function sanitizeDrawer(state: ChatDrawerState): ChatDrawerState {
     };
 }
 
-function isTypingTarget(target: EventTarget | null) {
-    if (!(target instanceof HTMLElement)) return false;
-    const tag = target.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
-    if (target.isContentEditable) return true;
-    return false;
-}
-
 export function AppShell() {
     // Singleton bus consumer — keeps the agent turn buffer alive regardless
     // of the Inspector's open/close state.
@@ -77,8 +69,6 @@ export function AppShell() {
 
     const safeDrawer = sanitizeDrawer(drawer);
     const safeSidebar = sanitizeSidebar(sidebar);
-    const drawerOpenRef = useRef(safeDrawer.open);
-    drawerOpenRef.current = safeDrawer.open;
     const drawerId = useId();
 
     const toggleDrawer = useCallback(() => {
@@ -95,38 +85,6 @@ export function AppShell() {
         },
         [setDrawer],
     );
-
-    useEffect(() => {
-        function onKey(e: KeyboardEvent) {
-            const isMac =
-                typeof navigator !== "undefined" &&
-                navigator.platform.toLowerCase().includes("mac");
-            const modPressed = isMac ? e.metaKey : e.ctrlKey;
-            if (!modPressed) return;
-            const key = e.key.toLowerCase();
-            if (isTypingTarget(e.target)) return;
-
-            if (key === "k") {
-                e.preventDefault();
-                if (drawerOpenRef.current) {
-                    useChatStore.getState().requestFocus();
-                } else {
-                    toggleDrawer();
-                    window.setTimeout(() => {
-                        useChatStore.getState().requestFocus();
-                    }, 240);
-                }
-                return;
-            }
-
-            if (key === "b") {
-                e.preventDefault();
-                toggleSidebar();
-            }
-        }
-        window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
-    }, [toggleDrawer, toggleSidebar]);
 
     const sidebarWidth = safeSidebar.collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 

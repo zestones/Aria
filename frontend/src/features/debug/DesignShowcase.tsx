@@ -12,7 +12,6 @@ import {
     Drawer,
     Hairline,
     Icons,
-    KbdKey,
     MetaStrip,
     Motion,
     SectionHeader,
@@ -265,15 +264,6 @@ export default function DesignShowcase() {
                             <StatusDot status="critical" pulse />
                             <span>critical · pulse</span>
                         </div>
-                    </div>
-                </section>
-
-                <section className="space-y-3">
-                    <SectionHeader label="Keyboard keys" size="md" marker="05" />
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>Toggle chat drawer</span>
-                        <KbdKey>⌘</KbdKey>
-                        <KbdKey>K</KbdKey>
                     </div>
                 </section>
 
