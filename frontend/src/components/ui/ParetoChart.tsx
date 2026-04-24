@@ -1,11 +1,13 @@
 /**
- * Pure-SVG horizontal-bar Pareto chart. No deps.
+ * ParetoChart — horizontal-bar Pareto with motion-polished fill.
  *
  * Bars are rendered top-to-bottom in the order they appear in `data`
- * (caller is expected to pre-sort descending by `value`). The label column
- * is left-aligned, the value column right-aligned. Bar widths are scaled
- * relative to the largest value in the dataset.
+ * (caller is expected to pre-sort descending by `value`). Bar widths are
+ * scaled relative to the largest value in the dataset and animated in on
+ * mount / data change for a polished feel.
  */
+
+import { motion } from "framer-motion";
 
 export interface ParetoDatum {
     label: string;
@@ -40,7 +42,7 @@ export function ParetoChart({
 
     return (
         <ul className={`flex flex-col gap-1.5 ${className}`} aria-label={ariaLabel}>
-            {data.map((d) => {
+            {data.map((d, i) => {
                 const widthPct = Math.max(2, (d.value / max) * 100);
                 const sharePct = total > 0 ? Math.round((d.value / total) * 100) : 0;
                 return (
@@ -57,9 +59,16 @@ export function ParetoChart({
                             className="h-1.5 overflow-hidden rounded-full"
                             style={{ background: "var(--border)" }}
                         >
-                            <div
+                            <motion.div
                                 className="h-full rounded-full"
-                                style={{ width: `${widthPct}%`, background: color }}
+                                style={{ background: color }}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${widthPct}%` }}
+                                transition={{
+                                    duration: 0.5,
+                                    ease: [0.16, 1, 0.3, 1],
+                                    delay: 0.05 + i * 0.04,
+                                }}
                             />
                         </div>
                     </li>

@@ -1,5 +1,6 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useId, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import {
     AgentConstellation,
     AgentInspector,
@@ -16,6 +17,7 @@ import {
 } from "../../features/control-room";
 import type { EquipmentSelection } from "../../lib/hierarchy";
 import { useLocalStorage } from "../../lib/useLocalStorage";
+import { pageTransition } from "../ui/motion";
 import { DRAWER_DEFAULT_WIDTH, DRAWER_MAX_WIDTH, DRAWER_MIN_WIDTH, Drawer } from "./Drawer";
 import { SIDEBAR_WIDTH_COLLAPSED, SIDEBAR_WIDTH_EXPANDED, Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -126,6 +128,11 @@ export function AppShell() {
 
     const sidebarWidth = safeSidebar.collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
+    const location = useLocation();
+    // Group sub-routes (e.g. /work-orders/:id) under their parent so
+    // navigating between siblings doesn't always replay the full transition.
+    const routeKey = location.pathname.split("/")[1] || "/";
+
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
             <Sidebar collapsed={safeSidebar.collapsed} />
@@ -165,7 +172,18 @@ export function AppShell() {
                                     "padding-bottom var(--motion-base) var(--ease-out-soft)",
                             }}
                         >
-                            <Outlet />
+                            <AnimatePresence mode="wait" initial={false}>
+                                <motion.div
+                                    key={routeKey}
+                                    variants={pageTransition}
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="exit"
+                                    className="h-full"
+                                >
+                                    <Outlet />
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
                         <AgentInspector />
                     </main>
