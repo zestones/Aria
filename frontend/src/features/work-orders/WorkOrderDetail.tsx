@@ -42,7 +42,20 @@ function statusToDotStatus(status: string): "nominal" | "warning" | "critical" |
 }
 
 function parseList(value: unknown): string[] {
-    if (Array.isArray(value)) return value.map((v) => String(v)).filter(Boolean);
+    if (Array.isArray(value)) {
+        return value
+            .map((v) => {
+                if (v === null || v === undefined) return "";
+                if (typeof v === "object") {
+                    return Object.values(v as Record<string, unknown>)
+                        .filter((x) => x !== undefined && x !== null && x !== "")
+                        .map((x) => String(x))
+                        .join(" · ");
+                }
+                return String(v);
+            })
+            .filter(Boolean);
+    }
     if (typeof value === "string") {
         try {
             const parsed = JSON.parse(value);
