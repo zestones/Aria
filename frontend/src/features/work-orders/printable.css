@@ -228,4 +228,18 @@
         height: 26mm;
         border: 0.5pt solid #000000;
     }
+
+    /* Prevent a trailing blank page: Chromium sometimes emits an extra A4
+       when the last flex/grid child sits a hair below the bottom margin.
+       Trim the last descendant's trailing space and tell the print engine
+       to avoid paginating after it. */
+    .printable-work-order > *:last-child {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+    .printable-work-order > .pw-footer {
+        margin-top: 14pt;
+    }
 }
