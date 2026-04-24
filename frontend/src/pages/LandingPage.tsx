@@ -20,7 +20,8 @@
  * already-authenticated visitor opening `/` is forwarded straight in.
  */
 
-import { type FormEvent, useId, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { type FormEvent, useEffect, useId, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AriaMark, Icons, ThemeToggle } from "../components/ui";
 import { isAuthenticated, login } from "../services/auth";
@@ -497,7 +498,7 @@ const AGENTS: AgentCard[] = [
     {
         name: "Sentinel",
         role: "The watcher",
-        blurb: "Watches every signal in real time and catches threshold breaches the moment they happen.",
+        blurb: "Two loops on every signal: catches threshold breaches the moment they happen, and forecasts the ones that will happen in the next few hours.",
         color: "#3f6fb8",
         icon: <Icons.Eye className="size-5" aria-hidden />,
     },
@@ -531,11 +532,56 @@ const AGENTS: AgentCard[] = [
     },
 ];
 
+// ── Constellation geometry ──────────────────────────────────────────────────
+// Sentinel at the centre; the 4 specialists sit on a circle around it.
+// SVG viewBox is `-300 -300 600 600` so (0,0) is the centre.
+const ORBIT_R = 200;
+const SAT_ANGLES_DEG: Record<string, number> = {
+    Investigator: -135,
+    "KB Builder": -45,
+    "Work Order": 45,
+    "Q&A": 135,
+};
+
+function polar(angleDeg: number, r: number) {
+    const rad = (angleDeg * Math.PI) / 180;
+    return { x: r * Math.cos(rad), y: r * Math.sin(rad) };
+}
+
+function nodeXY(name: string) {
+    if (name === "Sentinel") return { x: 0, y: 0 };
+    const a = SAT_ANGLES_DEG[name] ?? 0;
+    return polar(a, ORBIT_R);
+}
+
 function AgentsSection() {
+    const satellites = AGENTS.filter((a) => a.name !== "Sentinel");
+    const sentinel = AGENTS.find((a) => a.name === "Sentinel")!;
+
+    const [activeName, setActiveName] = useState<string>(satellites[0].name);
+
+    // Auto-rotate the focused agent every 3.6 s. Order: satellites first,
+    // then Sentinel — Sentinel is fully clickable like the others.
+    useEffect(() => {
+        const cycle = [
+            ...AGENTS.filter((a) => a.name !== "Sentinel"),
+            AGENTS.find((a) => a.name === "Sentinel")!,
+        ];
+        const id = window.setInterval(() => {
+            setActiveName((name) => {
+                const i = cycle.findIndex((a) => a.name === name);
+                return cycle[(i + 1) % cycle.length].name;
+            });
+        }, 3600);
+        return () => window.clearInterval(id);
+    }, []);
+
+    const active = AGENTS.find((a) => a.name === activeName) ?? satellites[0];
+
     return (
         <section id="agents" className="border-b border-border/60 bg-card/40">
             <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-                <div className="mx-auto mb-12 max-w-3xl text-center">
+                <div className="mx-auto mb-2 max-w-3xl text-center">
                     <span className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
                         Five agents, one mission
                     </span>
@@ -548,45 +594,338 @@ function AgentsSection() {
                         technicians.
                     </p>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {AGENTS.map((a) => (
-                        <article
-                            key={a.name}
-                            className="group relative flex flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card p-6 transition-colors hover:border-input"
-                        >
-                            <span
-                                aria-hidden
-                                className="absolute inset-x-0 top-0 h-0.5"
-                                style={{ background: a.color }}
-                            />
-                            <div
-                                className="flex size-10 items-center justify-center rounded-lg"
-                                style={{
-                                    background: `color-mix(in oklab, ${a.color} 14%, transparent)`,
-                                    color: a.color,
-                                }}
-                            >
-                                {a.icon}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <h3 className="text-base font-semibold tracking-[-0.01em] text-foreground">
-                                    {a.name}
-                                </h3>
-                                <span
-                                    className="text-xs font-medium uppercase tracking-wide"
-                                    style={{ color: a.color }}
-                                >
-                                    {a.role}
-                                </span>
-                            </div>
-                            <p className="text-sm leading-relaxed text-muted-foreground">
-                                {a.blurb}
-                            </p>
-                        </article>
-                    ))}
+
+                <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-12">
+                    {/* Constellation canvas */}
+                    <ConstellationCanvas
+                        sentinel={sentinel}
+                        satellites={satellites}
+                        activeName={active.name}
+                        onPick={setActiveName}
+                    />
+
+                    {/* Active agent panel */}
+                    <AgentInfoPanel
+                        sentinel={sentinel}
+                        agents={satellites}
+                        active={active}
+                        onPick={setActiveName}
+                    />
                 </div>
             </div>
         </section>
+    );
+}
+
+function ConstellationCanvas({
+    sentinel,
+    satellites,
+    activeName,
+    onPick,
+}: {
+    sentinel: AgentCard;
+    satellites: AgentCard[];
+    activeName: string;
+    onPick: (name: string) => void;
+}) {
+    const sentinelPos = nodeXY(sentinel.name);
+
+    return (
+        <div className="relative mx-auto aspect-square w-full max-w-[560px]">
+            {/* Soft radial backdrop */}
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-full opacity-60"
+                style={{
+                    background:
+                        "radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 65%)",
+                }}
+            />
+
+            <svg
+                viewBox="-300 -300 600 600"
+                className="absolute inset-0 h-full w-full"
+                role="img"
+                aria-label="Agent constellation: Sentinel at the centre with Investigator, KB Builder, Work Order and Q&A on its orbit"
+            >
+                {/* Orbit ring */}
+                <circle
+                    cx={0}
+                    cy={0}
+                    r={ORBIT_R}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1}
+                    strokeDasharray="2 6"
+                    className="text-border"
+                />
+                {/* Inner ring for depth */}
+                <circle
+                    cx={0}
+                    cy={0}
+                    r={ORBIT_R * 0.55}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1}
+                    strokeOpacity={0.4}
+                    strokeDasharray="1 8"
+                    className="text-border"
+                />
+
+                {/* Connection lines + traveling particles, one per satellite */}
+                {satellites.map((a, i) => {
+                    const p = nodeXY(a.name);
+                    const isActive = a.name === activeName;
+                    return (
+                        <g key={a.name}>
+                            <line
+                                x1={sentinelPos.x}
+                                y1={sentinelPos.y}
+                                x2={p.x}
+                                y2={p.y}
+                                stroke={a.color}
+                                strokeWidth={isActive ? 1.6 : 1}
+                                strokeOpacity={isActive ? 0.7 : 0.22}
+                                strokeLinecap="round"
+                                style={{
+                                    transition:
+                                        "stroke-opacity 400ms ease, stroke-width 400ms ease",
+                                }}
+                            />
+                            {/* Sentinel → satellite particle */}
+                            <motion.circle
+                                r={3.5}
+                                fill={a.color}
+                                initial={{ cx: sentinelPos.x, cy: sentinelPos.y, opacity: 0 }}
+                                animate={{
+                                    cx: [sentinelPos.x, p.x, p.x, sentinelPos.x, sentinelPos.x],
+                                    cy: [sentinelPos.y, p.y, p.y, sentinelPos.y, sentinelPos.y],
+                                    opacity: [0, 1, 1, 1, 0],
+                                }}
+                                transition={{
+                                    duration: 4.2,
+                                    times: [0, 0.4, 0.5, 0.9, 1],
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    delay: i * 0.7,
+                                }}
+                                style={{
+                                    filter: `drop-shadow(0 0 6px ${a.color})`,
+                                }}
+                            />
+                        </g>
+                    );
+                })}
+            </svg>
+
+            {/* Sentinel node — centre */}
+            <ConstellationNode
+                agent={sentinel}
+                pos={sentinelPos}
+                size={108}
+                isCore
+                isActive={sentinel.name === activeName}
+                onPick={() => onPick(sentinel.name)}
+            />
+
+            {/* Satellite nodes */}
+            {satellites.map((a) => (
+                <ConstellationNode
+                    key={a.name}
+                    agent={a}
+                    pos={nodeXY(a.name)}
+                    size={84}
+                    isCore={false}
+                    isActive={a.name === activeName}
+                    onPick={() => onPick(a.name)}
+                />
+            ))}
+        </div>
+    );
+}
+
+function ConstellationNode({
+    agent,
+    pos,
+    size,
+    isCore,
+    isActive,
+    onPick,
+}: {
+    agent: AgentCard;
+    pos: { x: number; y: number };
+    size: number;
+    isCore: boolean;
+    isActive: boolean;
+    onPick: () => void;
+}) {
+    // Convert SVG coords (-300..300) to percentage on the square container.
+    const left = `${((pos.x + 300) / 600) * 100}%`;
+    const top = `${((pos.y + 300) / 600) * 100}%`;
+
+    return (
+        <button
+            type="button"
+            onClick={onPick}
+            className="group absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center focus:outline-none"
+            style={{ left, top }}
+            aria-label={`${agent.name} — ${agent.role}`}
+        >
+            <span className="relative" style={{ width: size, height: size }}>
+                {/* Outer pulsing halo */}
+                <motion.span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                        background: `radial-gradient(circle, color-mix(in oklab, ${agent.color} 35%, transparent) 0%, transparent 70%)`,
+                    }}
+                    animate={{
+                        scale: isCore || isActive ? [1, 1.35, 1] : [1, 1.15, 1],
+                        opacity: isCore || isActive ? [0.7, 0.2, 0.7] : [0.4, 0.15, 0.4],
+                    }}
+                    transition={{
+                        duration: isCore ? 2.4 : 2.8,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                    }}
+                />
+                {/* Disk */}
+                <span
+                    className="absolute inset-2 flex items-center justify-center rounded-full border bg-card transition-all duration-300 group-hover:scale-105 group-focus-visible:ring-2 group-focus-visible:ring-ring"
+                    style={{
+                        borderColor: isActive || isCore ? agent.color : "var(--border)",
+                        boxShadow:
+                            isActive || isCore
+                                ? `0 0 24px -4px ${agent.color}, inset 0 0 12px -4px ${agent.color}`
+                                : "var(--shadow-sm)",
+                        color: agent.color,
+                    }}
+                >
+                    <span
+                        className="flex items-center justify-center"
+                        style={{
+                            width: size * 0.42,
+                            height: size * 0.42,
+                        }}
+                    >
+                        {agent.icon}
+                    </span>
+                </span>
+            </span>
+            {/* Label below */}
+            <span className="mt-2 flex flex-col items-center gap-0.5">
+                <span
+                    className="text-xs font-semibold tracking-[-0.01em] transition-colors"
+                    style={{
+                        color: isActive || isCore ? agent.color : "var(--foreground)",
+                    }}
+                >
+                    {agent.name}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-text-tertiary">
+                    {agent.role}
+                </span>
+            </span>
+        </button>
+    );
+}
+
+function AgentInfoPanel({
+    sentinel,
+    agents,
+    active,
+    onPick,
+}: {
+    sentinel: AgentCard;
+    agents: AgentCard[];
+    active: AgentCard;
+    onPick: (name: string) => void;
+}) {
+    return (
+        <div className="flex flex-col gap-6">
+            {/* Active agent card */}
+            <div
+                className="relative overflow-hidden rounded-2xl border bg-card p-6 transition-colors"
+                style={{
+                    borderColor: `color-mix(in oklab, ${active.color} 40%, var(--border))`,
+                }}
+            >
+                <span
+                    aria-hidden
+                    className="absolute inset-x-0 top-0 h-0.5"
+                    style={{ background: active.color }}
+                />
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={active.name}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25 }}
+                        className="flex flex-col gap-3"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span
+                                className="flex size-10 items-center justify-center rounded-lg"
+                                style={{
+                                    background: `color-mix(in oklab, ${active.color} 14%, transparent)`,
+                                    color: active.color,
+                                }}
+                            >
+                                {active.icon}
+                            </span>
+                            <div className="flex flex-col">
+                                <h3 className="text-lg font-semibold tracking-[-0.01em] text-foreground">
+                                    {active.name}
+                                </h3>
+                                <span
+                                    className="text-[11px] font-medium uppercase tracking-wider"
+                                    style={{ color: active.color }}
+                                >
+                                    {active.role}
+                                </span>
+                            </div>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                            {active.blurb}
+                        </p>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* Compact list of all agents (incl. sentinel) — click to focus */}
+            <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {[sentinel, ...agents].map((a) => {
+                    const isActive = a.name === active.name;
+                    return (
+                        <li key={a.name}>
+                            <button
+                                type="button"
+                                onClick={() => onPick(a.name)}
+                                className="flex w-full items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-2.5 py-2 text-left transition-colors hover:border-input"
+                                style={{
+                                    borderColor: isActive
+                                        ? `color-mix(in oklab, ${a.color} 50%, var(--border))`
+                                        : undefined,
+                                }}
+                            >
+                                <span
+                                    aria-hidden
+                                    className="size-2 rounded-full"
+                                    style={{ background: a.color }}
+                                />
+                                <span className="text-xs font-medium text-foreground">
+                                    {a.name}
+                                </span>
+                                <span className="ml-auto text-[10px] uppercase tracking-wider text-text-tertiary">
+                                    {a.role}
+                                </span>
+                            </button>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
     );
 }
 
