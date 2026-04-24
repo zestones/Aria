@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { ActivityFeed } from "../../features/agents";
 import { EquipmentPicker } from "../../features/control-room";
 import type { EquipmentSelection } from "../../lib/hierarchy";
-import { Drawer, Icons, StatusDot, ThemeToggle } from "../ui";
+import { Icons, StatusDot, ThemeToggle } from "../ui";
 
 function computeShift(date: Date) {
     const h = date.getHours();
@@ -41,7 +40,7 @@ export interface TopBarProps {
  * so the entire chrome reads as one continuous strip.
  *
  * Right-edge controls, in order, are scoped from "ambient" → "intent":
- *   shift + theme  ·  Activity (overlay)  ·  Ask ARIA (primary copilot CTA)
+ *   shift + theme  ·  Constellation (overlay)  ·  Ask ARIA (primary copilot CTA)
  *
  * The chat toggle is intentionally a labelled pill (not an icon) so judges
  * understand at a glance there is a copilot to talk to — fixing the audit's
@@ -59,92 +58,66 @@ export function TopBar({
     onConstellationToggle,
 }: TopBarProps) {
     const shift = useShift();
-    const [activityOpen, setActivityOpen] = useState(false);
     const SidebarIcon = sidebarCollapsed ? Icons.PanelLeftOpen : Icons.PanelLeftClose;
 
-    // Auto-dismiss the Activity overlay on route change. TopBar is mounted
-    // once at the AppShell level (see [routes.tsx](../../routes/routes.tsx))
-    // so without this the overlay would persist across navigations and
-    // intercept clicks on the sidebar toggle on the next page — the user
-    // would otherwise need two clicks (one to dismiss, one to toggle).
+    // Re-run when the route changes — referenced so the linter doesn't
+    // strip the dep. (Previously toggled the Activity overlay; kept as a
+    // safe no-op hook to avoid surprising future additions.)
     const { pathname } = useLocation();
     useEffect(() => {
-        // pathname is referenced so the effect actually re-runs per route
         void pathname;
-        setActivityOpen(false);
     }, [pathname]);
 
     return (
-        <>
-            <header className="sticky top-0 z-30 flex h-14 flex-none items-center gap-3 border-b border-sidebar-border/40 bg-sidebar pl-2 pr-3">
-                {/* Left chrome — sidebar toggle + context */}
-                <button
-                    type="button"
-                    onClick={() => {
-                        onSidebarToggle();
-                    }}
-                    aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    aria-pressed={!sidebarCollapsed}
-                    title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    className={ChromeButton}
-                >
-                    <SidebarIcon className="size-4" aria-hidden />
-                </button>
-                <div aria-hidden className="h-5 w-px bg-sidebar-border/60" />
-
-                <EquipmentPicker selection={selection} onChange={onSelectionChange} />
-
-                <div className="min-w-0 flex-1" data-kpi-slot>
-                    {kpiSlot}
-                </div>
-
-                {/* Right chrome */}
-                <div className="flex flex-none items-center gap-1.5 text-sm">
-                    <StatusDot status="nominal" />
-                    <span className="font-medium text-sidebar-foreground">{shift.label}</span>
-                    <span className="text-sidebar-muted-foreground">{shift.range}</span>
-                </div>
-                <div aria-hidden className="h-5 w-px bg-sidebar-border/60" />
-                <ThemeToggle />
-                {onConstellationToggle && (
-                    <button
-                        type="button"
-                        onClick={onConstellationToggle}
-                        aria-label="Open agent constellation (A)"
-                        title="Agent constellation (A)"
-                        className={ChromeButton}
-                    >
-                        <Icons.Sparkles className="size-4" aria-hidden />
-                    </button>
-                )}
-                <button
-                    type="button"
-                    onClick={() => setActivityOpen(true)}
-                    aria-label="Show agent activity"
-                    title="Agent activity"
-                    className={ChromeButton}
-                >
-                    <Icons.Activity className="size-4" aria-hidden />
-                </button>
-                <CopilotToggle
-                    open={drawerOpen}
-                    onClick={() => {
-                        onDrawerToggle();
-                    }}
-                    controlsId={drawerControlsId}
-                />
-            </header>
-
-            <Drawer
-                open={activityOpen}
-                onClose={() => setActivityOpen(false)}
-                side="right"
-                width={380}
-                overlay
+        <header className="sticky top-0 z-30 flex h-14 flex-none items-center gap-3 border-b border-sidebar-border/40 bg-sidebar pl-2 pr-3">
+            {/* Left chrome — sidebar toggle + context */}
+            <button
+                type="button"
+                onClick={() => {
+                    onSidebarToggle();
+                }}
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-pressed={!sidebarCollapsed}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className={ChromeButton}
             >
-                <ActivityFeed />
-            </Drawer>
-        </>
+                <SidebarIcon className="size-4" aria-hidden />
+            </button>
+            <div aria-hidden className="h-5 w-px bg-sidebar-border/60" />
+
+            <EquipmentPicker selection={selection} onChange={onSelectionChange} />
+
+            <div className="min-w-0 flex-1" data-kpi-slot>
+                {kpiSlot}
+            </div>
+
+            {/* Right chrome */}
+            <div className="flex flex-none items-center gap-1.5 text-sm">
+                <StatusDot status="nominal" />
+                <span className="font-medium text-sidebar-foreground">{shift.label}</span>
+                <span className="text-sidebar-muted-foreground">{shift.range}</span>
+            </div>
+            <div aria-hidden className="h-5 w-px bg-sidebar-border/60" />
+            <ThemeToggle />
+            {onConstellationToggle && (
+                <button
+                    type="button"
+                    onClick={onConstellationToggle}
+                    aria-label="Open agent constellation (A)"
+                    title="Agent constellation (A)"
+                    className={ChromeButton}
+                >
+                    <Icons.Sparkles className="size-4" aria-hidden />
+                </button>
+            )}
+            <CopilotToggle
+                open={drawerOpen}
+                onClick={() => {
+                    onDrawerToggle();
+                }}
+                controlsId={drawerControlsId}
+            />
+        </header>
     );
 }
 

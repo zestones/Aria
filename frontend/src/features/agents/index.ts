@@ -1,4 +1,3 @@
-export { ActivityFeed } from "./ActivityFeed";
 export type { AgentConstellationProps } from "./AgentConstellation";
 export { AgentConstellation } from "./AgentConstellation";
 export { AgentInspector } from "./AgentInspector";
