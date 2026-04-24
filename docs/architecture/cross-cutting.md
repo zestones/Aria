@@ -46,6 +46,7 @@ Frame catalogue (the full list — backend-emitted):
 | Type                  | Payload                                                                                         | Emitter                                                           |
 |-----------------------|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
 | `anomaly_detected`    | `{cell_id, signal_def_id, value, threshold, severity, direction, work_order_id, time, turn_id}` | Sentinel                                                          |
+| `forecast_warning`    | `{cell_id, cell_name, signal_def_id, signal_name, current_value, threshold_value, threshold_field, slope_per_hour, confidence, eta_hours, trend, severity, projected_breach_at, detected_at, turn_id}` | Forecast-watch (M9 — see [06-forecast-watch.md](./06-forecast-watch.md)) |
 | `agent_start`         | `{agent, turn_id}`                                                                              | Every agent at run start                                          |
 | `agent_end`           | `{agent, turn_id, finish_reason}`                                                               | Every agent at run end                                            |
 | `agent_handoff`       | `{from_agent, to_agent, reason, turn_id}`                                                       | Investigator (`ask_kb_builder`), Q&A (`ask_investigator`)         |

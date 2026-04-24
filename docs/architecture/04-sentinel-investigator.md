@@ -47,7 +47,10 @@ flowchart LR
 
 ## Sentinel — the detection loop
 
-[backend/agents/sentinel.py](../../backend/agents/sentinel.py)
+[backend/agents/sentinel/service.py](../../backend/agents/sentinel/service.py)
+
+> [!NOTE]
+> Sentinel is a package (M9 split): [`backend/agents/sentinel/`](../../backend/agents/sentinel/) with `service.py` (this doc, the reactive loop) and `forecast.py` (predictive sibling — see [06-forecast-watch.md](./06-forecast-watch.md)). The package `__init__.py` re-exports `sentinel_loop` and `forecast_watch_loop` so `from agents.sentinel import ...` in [main.py](../../backend/main.py) is unchanged. Mirrors the layout of the other agent packages (`kb_builder/`, `investigator/`, `qa/`, `work_order_generator/`).
 
 ### Loop structure
 
@@ -283,4 +286,5 @@ sequenceDiagram
 - The Work Order Generator that the Investigator spawns: [05-workorder-qa.md](./05-workorder-qa.md#work-order-generator).
 - The Q&A agent that calls back into the Investigator via `ask_investigator`: [05-workorder-qa.md](./05-workorder-qa.md#qa-operator-chat).
 - The Managed Agents migration of the Investigator: [05-workorder-qa.md](./05-workorder-qa.md#managed-agents-migration-m55) and [decisions.md](./decisions.md#two-paths-messages-api-vs-managed-agents).
+- The predictive sibling loop that forecasts breaches before Sentinel sees them: [06-forecast-watch.md](./06-forecast-watch.md).
 - The full WebSocket frame catalogue: [cross-cutting.md](./cross-cutting.md#websocket-contracts).

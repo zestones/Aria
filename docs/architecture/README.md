@@ -20,6 +20,7 @@ This documentation is structured to serve two audiences in a single pass:
 | Understand the onboarding flow (PDF → calibrated KB)   | [03-kb-builder.md](./03-kb-builder.md)                       |
 | Understand anomaly detection and root-cause analysis   | [04-sentinel-investigator.md](./04-sentinel-investigator.md) |
 | Understand the work order pipeline and operator chat   | [05-workorder-qa.md](./05-workorder-qa.md)                   |
+| Understand predictive alerting and pattern enrichment  | [06-forecast-watch.md](./06-forecast-watch.md)               |
 | Understand the WebSocket bus, auth, and shared helpers | [cross-cutting.md](./cross-cutting.md)                       |
 | Understand why a non-obvious choice was made           | [decisions.md](./decisions.md)                               |
 
@@ -93,7 +94,7 @@ flowchart LR
 | Tools          | [backend/aria_mcp/client.py](../../backend/aria_mcp/client.py)                                   | M2              | `MCPClient` singleton — every agent's only path to data tools.                                                           |
 | Agents         | [backend/agents/anthropic_client.py](../../backend/agents/anthropic_client.py)                   | M3              | Shared `AsyncAnthropic` wrapper, model selection, JSON-response helper.                                                  |
 | Agents         | [backend/agents/kb_builder/](../../backend/agents/kb_builder/)                                   | M3              | PDF vision extraction, onboarding session, `answer_kb_question` handler.                                                 |
-| Agents         | [backend/agents/sentinel.py](../../backend/agents/sentinel.py)                                   | M4              | 30-second detection loop, work-order opening, anomaly broadcast.                                                         |
+| Agents         | [backend/agents/sentinel/](../../backend/agents/sentinel/)                                       | M4/M9           | Package with two sibling loops: `service.py` (reactive 30 s breach detection) and `forecast.py` (predictive 60 s regression-based alerting).              |
 | Agents         | [backend/agents/investigator/](../../backend/agents/investigator/)                               | M4              | RCA agent loop with extended thinking; Messages-API path and Managed-Agents path.                                        |
 | Agents         | [backend/agents/work_order_generator/](../../backend/agents/work_order_generator/)               | M5              | RCA → structured work order + recommended actions + parts list.                                                          |
 | Agents         | [backend/agents/qa/](../../backend/agents/qa/)                                                   | M5              | Operator chat agent. WebSocket-driven, with `ask_investigator` agent-as-tool handoff.                                    |
@@ -130,15 +131,17 @@ flowchart LR
     M3["M3<br/>KB Builder agent<br/>PDF vision + onboarding"]
     M4["M4<br/>Sentinel + Investigator<br/>WSManager + thinking + handoffs"]
     M5["M5<br/>WO Generator + Q&A<br/>Managed Agents migration"]
+    M9["M9<br/>Forecast-watch<br/>predictive alerting + enrichment"]
 
     M1 --> M2
     M2 --> M3
     M2 --> M4
     M3 --> M4
     M4 --> M5
+    M4 --> M9
 
     classDef done fill:#0d3a1a,stroke:#2ea043,color:#fff
-    class M1,M2,M3,M4,M5 done
+    class M1,M2,M3,M4,M5,M9 done
 ```
 
 Each milestone is fully shipped on `main`. The roadmap and the original issue inventory live in [docs/planning/ROADMAP.md](../planning/ROADMAP.md). Per-issue audits performed before and after implementation live in [docs/audits/](../audits/) — they are excellent secondary reading for anyone investigating *why* a particular contract has the shape it does.
