@@ -1,25 +1,10 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { EquipmentPicker } from "../../features/control-room";
+import { useCurrentShift } from "../../features/shifts/useShifts";
+import { formatShiftRange, operatorDisplay } from "../../features/shifts/utils";
 import type { EquipmentSelection } from "../../lib/hierarchy";
 import { Icons, StatusDot } from "../ui";
-
-function computeShift(date: Date) {
-    const h = date.getHours();
-    if (h >= 6 && h < 14) return { label: "Shift A", range: "06–14" };
-    if (h >= 14 && h < 22) return { label: "Shift B", range: "14–22" };
-    return { label: "Shift C", range: "22–06" };
-}
-
-function useShift() {
-    const [shift, setShift] = useState(() => computeShift(new Date()));
-    useEffect(() => {
-        const tick = () => setShift(computeShift(new Date()));
-        const id = window.setInterval(tick, 60_000);
-        return () => window.clearInterval(id);
-    }, []);
-    return shift;
-}
 
 export interface TopBarProps {
     selection: EquipmentSelection | null;
@@ -57,7 +42,8 @@ export function TopBar({
     kpiSlot,
     onConstellationToggle,
 }: TopBarProps) {
-    const shift = useShift();
+    const navigate = useNavigate();
+    const current = useCurrentShift();
     const SidebarIcon = sidebarCollapsed ? Icons.PanelLeftOpen : Icons.PanelLeftClose;
 
     // Re-run when the route changes — referenced so the linter doesn't
@@ -67,6 +53,16 @@ export function TopBar({
     useEffect(() => {
         void pathname;
     }, [pathname]);
+
+    const shift = current.data?.shift ?? null;
+    const shiftLabel = shift?.name ?? "No shift";
+    const shiftRange = shift ? formatShiftRange(shift) : "—";
+    const operatorName = current.data ? operatorDisplay(current.data.assignments) : null;
+    const pillTitle = shift
+        ? operatorName
+            ? `${shift.name} · ${shiftRange} · ${operatorName}`
+            : `${shift.name} · ${shiftRange}`
+        : "No shift currently active";
 
     return (
         <header className="sticky top-0 z-30 flex h-14 flex-none items-center gap-3 border-b border-sidebar-border/40 bg-sidebar pl-2 pr-3">
@@ -91,12 +87,25 @@ export function TopBar({
                 {kpiSlot}
             </div>
 
-            {/* Right chrome */}
-            <div className="flex flex-none items-center gap-1.5 text-sm">
+            {/* Right chrome — shift pill is clickable, navigates to /shifts.
+                Source of truth is `/shifts/current` (same hook the Shifts page
+                uses) so the pill and the page never disagree. */}
+            <button
+                type="button"
+                onClick={() => navigate("/shifts")}
+                title={pillTitle}
+                aria-label={`Open shifts page — ${pillTitle}`}
+                className="inline-flex h-8 flex-none items-center gap-1.5 rounded-md px-2 text-sm text-sidebar-foreground transition-colors duration-150 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            >
                 <StatusDot status="nominal" />
-                <span className="font-medium text-sidebar-foreground">{shift.label}</span>
-                <span className="text-sidebar-muted-foreground">{shift.range}</span>
-            </div>
+                <span className="font-medium">{shiftLabel}</span>
+                <span className="text-sidebar-muted-foreground">{shiftRange}</span>
+                {operatorName && (
+                    <span className="hidden text-sidebar-muted-foreground sm:inline">
+                        · {operatorName}
+                    </span>
+                )}
+            </button>
             {onConstellationToggle && (
                 <button
                     type="button"
