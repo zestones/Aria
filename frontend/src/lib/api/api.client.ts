@@ -75,7 +75,7 @@ async function doFetch(url: string, opts: FetchOptions): Promise<Response> {
     if (!res.ok) {
         if (res.status === 401) {
             localStorage.removeItem("user");
-            if (window.location.pathname !== "/login") window.location.href = "/login";
+            if (window.location.pathname !== "/") window.location.href = "/";
         }
         const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
         const msg =

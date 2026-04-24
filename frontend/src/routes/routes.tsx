@@ -5,8 +5,8 @@ import {
     AnomaliesPage,
     DashboardPage,
     EquipmentPage,
+    LandingPage,
     LogbookPage,
-    LoginPage,
     OnboardingPage,
     ShiftsPage,
     WorkspacePage,
@@ -16,7 +16,7 @@ import RequireAuth from "./auth-guards";
 export function AppRoutes() {
     return (
         <Routes>
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<LandingPage />} />
             <Route
                 path="/workspace"
                 element={
@@ -44,8 +44,7 @@ export function AppRoutes() {
                 <Route path="/onboarding/:session_id" element={<OnboardingPage />} />
             </Route>
 
-            <Route path="/" element={<Navigate to="/control-room" replace />} />
-            <Route path="*" element={<Navigate to="/control-room" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 }

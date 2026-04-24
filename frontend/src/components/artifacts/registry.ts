@@ -5,6 +5,7 @@ import { DiagnosticCard } from "./DiagnosticCard";
 import { EquipmentKbCard } from "./EquipmentKbCard";
 import { KbProgress } from "./KbProgress";
 import { PatternMatch } from "./PatternMatch";
+import { SandboxExecution } from "./SandboxExecution";
 import { SignalChart } from "./SignalChart";
 import type { ArtifactComponentName } from "./schemas";
 import { WorkOrderCard } from "./WorkOrderCard";
@@ -36,6 +37,7 @@ export const registry: Record<ArtifactComponentName, ArtifactComponent> = {
     bar_chart: BarChart,
     kb_progress: KbProgress,
     alert_banner: AlertBanner,
+    sandbox_execution: SandboxExecution,
 };
 
 export function getArtifactComponent(name: string): ArtifactComponent | undefined {

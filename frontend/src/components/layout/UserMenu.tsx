@@ -79,7 +79,7 @@ export function UserMenu({ compact = false }: UserMenuProps) {
         } finally {
             setBusy(false);
             setOpen(false);
-            navigate("/login", { replace: true });
+            navigate("/", { replace: true });
         }
     }, [busy, navigate]);
 

@@ -125,6 +125,29 @@ export const AlertBannerPropsSchema = z
     })
     .passthrough();
 
+/**
+ * Shape emitted by `render_sandbox_execution` (M5.7 / #105). The Managed
+ * Investigator calls this after running a Python analysis in the
+ * Anthropic cloud sandbox and before `submit_rca`, so the judge can see
+ * the script, the numerical output, and a "ran in Anthropic sandbox"
+ * chip — the visual proof that the math ran as real Python rather than
+ * in tokens.
+ */
+export const SandboxExecutionPropsSchema = z
+    .object({
+        cell_id: z.number().int(),
+        technique: z.enum(["regression", "correlation", "fft", "cusum", "other"]),
+        /** Verbatim Python the agent ran, without the outer bash/curl wrapper. */
+        script: z.string(),
+        /** Verbatim `key=value` lines the script printed — one per line. */
+        output: z.string(),
+        /** Which signal CSVs the agent pulled from the sandbox endpoint. */
+        signal_def_ids: z.array(z.number().int()).optional(),
+        /** Time window the script analysed, in hours. */
+        window_hours: z.number().nonnegative().optional(),
+    })
+    .passthrough();
+
 export type SignalChartProps = z.infer<typeof SignalChartPropsSchema>;
 export type EquipmentKbCardProps = z.infer<typeof EquipmentKbCardPropsSchema>;
 export type WorkOrderCardProps = z.infer<typeof WorkOrderCardPropsSchema>;
@@ -133,6 +156,7 @@ export type PatternMatchProps = z.infer<typeof PatternMatchPropsSchema>;
 export type BarChartProps = z.infer<typeof BarChartPropsSchema>;
 export type KbProgressProps = z.infer<typeof KbProgressPropsSchema>;
 export type AlertBannerProps = z.infer<typeof AlertBannerPropsSchema>;
+export type SandboxExecutionProps = z.infer<typeof SandboxExecutionPropsSchema>;
 
 export const schemas = {
     signal_chart: SignalChartPropsSchema,
@@ -143,6 +167,7 @@ export const schemas = {
     bar_chart: BarChartPropsSchema,
     kb_progress: KbProgressPropsSchema,
     alert_banner: AlertBannerPropsSchema,
+    sandbox_execution: SandboxExecutionPropsSchema,
 } as const;
 
 export type ArtifactComponentName = keyof typeof schemas;

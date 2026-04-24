@@ -4,7 +4,7 @@ import { isAuthenticated } from "../services/auth";
 export default function RequireAuth({ children }: { children: React.ReactNode }) {
     const location = useLocation();
     if (!isAuthenticated()) {
-        return <Navigate to="/login" replace state={{ from: location }} />;
+        return <Navigate to="/" replace state={{ from: location }} />;
     }
     return <>{children}</>;
 }
