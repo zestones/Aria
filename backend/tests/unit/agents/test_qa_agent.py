@@ -32,7 +32,6 @@ from agents.qa import investigator_qa as qa_investigator
 from agents.qa import messages_api as qa_messages_api
 from agents.qa import tool_dispatch as qa_tool_dispatch
 
-
 # ---------------------------------------------------------------------------
 # Fake blocks / message / stream
 # ---------------------------------------------------------------------------
@@ -481,6 +480,20 @@ async def test_ask_investigator_dual_channel_handoff(
     assert len(starts) == 1
     assert len(ends) == 1
     assert ends[0][1]["finish_reason"] == "answered"
+
+    # Issue #125: chat socket mirrors the sub-agent agent_start/agent_end so
+    # the M8.5 Agent Inspector can correlate badge → /api/v1/events stream.
+    chat_starts = [
+        f for f in ws.sent if f["type"] == "agent_start" and f.get("agent") == "investigator"
+    ]
+    chat_ends = [
+        f for f in ws.sent if f["type"] == "agent_end" and f.get("agent") == "investigator"
+    ]
+    assert len(chat_starts) == 1
+    assert len(chat_ends) == 1
+    assert chat_starts[0]["turn_id"] == starts[0][1]["turn_id"]
+    assert chat_ends[0]["turn_id"] == ends[0][1]["turn_id"]
+    assert chat_ends[0]["finish_reason"] == "answered"
 
     # tool_result content handed to the LLM is the JSON-encoded answer.
     second = antr.stream_calls[1]["messages"]
