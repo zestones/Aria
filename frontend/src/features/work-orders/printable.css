@@ -12,10 +12,41 @@
         margin: 16mm 14mm;
     }
 
+    /* Neutralize the AppShell layout chain. The live UI wraps the printable
+       article in a flex + grid structure with fixed viewport height and
+       `overflow: hidden` on several ancestors, which clips the printed
+       output to a single narrow column. `visibility: hidden` masks the
+       pixels but keeps the box sizes — so we also need to reset the
+       structural boxes themselves back to a neutral full-width block flow.
+       Scoped to `@media print` so the live shell is untouched. */
     html,
-    body {
+    body,
+    #root {
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
         background: #ffffff !important;
         color: #000000 !important;
+    }
+
+    body > div,
+    body > div > div,
+    body > div > div > div,
+    main,
+    [role="main"],
+    header,
+    aside,
+    nav {
+        display: block !important;
+        position: static !important;
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Hide everything on the page, then un-hide the printable article. */
@@ -30,8 +61,9 @@
     .printable-work-order {
         /* `position: static` keeps the article in normal flow so the
            browser's print engine can paginate naturally across A4 pages.
-           Absolute positioning clipped the content to the on-screen
-           viewport (issue #51 follow-up). */
+           Combined with the ancestor-neutralization block above, the
+           article spans the full printable area instead of being trapped
+           inside the on-screen viewport rectangle (issue #51 follow-up). */
         position: static;
         display: block;
         width: 100%;
