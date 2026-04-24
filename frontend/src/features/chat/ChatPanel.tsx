@@ -4,9 +4,11 @@ import { useShallow } from "zustand/react/shallow";
 import { Icons, type Status, StatusDot } from "../../components/ui";
 import type { EquipmentSelection } from "../../lib/hierarchy";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
+import { useChatSessionsStore } from "./chatSessionsStore";
 import { type ChatMessage, useChatStore } from "./chatStore";
 import { MessageList } from "./MessageList";
 import { QuickPrompts } from "./QuickPrompts";
+import { SessionsMenu } from "./SessionsMenu";
 import { useThrottledMessages } from "./useThrottledMessages";
 
 export interface ChatPanelProps {
@@ -22,14 +24,22 @@ export interface ChatPanelProps {
  */
 export function ChatPanel({ selection }: ChatPanelProps) {
     const messages = useThrottledMessages();
-    const { status, sendMessage, connect, focusRequestId } = useChatStore(
+    const { status, sendMessage, connect, focusRequestId, newSession } = useChatStore(
         useShallow((s) => ({
             status: s.status,
             sendMessage: s.sendMessage,
             connect: s.connect,
             focusRequestId: s.focusRequestId,
+            newSession: s.newSession,
         })),
     );
+    const startNewPersisted = useChatSessionsStore((s) => s.startNew);
+
+    const handleNewSession = () => {
+        newSession();
+        startNewPersisted();
+        inputRef.current?.focus();
+    };
 
     const inputRef = useRef<ChatInputHandle>(null);
 
@@ -56,15 +66,28 @@ export function ChatPanel({ selection }: ChatPanelProps) {
                 </h2>
                 <StatusDot status={dotStatus} size={6} aria-hidden />
                 <span className="sr-only">{statusLabel}</span>
-                <Link
-                    to="/workspace"
-                    aria-label="Open the full-screen Agent workspace"
-                    title="Open Agent workspace"
-                    className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                    <Icons.Maximize2 className="size-3" aria-hidden />
-                    Workspace
-                </Link>
+                <div className="ml-auto flex items-center gap-1.5">
+                    <button
+                        type="button"
+                        onClick={handleNewSession}
+                        aria-label="Start a new chat session"
+                        title="New session"
+                        className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        <Icons.Plus className="size-3" aria-hidden />
+                        New
+                    </button>
+                    <SessionsMenu />
+                    <Link
+                        to="/workspace"
+                        aria-label="Open the full-screen Agent workspace"
+                        title="Open Agent workspace"
+                        className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        <Icons.Maximize2 className="size-3" aria-hidden />
+                        Workspace
+                    </Link>
+                </div>
             </header>
 
             <MessageList messages={messages} activeSubAgent={activeSubAgent} />

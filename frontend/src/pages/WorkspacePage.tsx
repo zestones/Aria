@@ -26,8 +26,8 @@ import { useAgentTurnsIngest } from "../features/agents/useAgentTurnsIngest";
 import { useThrottledMessages } from "../features/chat";
 import { ArtifactCanvas } from "../features/workspace/ArtifactCanvas";
 import { ConversationStream } from "../features/workspace/ConversationStream";
+import { SessionsPanel } from "../features/workspace/SessionsPanel";
 import { useWorkspaceArtifacts } from "../features/workspace/useWorkspaceArtifacts";
-import { WorkspaceTimeline } from "../features/workspace/WorkspaceTimeline";
 
 export default function WorkspacePage() {
     // Keep the singleton agent-turn buffer fed even if the user lands here
@@ -41,7 +41,7 @@ export default function WorkspacePage() {
         <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
             <WorkspaceHeader artifactCount={artifacts.length} />
             <div className="grid min-h-0 flex-1 grid-cols-[260px_minmax(0,1fr)_minmax(360px,420px)]">
-                <WorkspaceTimeline />
+                <SessionsPanel />
                 <main className="relative min-h-0 overflow-hidden bg-background">
                     <ArtifactCanvas artifacts={artifacts} />
                 </main>

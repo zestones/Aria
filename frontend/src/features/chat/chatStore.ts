@@ -73,6 +73,14 @@ export interface ChatState {
     sendMessage: (content: string) => void;
     reset: () => void;
     requestFocus: () => void;
+    /** Replace the message list (e.g. when resuming a saved session). */
+    loadMessages: (messages: ChatMessage[]) => void;
+    /**
+     * Start a fresh server-side context: closes the current WS so the
+     * backend's per-connection memory is dropped, clears the local
+     * transcript, and the next user send will reconnect on demand.
+     */
+    newSession: () => void;
 }
 
 const DEFAULT_AGENT: AgentId = "sentinel";
@@ -333,6 +341,26 @@ export const useChatStore = create<ChatState>((set, get) => {
 
         requestFocus: () => {
             set((state) => ({ focusRequestId: state.focusRequestId + 1 }));
+        },
+
+        loadMessages: (messages) => {
+            // Hydrate the visible transcript from a saved session. We close
+            // the live WS so backend memory matches what the user sees
+            // (i.e. an empty server-side context — the visible history is
+            // for review/continuation, not literal replay to the model).
+            internal.handle?.close(1000, "load-session");
+            internal.handle = null;
+            internal.currentAgentMessageId = null;
+            internal.pendingSends.length = 0;
+            set({ messages, status: "idle", error: null });
+        },
+
+        newSession: () => {
+            internal.handle?.close(1000, "new-session");
+            internal.handle = null;
+            internal.currentAgentMessageId = null;
+            internal.pendingSends.length = 0;
+            set({ messages: [], status: "idle", error: null });
         },
     };
 });
