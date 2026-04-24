@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef } from "react";
 import { Outlet } from "react-router-dom";
+import { AgentInspector, useAgentInspectorStore } from "../features/agents";
 import { AnomalyBanner, KpiBar } from "../features/control-room";
 import { EQUIPMENT_KEY, validateEquipmentSelection } from "../lib/equipmentSelection";
 import type { EquipmentSelection } from "../lib/hierarchy";
@@ -15,6 +16,7 @@ interface ChatDrawerState {
 }
 
 const CHAT_DRAWER_KEY = "aria.chatDrawer";
+const INSPECTOR_HEIGHT = "40vh";
 
 const DEFAULT_DRAWER_STATE: ChatDrawerState = {
     open: true,
@@ -49,6 +51,7 @@ export function AppShell() {
         null,
         { validator: validateEquipmentSelection },
     );
+    const inspectorAgent = useAgentInspectorStore((s) => s.agent);
 
     const safeDrawer = sanitizeDrawer(drawer);
     const drawerOpenRef = useRef(safeDrawer.open);
@@ -108,8 +111,17 @@ export function AppShell() {
                     transition: `grid-template-columns var(--ds-motion-base) var(--ds-ease-out)`,
                 }}
             >
-                <main className="relative min-h-0 overflow-auto">
-                    <Outlet />
+                <main className="relative flex min-h-0 flex-col overflow-hidden">
+                    <div
+                        className="min-h-0 flex-1 overflow-auto"
+                        style={{
+                            paddingBottom: inspectorAgent ? INSPECTOR_HEIGHT : undefined,
+                            transition: "padding-bottom var(--ds-motion-base) var(--ds-ease-out)",
+                        }}
+                    >
+                        <Outlet />
+                    </div>
+                    <AgentInspector />
                 </main>
                 <Drawer
                     id={drawerId}
