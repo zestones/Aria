@@ -35,8 +35,8 @@ export function ChatPanel() {
     }, [focusRequestId]);
 
     return (
-        <div className="flex h-full min-h-0 flex-col bg-[var(--ds-bg-surface)]">
-            <div className="flex flex-none items-center justify-between border-b border-[var(--ds-border)] px-4 py-2">
+        <div className="flex h-full min-h-0 flex-col bg-ds-bg-surface">
+            <div className="flex flex-none items-center justify-between border-b border-ds-border px-4 py-2">
                 <ConnectionIndicator status={status} />
                 <button
                     type="button"
@@ -44,7 +44,7 @@ export function ChatPanel() {
                     aria-expanded={activityOpen}
                     aria-controls="aria-activity-panel"
                     aria-label={activityOpen ? "Collapse activity feed" : "Expand activity feed"}
-                    className="inline-flex h-6 items-center gap-1 rounded-[var(--ds-radius-sm)] px-1.5 text-[11px] text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                    className="inline-flex h-6 items-center gap-1 rounded-ds-sm px-1.5 text-[11px] text-ds-fg-muted transition-colors duration-ds-fast hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
                 >
                     <Icons.Activity className="size-3.5" aria-hidden />
                     <span>Activity</span>
@@ -59,7 +59,7 @@ export function ChatPanel() {
             {activityOpen && (
                 <div
                     id="aria-activity-panel"
-                    className="flex h-[38%] min-h-[160px] max-h-[320px] flex-none flex-col border-t border-[var(--ds-border)]"
+                    className="flex h-[38%] min-h-[160px] max-h-[320px] flex-none flex-col border-t border-ds-border"
                 >
                     <ActivityFeed />
                 </div>
@@ -91,7 +91,7 @@ function ConnectionIndicator({ status }: { status: string }) {
                 : "unknown";
 
     return (
-        <div className="flex items-center gap-2 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+        <div className="flex items-center gap-2 text-ds-xs text-ds-fg-muted">
             <StatusDot status={dotStatus} size={6} aria-hidden />
             <span>{label}</span>
         </div>

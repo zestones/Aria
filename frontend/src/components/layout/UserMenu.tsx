@@ -94,27 +94,27 @@ export function UserMenu({ compact = false }: UserMenuProps) {
                 aria-label={compact ? `Account menu for ${displayName}` : undefined}
                 className={[
                     "group flex w-full items-center gap-2.5 rounded-(--ds-radius-md) border border-transparent transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]",
-                    "hover:border-[var(--ds-border)] hover:bg-[var(--ds-bg-hover)]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring",
+                    "hover:border-ds-border hover:bg-ds-bg-hover",
                     compact ? "justify-center p-1.5" : "px-2 py-1.5",
-                    open ? "border-[var(--ds-border)] bg-[var(--ds-bg-hover)]" : "",
+                    open ? "border-ds-border bg-ds-bg-hover" : "",
                 ].join(" ")}
             >
                 {avatar}
                 {!compact && (
                     <>
                         <span className="flex min-w-0 flex-1 flex-col items-start text-left">
-                            <span className="truncate text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)]">
+                            <span className="truncate text-ds-sm font-medium text-ds-fg-primary">
                                 {displayName}
                             </span>
                             {user?.role && (
-                                <span className="truncate text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                                <span className="truncate text-ds-xs text-ds-fg-subtle">
                                     {roleLabel(user.role)}
                                 </span>
                             )}
                         </span>
                         <Icons.ChevronUp
-                            className="size-3.5 flex-none text-[var(--ds-fg-subtle)] transition-transform"
+                            className="size-3.5 flex-none text-ds-fg-subtle transition-transform"
                             style={{ transform: open ? "rotate(0deg)" : "rotate(180deg)" }}
                             aria-hidden
                         />
@@ -127,25 +127,25 @@ export function UserMenu({ compact = false }: UserMenuProps) {
                     role="menu"
                     aria-label="User menu"
                     className={[
-                        "absolute z-40 w-60 overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] shadow-[var(--ds-shadow-overlay)]",
+                        "absolute z-40 w-60 overflow-hidden rounded-ds-md border border-ds-border bg-ds-bg-elevated shadow-ds-overlay",
                         // Position above the button — sidebar bottom anchor.
                         "bottom-[calc(100%+6px)]",
                         compact ? "left-[calc(100%+8px)] bottom-0" : "left-0 right-0",
                     ].join(" ")}
                 >
-                    <div className="flex items-center gap-2.5 border-b border-[var(--ds-border)] px-3 py-2.5">
+                    <div className="flex items-center gap-2.5 border-b border-ds-border px-3 py-2.5">
                         {avatar}
                         <div className="flex min-w-0 flex-1 flex-col">
-                            <span className="truncate text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)]">
+                            <span className="truncate text-ds-sm font-medium text-ds-fg-primary">
                                 {displayName}
                             </span>
                             {user?.email && (
-                                <span className="truncate text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                                <span className="truncate text-ds-xs text-ds-fg-subtle">
                                     {user.email}
                                 </span>
                             )}
                             {user?.role && (
-                                <span className="mt-0.5 truncate text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                <span className="mt-0.5 truncate text-ds-xs text-ds-fg-muted">
                                     {roleLabel(user.role)}
                                 </span>
                             )}
@@ -157,12 +157,9 @@ export function UserMenu({ compact = false }: UserMenuProps) {
                             role="menuitem"
                             onClick={handleLogout}
                             disabled={busy}
-                            className="flex w-full items-center gap-2 rounded-[var(--ds-radius-sm)] px-2.5 py-1.5 text-left text-[var(--ds-text-sm)] text-[var(--ds-fg-primary)] transition-colors hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex w-full items-center gap-2 rounded-ds-sm px-2.5 py-1.5 text-left text-ds-sm text-ds-fg-primary transition-colors hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            <Icons.LogOut
-                                className="size-4 text-[var(--ds-fg-muted)]"
-                                aria-hidden
-                            />
+                            <Icons.LogOut className="size-4 text-ds-fg-muted" aria-hidden />
                             {busy ? "Signing out…" : "Sign out"}
                         </button>
                     </div>

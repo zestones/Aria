@@ -114,7 +114,7 @@ function KpiTile({
 
     return (
         <div
-            className={`flex min-w-0 flex-none items-center gap-2.5 rounded-[var(--ds-radius-sm)] px-1.5 py-1 ${className}`}
+            className={`flex min-w-0 flex-none items-center gap-2.5 rounded-ds-sm px-1.5 py-1 ${className}`}
             data-kpi={dataKpi}
             data-kpi-state={state}
             data-flashing={flashing ? "true" : undefined}
@@ -125,14 +125,14 @@ function KpiTile({
             }}
         >
             <div className="flex min-w-0 flex-col leading-none">
-                <span className="flex items-center gap-1 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                <span className="flex items-center gap-1 text-ds-xs text-ds-fg-muted">
                     {label}
                     {state === "error" && (
                         <StatusDot status="critical" size={4} aria-label={`${label} unavailable`} />
                     )}
                 </span>
                 <span
-                    className="mt-1 font-medium tabular-nums text-[var(--ds-fg-primary)]"
+                    className="mt-1 font-medium tabular-nums text-ds-fg-primary"
                     style={{
                         fontFamily: "var(--ds-font-mono)",
                         fontSize: "var(--ds-text-md)",

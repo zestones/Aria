@@ -57,8 +57,8 @@ export function EquipmentNode({
     };
 
     const ringClass = selected
-        ? "ring-1 ring-[var(--ds-accent)]"
-        : "hover:ring-1 hover:ring-[var(--ds-border-strong)]";
+        ? "ring-1 ring-ds-accent"
+        : "hover:ring-1 hover:ring-ds-border-strong";
     const cursorClass = interactive ? "cursor-pointer" : "";
 
     return (
@@ -69,7 +69,7 @@ export function EquipmentNode({
             elevated
             rail={status}
             padding="md"
-            className={`flex min-h-[88px] flex-col justify-center gap-1 transition-[box-shadow,border-color] duration-[var(--ds-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] ${ringClass} ${cursorClass}`}
+            className={`flex min-h-[88px] flex-col justify-center gap-1 transition-[box-shadow,border-color] duration-ds-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring ${ringClass} ${cursorClass}`}
             role={interactive ? "button" : undefined}
             tabIndex={interactive ? 0 : undefined}
             aria-pressed={interactive ? selected : undefined}
@@ -78,14 +78,14 @@ export function EquipmentNode({
             onKeyDown={handleKey}
         >
             <span
-                className="truncate text-[var(--ds-text-sm)] font-semibold text-[var(--ds-fg-primary)]"
+                className="truncate text-ds-sm font-semibold text-ds-fg-primary"
                 style={{ fontFamily: "var(--ds-font-sans)" }}
             >
                 {label}
             </span>
             {sublabel && (
                 <span
-                    className="truncate text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]"
+                    className="truncate text-ds-xs text-ds-fg-muted"
                     style={{ fontFamily: "var(--ds-font-sans)" }}
                 >
                     {sublabel}

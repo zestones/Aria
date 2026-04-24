@@ -52,7 +52,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     return (
         <aside
             aria-label="Primary navigation"
-            className="flex h-full flex-none flex-col border-r border-[var(--ds-border)] bg-[var(--ds-bg-surface)]"
+            className="flex h-full flex-none flex-col border-r border-ds-border bg-ds-bg-surface"
             style={{
                 width: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED,
                 transition: "width var(--ds-motion-base) var(--ds-ease-out)",
@@ -60,18 +60,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         >
             {/* Brand */}
             <div
-                className={`flex h-14 flex-none items-center border-b border-[var(--ds-border)] ${
+                className={`flex h-14 flex-none items-center border-b border-ds-border ${
                     collapsed ? "justify-center px-0" : "px-3"
                 }`}
             >
                 <NavLink
                     to="/control-room"
-                    className="inline-flex items-center gap-2 rounded-[var(--ds-radius-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                    className="inline-flex items-center gap-2 rounded-ds-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
                     aria-label="ARIA — Control room"
                 >
-                    <AriaMark size={20} className="text-[var(--ds-fg-primary)]" />
+                    <AriaMark size={20} className="text-ds-fg-primary" />
                     {!collapsed && (
-                        <span className="text-[var(--ds-text-md)] font-semibold tracking-[-0.01em] text-[var(--ds-fg-primary)]">
+                        <span className="text-ds-md font-semibold tracking-[-0.01em] text-ds-fg-primary">
                             ARIA
                         </span>
                     )}
@@ -89,15 +89,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     return (
                         <div key={group.id} className="flex flex-col gap-0.5">
                             {!collapsed && (
-                                <div className="px-2 pb-1 text-[var(--ds-text-xs)] font-medium uppercase tracking-wider text-[var(--ds-fg-subtle)]">
+                                <div className="px-2 pb-1 text-ds-xs font-medium uppercase tracking-wider text-ds-fg-subtle">
                                     {group.label}
                                 </div>
                             )}
                             {collapsed && group.id !== NAV_GROUPS[0].id && (
-                                <div
-                                    aria-hidden
-                                    className="mx-auto mb-1 h-px w-6 bg-[var(--ds-border)]"
-                                />
+                                <div aria-hidden className="mx-auto mb-1 h-px w-6 bg-ds-border" />
                             )}
                             <ul className="flex flex-col gap-0.5">
                                 {items.map((item) => (
@@ -112,7 +109,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </nav>
 
             {/* Bottom: collapse toggle + user menu */}
-            <div className="flex flex-none flex-col gap-1 border-t border-[var(--ds-border)] p-2">
+            <div className="flex flex-none flex-col gap-1 border-t border-ds-border p-2">
                 <button
                     type="button"
                     onClick={onToggle}
@@ -120,9 +117,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     aria-pressed={!collapsed}
                     title={collapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
                     className={[
-                        "flex h-8 items-center gap-2 rounded-[var(--ds-radius-sm)] text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] transition-colors",
-                        "hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)]",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]",
+                        "flex h-8 items-center gap-2 rounded-ds-sm text-ds-sm text-ds-fg-muted transition-colors",
+                        "hover:bg-ds-bg-hover hover:text-ds-fg-primary",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring",
                         collapsed ? "w-full justify-center" : "w-full px-2",
                     ].join(" ")}
                 >
@@ -157,12 +154,12 @@ function SidebarLink({ item, collapsed }: SidebarLinkProps) {
             aria-label={collapsed ? item.label : undefined}
             className={({ isActive }) =>
                 [
-                    "group flex h-9 items-center gap-2.5 rounded-[var(--ds-radius-sm)] text-[var(--ds-text-sm)] font-medium transition-colors duration-[var(--ds-motion-fast)]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]",
+                    "group flex h-9 items-center gap-2.5 rounded-ds-sm text-ds-sm font-medium transition-colors duration-ds-fast",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring",
                     collapsed ? "justify-center px-0" : "px-2.5",
                     isActive
-                        ? "bg-[var(--ds-accent-soft)] text-[var(--ds-accent)]"
-                        : "text-[var(--ds-fg-muted)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)]",
+                        ? "bg-ds-accent-soft text-ds-accent"
+                        : "text-ds-fg-muted hover:bg-ds-bg-hover hover:text-ds-fg-primary",
                 ].join(" ")
             }
         >

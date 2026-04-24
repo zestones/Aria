@@ -29,7 +29,7 @@ export function Hairline({ label, weight = 1, className = "", ...rest }: Hairlin
         <div aria-hidden className={`flex items-center gap-3 ${className}`} {...rest}>
             <div className="flex-1" style={{ height: `${weight}px`, backgroundColor: color }} />
             <span
-                className="text-[var(--ds-text-sm)] font-medium whitespace-nowrap"
+                className="text-ds-sm font-medium whitespace-nowrap"
                 style={{ color: "var(--ds-fg-muted)" }}
             >
                 {label}

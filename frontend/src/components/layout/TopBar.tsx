@@ -42,17 +42,17 @@ export function TopBar({
     const DrawerIcon = drawerOpen ? Icons.PanelRightClose : Icons.PanelRightOpen;
 
     return (
-        <header className="sticky top-0 z-30 flex h-14 flex-none items-center gap-5 border-b border-[var(--ds-border)] bg-[var(--ds-bg-base)] px-4">
+        <header className="sticky top-0 z-30 flex h-14 flex-none items-center gap-5 border-b border-ds-border bg-ds-bg-base px-4">
             <EquipmentPicker selection={selection} onChange={onSelectionChange} />
 
             <div className="min-w-0 flex-1" data-kpi-slot>
                 {kpiSlot}
             </div>
 
-            <div className="flex flex-none items-center gap-2 text-[var(--ds-text-sm)]">
+            <div className="flex flex-none items-center gap-2 text-ds-sm">
                 <StatusDot status="nominal" />
-                <span className="font-medium text-[var(--ds-fg-primary)]">{shift.label}</span>
-                <span className="text-[var(--ds-fg-subtle)]">{shift.range}</span>
+                <span className="font-medium text-ds-fg-primary">{shift.label}</span>
+                <span className="text-ds-fg-subtle">{shift.range}</span>
             </div>
 
             <ThemeToggle />
@@ -63,7 +63,7 @@ export function TopBar({
                 aria-expanded={drawerOpen}
                 aria-controls={drawerControlsId}
                 aria-label={drawerOpen ? "Collapse chat drawer" : "Expand chat drawer"}
-                className="inline-flex h-8 flex-none items-center gap-1.5 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-2.5 text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:border-[var(--ds-border-strong)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                className="inline-flex h-8 flex-none items-center gap-1.5 rounded-ds-md border border-ds-border bg-ds-bg-surface px-2.5 text-ds-fg-muted transition-colors duration-ds-fast hover:border-ds-border-strong hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
             >
                 <DrawerIcon className="size-4" />
                 <KbdKey className="ml-1">⌘K</KbdKey>

@@ -57,7 +57,7 @@ export function TabsList({
     return (
         <div
             role="tablist"
-            className={`inline-flex items-end gap-0 border-b border-[var(--ds-border)] ${className}`}
+            className={`inline-flex items-end gap-0 border-b border-ds-border ${className}`}
         >
             {children}
         </div>
@@ -83,10 +83,10 @@ export function TabsTrigger({
             aria-controls={`${idBase}-panel-${value}`}
             id={`${idBase}-trigger-${value}`}
             onClick={() => setValue(value)}
-            className={`relative h-9 px-3.5 text-[var(--ds-text-sm)] font-medium transition-colors duration-[var(--ds-motion-fast)] -mb-px border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] rounded-t-[var(--ds-radius-sm)] ${
+            className={`relative h-9 px-3.5 text-ds-sm font-medium transition-colors duration-ds-fast -mb-px border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring rounded-t-ds-sm ${
                 selected
-                    ? "text-[var(--ds-fg-primary)] border-[var(--ds-accent)]"
-                    : "text-[var(--ds-fg-muted)] border-transparent hover:text-[var(--ds-fg-primary)]"
+                    ? "text-ds-fg-primary border-ds-accent"
+                    : "text-ds-fg-muted border-transparent hover:text-ds-fg-primary"
             } ${className}`}
         >
             {children}

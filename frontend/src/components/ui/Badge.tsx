@@ -20,14 +20,14 @@ const agentColorVar: Record<AgentId, string> = {
 };
 
 const baseVariants: Record<Exclude<Variant, "agent" | "code">, string> = {
-    default: "bg-[var(--ds-bg-elevated)] text-[var(--ds-fg-muted)] border-[var(--ds-border)]",
-    accent: "bg-[var(--ds-accent-soft)] text-[var(--ds-accent)] border-[color-mix(in_oklab,var(--ds-accent),transparent_70%)]",
+    default: "bg-ds-bg-elevated text-ds-fg-muted border-ds-border",
+    accent: "bg-ds-accent-soft text-ds-accent border-[color-mix(in_oklab,var(--ds-accent),transparent_70%)]",
     nominal:
-        "bg-[color-mix(in_oklab,var(--ds-status-nominal),transparent_85%)] text-[var(--ds-status-nominal)] border-[color-mix(in_oklab,var(--ds-status-nominal),transparent_70%)]",
+        "bg-[color-mix(in_oklab,var(--ds-status-nominal),transparent_85%)] text-ds-nominal border-[color-mix(in_oklab,var(--ds-status-nominal),transparent_70%)]",
     warning:
-        "bg-[color-mix(in_oklab,var(--ds-status-warning),transparent_85%)] text-[var(--ds-status-warning)] border-[color-mix(in_oklab,var(--ds-status-warning),transparent_70%)]",
+        "bg-[color-mix(in_oklab,var(--ds-status-warning),transparent_85%)] text-ds-warning border-[color-mix(in_oklab,var(--ds-status-warning),transparent_70%)]",
     critical:
-        "bg-[color-mix(in_oklab,var(--ds-status-critical),transparent_85%)] text-[var(--ds-status-critical)] border-[color-mix(in_oklab,var(--ds-status-critical),transparent_70%)]",
+        "bg-[color-mix(in_oklab,var(--ds-status-critical),transparent_85%)] text-ds-critical border-[color-mix(in_oklab,var(--ds-status-critical),transparent_70%)]",
 };
 
 /**
@@ -44,7 +44,7 @@ export function Badge({
     children,
     ...rest
 }: BadgeProps) {
-    const sizing = size === "md" ? "h-6 px-2 text-[var(--ds-text-xs)]" : "h-5 px-1.5 text-[11px]";
+    const sizing = size === "md" ? "h-6 px-2 text-ds-xs" : "h-5 px-1.5 text-[11px]";
     const typography = variant === "code" ? "font-mono" : "font-medium";
 
     if (variant === "agent" && agent) {
@@ -58,7 +58,7 @@ export function Badge({
         return (
             <span
                 style={agentStyle}
-                className={`inline-flex items-center gap-1 ${sizing} rounded-[var(--ds-radius-sm)] border ${typography} whitespace-nowrap ${className}`}
+                className={`inline-flex items-center gap-1 ${sizing} rounded-ds-sm border ${typography} whitespace-nowrap ${className}`}
                 {...rest}
             >
                 {children}
@@ -70,7 +70,7 @@ export function Badge({
     const variantClass = v === "code" ? baseVariants.default : baseVariants[v];
     return (
         <span
-            className={`inline-flex items-center gap-1 ${sizing} rounded-[var(--ds-radius-sm)] border ${typography} whitespace-nowrap ${variantClass} ${className}`}
+            className={`inline-flex items-center gap-1 ${sizing} rounded-ds-sm border ${typography} whitespace-nowrap ${variantClass} ${className}`}
             style={style}
             {...rest}
         >

@@ -49,7 +49,7 @@ export function EquipmentGrid({
             <div
                 data-testid="equipment-grid"
                 data-state="loading"
-                className={`flex h-full items-center justify-center p-6 text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] ${className}`}
+                className={`flex h-full items-center justify-center p-6 text-ds-sm text-ds-fg-muted ${className}`}
             >
                 Loading equipment…
             </div>
@@ -61,7 +61,7 @@ export function EquipmentGrid({
             <div
                 data-testid="equipment-grid"
                 data-state="empty"
-                className={`flex h-full items-center justify-center p-6 text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] ${className}`}
+                className={`flex h-full items-center justify-center p-6 text-ds-sm text-ds-fg-muted ${className}`}
             >
                 No equipment in scope.
             </div>
@@ -72,7 +72,7 @@ export function EquipmentGrid({
         <ul
             data-testid="equipment-grid"
             data-state="ready"
-            className={`grid h-full auto-rows-min list-none grid-cols-2 gap-[var(--ds-space-3,12px)] overflow-auto p-[var(--ds-space-4,16px)] md:grid-cols-3 lg:grid-cols-4 ${className}`}
+            className={`grid h-full auto-rows-min list-none grid-cols-2 gap-3 overflow-auto p-4 md:grid-cols-3 lg:grid-cols-4 ${className}`}
             aria-label="Equipment cells"
         >
             {entries.map((entry) => {

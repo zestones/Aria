@@ -18,7 +18,7 @@ export interface MetaStripProps extends HTMLAttributes<HTMLDListElement> {
 export function MetaStrip({ items, className = "", ...rest }: MetaStripProps) {
     return (
         <dl
-            className={`flex items-baseline gap-2 text-[var(--ds-text-sm)] ${className}`}
+            className={`flex items-baseline gap-2 text-ds-sm ${className}`}
             style={{ color: "var(--ds-fg-muted)" }}
             {...rest}
         >

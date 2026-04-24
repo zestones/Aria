@@ -172,25 +172,19 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
     if (isLoading) {
         return (
             <div
-                className="flex w-full max-w-[440px] items-center justify-center rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] p-4"
+                className="flex w-full max-w-[440px] items-center justify-center rounded-ds-md border border-ds-border bg-ds-bg-surface p-4"
                 role="status"
             >
-                <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
-                    Loading equipment KB…
-                </span>
+                <span className="text-ds-xs text-ds-fg-muted">Loading equipment KB…</span>
             </div>
         );
     }
 
     if (isError || !kb) {
         return (
-            <div className="w-full max-w-[440px] rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] p-3">
-                <div className="mb-1 text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)]">
-                    Equipment
-                </div>
-                <div className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
-                    No KB data for cell {cell_id}.
-                </div>
+            <div className="w-full max-w-[440px] rounded-ds-md border border-ds-border bg-ds-bg-surface p-3">
+                <div className="mb-1 text-ds-sm font-medium text-ds-fg-primary">Equipment</div>
+                <div className="text-ds-xs text-ds-fg-subtle">No KB data for cell {cell_id}.</div>
             </div>
         );
     }
@@ -289,39 +283,35 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
     return (
         <section
             aria-label={`Equipment KB for ${displayName}`}
-            className="w-full max-w-[440px] overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]"
+            className="w-full max-w-[440px] overflow-hidden rounded-ds-md border border-ds-border bg-ds-bg-surface"
         >
             {/* Header */}
             <div className="px-4 pt-3 pb-2">
                 <div className="flex items-baseline gap-2">
-                    <span className="text-[var(--ds-text-lg)] font-semibold text-[var(--ds-fg-primary)]">
+                    <span className="text-ds-lg font-semibold text-ds-fg-primary">
                         {displayName}
                     </span>
-                    <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
-                        · {equipmentType}
-                    </span>
+                    <span className="text-ds-sm text-ds-fg-muted">· {equipmentType}</span>
                 </div>
                 {subParts.length > 0 && (
-                    <div className="mt-0.5 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
-                        {subParts.join(" · ")}
-                    </div>
+                    <div className="mt-0.5 text-ds-xs text-ds-fg-muted">{subParts.join(" · ")}</div>
                 )}
             </div>
 
-            <div aria-hidden="true" className="h-px w-full bg-[var(--ds-border)]" />
+            <div aria-hidden="true" className="h-px w-full bg-ds-border" />
 
             {/* Thresholds */}
             <details open className="group/thresholds">
-                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)] hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]">
+                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-ds-sm font-medium text-ds-fg-primary hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring">
                     <span>Thresholds ({thresholdKeys.length})</span>
                     <ChevronDown
-                        className="size-4 text-[var(--ds-fg-muted)] transition-transform [details:not([open])_&]:-rotate-90"
+                        className="size-4 text-ds-fg-muted transition-transform [details:not([open])_&]:-rotate-90"
                         aria-hidden="true"
                     />
                 </summary>
 
                 {thresholdKeys.length === 0 ? (
-                    <div className="px-4 pb-3 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                    <div className="px-4 pb-3 text-ds-xs text-ds-fg-subtle">
                         No thresholds calibrated yet.
                     </div>
                 ) : (
@@ -333,7 +323,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                             );
                             return (
                                 <div key={key} className="py-2">
-                                    <div className="mb-1 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                    <div className="mb-1 text-ds-xs text-ds-fg-muted">
                                         {humanizeThresholdKey(key)}
                                     </div>
                                     <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -348,7 +338,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                                                     key={field}
                                                     className="flex items-baseline gap-1.5"
                                                 >
-                                                    <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                                                    <span className="text-ds-xs text-ds-fg-subtle">
                                                         {THRESHOLD_FIELD_LABELS[field]}
                                                     </span>
                                                     {editing ? (
@@ -375,7 +365,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                                                                     cancelEdit(path);
                                                                 }
                                                             }}
-                                                            className="w-16 rounded-[var(--ds-radius-sm)] border border-[var(--ds-border-strong)] bg-[var(--ds-bg-elevated)] px-1.5 py-0.5 font-mono text-[var(--ds-text-sm)] text-[var(--ds-fg-primary)] tabular-nums focus-visible:border-[var(--ds-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                                                            className="w-16 rounded-ds-sm border border-ds-border-strong bg-ds-bg-elevated px-1.5 py-0.5 font-mono text-ds-sm text-ds-fg-primary tabular-nums focus-visible:border-ds-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
                                                         />
                                                     ) : (
                                                         <button
@@ -385,7 +375,7 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                                                             }
                                                             data-testid={`threshold-value-${path}`}
                                                             onClick={() => startEdit(path, value)}
-                                                            className={`cursor-pointer rounded-[var(--ds-radius-sm)] px-1.5 py-0.5 font-mono text-[var(--ds-text-sm)] text-[var(--ds-fg-primary)] tabular-nums transition-colors hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] ${highlighted ? "ring-1 ring-[var(--ds-accent)]" : ""}`}
+                                                            className={`cursor-pointer rounded-ds-sm px-1.5 py-0.5 font-mono text-ds-sm text-ds-fg-primary tabular-nums transition-colors hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring ${highlighted ? "ring-1 ring-ds-accent" : ""}`}
                                                         >
                                                             {value}
                                                         </button>
@@ -401,30 +391,30 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                 )}
             </details>
 
-            <div aria-hidden="true" className="h-px w-full bg-[var(--ds-border)]" />
+            <div aria-hidden="true" className="h-px w-full bg-ds-border" />
 
             {/* Specifications */}
             <details className="group/specs">
-                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)] hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]">
+                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2 text-ds-sm font-medium text-ds-fg-primary hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring">
                     <span>Specifications</span>
                     <ChevronDown
-                        className="size-4 text-[var(--ds-fg-muted)] transition-transform [details:not([open])_&]:-rotate-90"
+                        className="size-4 text-ds-fg-muted transition-transform [details:not([open])_&]:-rotate-90"
                         aria-hidden="true"
                     />
                 </summary>
 
                 {specEntries.length === 0 ? (
-                    <div className="px-4 pb-3 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                    <div className="px-4 pb-3 text-ds-xs text-ds-fg-subtle">
                         No specifications recorded.
                     </div>
                 ) : (
                     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 pb-3">
                         {specEntries.map(([k, v]) => (
                             <div key={k} className="contents">
-                                <dt className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                <dt className="text-ds-xs text-ds-fg-muted">
                                     {SPEC_LABELS[k] ?? humanizeThresholdKey(k)}
                                 </dt>
-                                <dd className="text-[var(--ds-text-xs)] text-[var(--ds-fg-primary)]">
+                                <dd className="text-ds-xs text-ds-fg-primary">
                                     {formatSpecValue(v)}
                                 </dd>
                             </div>
@@ -433,10 +423,10 @@ export function EquipmentKbCard(props: EquipmentKbCardProps) {
                 )}
             </details>
 
-            <div aria-hidden="true" className="h-px w-full bg-[var(--ds-border)]" />
+            <div aria-hidden="true" className="h-px w-full bg-ds-border" />
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-4 py-2 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+            <div className="flex items-center justify-between px-4 py-2 text-ds-xs text-ds-fg-muted">
                 <span>
                     {confidencePct !== null ? `Confidence ${confidencePct}%` : "Confidence —"}
                     {" · "}

@@ -25,14 +25,14 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         { padding = "md", elevated = false, rail, railPulse, className = "", children, ...rest },
         ref,
     ) => {
-        const bg = elevated ? "bg-[var(--ds-bg-elevated)]" : "bg-[var(--ds-bg-surface)]";
+        const bg = elevated ? "bg-ds-bg-elevated" : "bg-ds-bg-surface";
         const hasRail = rail !== undefined;
         const pulse = railPulse ?? (rail === "critical" || rail === "warning");
         const railPadding = hasRail ? "pl-[calc(var(--ds-space-rail,14px))]" : "";
         return (
             <div
                 ref={ref}
-                className={`relative ${bg} border border-[var(--ds-border)] rounded-[var(--ds-radius-md)] ${paddings[padding]} ${railPadding} ${className}`}
+                className={`relative ${bg} border border-ds-border rounded-ds-md ${paddings[padding]} ${railPadding} ${className}`}
                 {...rest}
             >
                 {hasRail && <StatusRail tone={rail} pulse={pulse} />}
@@ -58,7 +58,7 @@ export function CardTitle({
 }: HTMLAttributes<HTMLHeadingElement>) {
     return (
         <h3
-            className={`text-[var(--ds-text-lg)] font-semibold leading-tight text-[var(--ds-fg-primary)] ${className}`}
+            className={`text-ds-lg font-semibold leading-tight text-ds-fg-primary ${className}`}
             {...rest}
         >
             {children}
@@ -72,10 +72,7 @@ export function CardDescription({
     ...rest
 }: HTMLAttributes<HTMLParagraphElement>) {
     return (
-        <p
-            className={`text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] mt-1 ${className}`}
-            {...rest}
-        >
+        <p className={`text-ds-sm text-ds-fg-muted mt-1 ${className}`} {...rest}>
             {children}
         </p>
     );

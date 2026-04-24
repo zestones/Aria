@@ -44,13 +44,15 @@
 
   /* Elevation — overlays only */
   --ds-shadow-overlay:
-    0 10px 30px -10px rgb(0 0 0 / 0.6),
-    0 4px 12px -4px rgb(0 0 0 / 0.5);
+    0 10px 30px -10px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.5);
 
   /* Typography */
-  --ds-font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --ds-font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
-    monospace;
+  --ds-font-sans:
+    "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --ds-font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular,
+    Menlo, monospace;
 
   /* Type scale (static px, app-appropriate) */
   --ds-text-xs: 11px;
@@ -102,8 +104,7 @@
   --ds-agent-qa: #a34e81;
 
   --ds-shadow-overlay:
-    0 10px 30px -10px rgb(0 0 0 / 0.15),
-    0 4px 12px -4px rgb(0 0 0 / 0.08);
+    0 10px 30px -10px rgb(0 0 0 / 0.15), 0 4px 12px -4px rgb(0 0 0 / 0.08);
 
   color-scheme: light;
 }

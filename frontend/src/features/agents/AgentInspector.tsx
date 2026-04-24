@@ -99,7 +99,7 @@ const AgentInspectorDrawer = memo(function AgentInspectorDrawer({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-x-0 bottom-0 z-30 flex h-[40vh] min-h-[280px] flex-col overflow-hidden rounded-t-[var(--ds-radius-md)] border-t border-[var(--ds-border)] bg-[var(--ds-bg-surface)]"
+            className="absolute inset-x-0 bottom-0 z-30 flex h-[40vh] min-h-[280px] flex-col overflow-hidden rounded-t-ds-md border-t border-ds-border bg-ds-bg-surface"
             style={{ boxShadow: "var(--ds-shadow-overlay)" }}
         >
             <InspectorHeader
@@ -157,11 +157,11 @@ interface InspectorHeaderProps {
 
 function InspectorHeader({ agent, agentKey, turnId, isStreaming, onClose }: InspectorHeaderProps) {
     return (
-        <header className="flex items-center justify-between gap-3 border-b border-[var(--ds-border)] px-4 py-3">
+        <header className="flex items-center justify-between gap-3 border-b border-ds-border px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
                 <h2
                     id="agent-inspector-heading"
-                    className="flex items-center gap-2 text-[var(--ds-text-lg)] font-semibold text-[var(--ds-fg-primary)]"
+                    className="flex items-center gap-2 text-ds-lg font-semibold text-ds-fg-primary"
                 >
                     {agentKey ? (
                         <Badge variant="agent" agent={agentKey} size="md">
@@ -174,7 +174,7 @@ function InspectorHeader({ agent, agentKey, turnId, isStreaming, onClose }: Insp
                     )}
                     <span>Agent inspector</span>
                 </h2>
-                <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                <span className="text-ds-sm text-ds-fg-muted">
                     Turn <span className="font-mono">{truncateId(turnId)}</span>
                     {" · "}
                     {isStreaming ? "Streaming" : "Idle"}
@@ -184,7 +184,7 @@ function InspectorHeader({ agent, agentKey, turnId, isStreaming, onClose }: Insp
                 type="button"
                 onClick={onClose}
                 aria-label="Close agent inspector"
-                className="inline-flex size-8 items-center justify-center rounded-[var(--ds-radius-sm)] text-[var(--ds-fg-muted)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                className="inline-flex size-8 items-center justify-center rounded-ds-sm text-ds-fg-muted hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
             >
                 <Icons.X className="size-4" aria-hidden />
             </button>
@@ -223,23 +223,23 @@ function ThinkingPanel({ thinking, isStreaming }: ThinkingPanelProps) {
         >
             {hasContent ? (
                 <pre
-                    className="whitespace-pre-wrap break-words font-mono text-[var(--ds-text-sm)] leading-[1.55]"
+                    className="whitespace-pre-wrap break-words font-mono text-ds-sm leading-[1.55]"
                     style={{
                         color: "color-mix(in oklab, var(--ds-agent-investigator), var(--ds-fg-muted) 45%)",
                     }}
                 >
                     {thinking}
                     {isStreaming && (
-                        <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-pulse bg-[var(--ds-accent)] align-middle" />
+                        <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-pulse bg-ds-accent align-middle" />
                     )}
                 </pre>
             ) : isStreaming ? (
-                <p className="flex items-center gap-2 text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                <p className="flex items-center gap-2 text-ds-sm text-ds-fg-muted">
                     <Icons.Activity className="size-3.5 animate-pulse" aria-hidden />
                     <span>Thinking…</span>
                 </p>
             ) : (
-                <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
+                <p className="text-ds-sm text-ds-fg-subtle">
                     No extended thinking captured for this turn yet.
                 </p>
             )}
@@ -257,9 +257,7 @@ function ToolsPanel({ tools, handoffs }: ToolsPanelProps) {
     return (
         <div className="h-full overflow-y-auto px-4 py-3">
             {empty ? (
-                <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
-                    No tool activity yet.
-                </p>
+                <p className="text-ds-sm text-ds-fg-subtle">No tool activity yet.</p>
             ) : (
                 <ul className="flex flex-col gap-1.5">
                     {tools.map((run) => (
@@ -286,28 +284,23 @@ function ToolRow({ run }: { run: ToolRun }) {
 
     return (
         <li>
-            <details className="group rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)]">
-                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-[var(--ds-text-xs)]">
+            <details className="group rounded-ds-sm border border-ds-border bg-ds-bg-elevated">
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-ds-xs">
                     {run.status === "running" ? (
                         <Icons.Activity
-                            className="size-3.5 flex-none animate-pulse text-[var(--ds-fg-subtle)]"
+                            className="size-3.5 flex-none animate-pulse text-ds-fg-subtle"
                             aria-hidden
                         />
                     ) : (
-                        <Icons.Check
-                            className="size-3.5 flex-none text-[var(--ds-status-nominal)]"
-                            aria-hidden
-                        />
+                        <Icons.Check className="size-3.5 flex-none text-ds-nominal" aria-hidden />
                     )}
-                    <span className="font-mono text-[var(--ds-fg-primary)]">{run.toolName}</span>
-                    <span className="truncate font-mono text-[var(--ds-fg-subtle)]">
-                        {argsPreview}
-                    </span>
-                    <span className="ml-auto flex-none text-[var(--ds-fg-muted)]">
+                    <span className="font-mono text-ds-fg-primary">{run.toolName}</span>
+                    <span className="truncate font-mono text-ds-fg-subtle">{argsPreview}</span>
+                    <span className="ml-auto flex-none text-ds-fg-muted">
                         {run.durationMs != null ? `${run.durationMs} ms` : "—"}
                     </span>
                 </summary>
-                <pre className="whitespace-pre-wrap break-words border-t border-[var(--ds-border)] px-3 py-2 font-mono text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                <pre className="whitespace-pre-wrap break-words border-t border-ds-border px-3 py-2 font-mono text-ds-xs text-ds-fg-muted">
                     {safeStringify(run.args)}
                 </pre>
             </details>
@@ -317,16 +310,13 @@ function ToolRow({ run }: { run: ToolRun }) {
 
 function HandoffRow({ handoff }: { handoff: HandoffEvent }) {
     return (
-        <li className="flex items-center gap-2 rounded-[var(--ds-radius-sm)] border border-dashed border-[var(--ds-border)] px-3 py-2 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+        <li className="flex items-center gap-2 rounded-ds-sm border border-dashed border-ds-border px-3 py-2 text-ds-xs text-ds-fg-muted">
             <Icons.ArrowRight className="size-3.5 flex-none" aria-hidden />
             <span>Handoff</span>
-            <span className="font-mono text-[var(--ds-fg-primary)]">{handoff.from_agent}</span>
-            <Icons.ChevronRight
-                className="size-3 flex-none text-[var(--ds-fg-subtle)]"
-                aria-hidden
-            />
-            <span className="font-mono text-[var(--ds-fg-primary)]">{handoff.to_agent}</span>
-            <span className="ml-1 truncate text-[var(--ds-fg-subtle)]">· {handoff.reason}</span>
+            <span className="font-mono text-ds-fg-primary">{handoff.from_agent}</span>
+            <Icons.ChevronRight className="size-3 flex-none text-ds-fg-subtle" aria-hidden />
+            <span className="font-mono text-ds-fg-primary">{handoff.to_agent}</span>
+            <span className="ml-1 truncate text-ds-fg-subtle">· {handoff.reason}</span>
         </li>
     );
 }
@@ -335,7 +325,7 @@ function IoPanel({ rawEvents }: { rawEvents: RawAgentEvent[] }) {
     if (rawEvents.length === 0) {
         return (
             <div className="h-full overflow-y-auto px-4 py-3">
-                <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
+                <p className="text-ds-sm text-ds-fg-subtle">
                     No events received yet for this turn.
                 </p>
             </div>
@@ -347,15 +337,15 @@ function IoPanel({ rawEvents }: { rawEvents: RawAgentEvent[] }) {
                 {rawEvents.map((evt) => (
                     <li
                         key={evt.id}
-                        className="rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)]"
+                        className="rounded-ds-sm border border-ds-border bg-ds-bg-elevated"
                     >
-                        <div className="flex items-center gap-2 border-b border-[var(--ds-border)] px-3 py-1.5 text-[var(--ds-text-xs)]">
-                            <span className="font-mono text-[var(--ds-accent)]">{evt.type}</span>
-                            <span className="ml-auto text-[var(--ds-fg-subtle)]">
+                        <div className="flex items-center gap-2 border-b border-ds-border px-3 py-1.5 text-ds-xs">
+                            <span className="font-mono text-ds-accent">{evt.type}</span>
+                            <span className="ml-auto text-ds-fg-subtle">
                                 {new Date(evt.at).toLocaleTimeString()}
                             </span>
                         </div>
-                        <pre className="whitespace-pre-wrap break-words px-3 py-2 font-mono text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                        <pre className="whitespace-pre-wrap break-words px-3 py-2 font-mono text-ds-xs text-ds-fg-muted">
                             {safeStringify(evt.payload)}
                         </pre>
                     </li>
@@ -370,10 +360,10 @@ function MemoryPanel({ tools }: { tools: ToolRun[] }) {
     if (memoryHits.length === 0) {
         return (
             <div className="h-full overflow-y-auto px-4 py-3">
-                <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
+                <p className="text-ds-sm text-ds-fg-subtle">
                     No KB or failure-history entries touched yet.
                 </p>
-                <p className="mt-2 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                <p className="mt-2 text-ds-xs text-ds-fg-subtle">
                     Inferred from read-style MCP tools: {Array.from(MEMORY_TOOLS).join(", ")}.
                 </p>
             </div>
@@ -385,16 +375,14 @@ function MemoryPanel({ tools }: { tools: ToolRun[] }) {
                 {memoryHits.map((hit) => (
                     <li
                         key={hit.id}
-                        className="flex items-center gap-2 rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] px-3 py-2 text-[var(--ds-text-xs)]"
+                        className="flex items-center gap-2 rounded-ds-sm border border-ds-border bg-ds-bg-elevated px-3 py-2 text-ds-xs"
                     >
                         <Icons.Database
-                            className="size-3.5 flex-none text-[var(--ds-fg-muted)]"
+                            className="size-3.5 flex-none text-ds-fg-muted"
                             aria-hidden
                         />
-                        <span className="font-mono text-[var(--ds-fg-primary)]">
-                            {hit.toolName}
-                        </span>
-                        <span className="truncate font-mono text-[var(--ds-fg-subtle)]">
+                        <span className="font-mono text-ds-fg-primary">{hit.toolName}</span>
+                        <span className="truncate font-mono text-ds-fg-subtle">
                             {safeStringify(hit.args)}
                         </span>
                     </li>

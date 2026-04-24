@@ -68,26 +68,26 @@ const MINUTES_AGO = (m: number) => new Date(Date.now() - m * 60_000).toISOString
 
 function Pre({ value }: { value: unknown }) {
     return (
-        <pre className="max-h-64 overflow-auto rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] p-2 font-mono text-[var(--ds-text-xs)] text-[var(--ds-fg-primary)]">
+        <pre className="max-h-64 overflow-auto rounded-ds-sm border border-ds-border bg-ds-bg-elevated p-2 font-mono text-ds-xs text-ds-fg-primary">
             {JSON.stringify(value, null, 2)}
         </pre>
     );
 }
 
 function Loading() {
-    return <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">Loading…</p>;
+    return <p className="text-ds-sm text-ds-fg-muted">Loading…</p>;
 }
 
 function ErrorLine({ error }: { error: unknown }) {
     return (
-        <p className="text-[var(--ds-text-sm)] text-[var(--ds-status-critical)]">
+        <p className="text-ds-sm text-ds-critical">
             {error instanceof Error ? error.message : "Request failed."}
         </p>
     );
 }
 
 function Empty({ label }: { label: string }) {
-    return <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">{label}</p>;
+    return <p className="text-ds-sm text-ds-fg-muted">{label}</p>;
 }
 
 export default function DataInspector() {
@@ -153,34 +153,30 @@ export default function DataInspector() {
     }
 
     return (
-        <div className="min-h-full bg-[var(--ds-bg-base)]">
-            <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-[var(--ds-border)] bg-[var(--ds-bg-base)] px-6">
+        <div className="min-h-full bg-ds-bg-base">
+            <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-ds-border bg-ds-bg-base px-6">
                 <div className="flex items-center gap-2.5">
                     <AriaMark size={20} />
-                    <span className="text-[var(--ds-text-md)] font-semibold tracking-[-0.01em] text-[var(--ds-fg-primary)]">
+                    <span className="text-ds-md font-semibold tracking-[-0.01em] text-ds-fg-primary">
                         ARIA
                     </span>
                 </div>
-                <span className="h-5 w-px flex-none bg-[var(--ds-border)]" aria-hidden />
-                <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
-                    Data explorer
-                </span>
+                <span className="h-5 w-px flex-none bg-ds-border" aria-hidden />
+                <span className="text-ds-sm text-ds-fg-muted">Data explorer</span>
 
-                <div className="ml-auto flex items-center gap-3 text-[var(--ds-text-sm)]">
+                <div className="ml-auto flex items-center gap-3 text-ds-sm">
                     {user && (
                         <span className="hidden items-baseline gap-1.5 sm:inline-flex">
-                            <span className="font-medium text-[var(--ds-fg-primary)]">
-                                {user.username}
-                            </span>
-                            <span className="text-[var(--ds-fg-subtle)]">·</span>
-                            <span className="text-[var(--ds-fg-muted)]">{user.role}</span>
+                            <span className="font-medium text-ds-fg-primary">{user.username}</span>
+                            <span className="text-ds-fg-subtle">·</span>
+                            <span className="text-ds-fg-muted">{user.role}</span>
                         </span>
                     )}
                     <ThemeToggle />
                     <button
                         type="button"
                         onClick={handleLogout}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-2.5 text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:border-[var(--ds-border-strong)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-ds-md border border-ds-border bg-ds-bg-surface px-2.5 text-ds-sm font-medium text-ds-fg-muted transition-colors duration-ds-fast hover:border-ds-border-strong hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
                     >
                         <Icons.LogOut className="size-3.5" />
                         Logout
@@ -201,9 +197,9 @@ export default function DataInspector() {
                         {status.isLoading && <Loading />}
                         {status.error && <ErrorLine error={status.error} />}
                         {status.data && (
-                            <table className="w-full text-[var(--ds-text-sm)]">
+                            <table className="w-full text-ds-sm">
                                 <thead>
-                                    <tr className="text-left text-[var(--ds-text-xs)] font-medium text-[var(--ds-fg-muted)]">
+                                    <tr className="text-left text-ds-xs font-medium text-ds-fg-muted">
                                         <th className="py-1 pr-2">Cell</th>
                                         <th className="py-1 pr-2">Line</th>
                                         <th className="py-1 pr-2">Status</th>
@@ -212,14 +208,11 @@ export default function DataInspector() {
                                 </thead>
                                 <tbody>
                                     {status.data.map((c) => (
-                                        <tr
-                                            key={c.cell_id}
-                                            className="border-t border-[var(--ds-border)]"
-                                        >
-                                            <td className="py-1.5 pr-2 font-medium text-[var(--ds-fg-primary)]">
+                                        <tr key={c.cell_id} className="border-t border-ds-border">
+                                            <td className="py-1.5 pr-2 font-medium text-ds-fg-primary">
                                                 {c.cell_name}
                                             </td>
-                                            <td className="py-1.5 pr-2 text-[var(--ds-fg-muted)]">
+                                            <td className="py-1.5 pr-2 text-ds-fg-muted">
                                                 {c.line_name ?? "—"}
                                             </td>
                                             <td className="py-1.5 pr-2">
@@ -231,7 +224,7 @@ export default function DataInspector() {
                                                     {c.status_name ?? "?"}
                                                 </Badge>
                                             </td>
-                                            <td className="py-1.5 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                            <td className="py-1.5 text-ds-xs text-ds-fg-muted">
                                                 {c.last_status_change
                                                     ? new Date(
                                                           c.last_status_change,
@@ -250,9 +243,9 @@ export default function DataInspector() {
                         {signals.isLoading && <Loading />}
                         {signals.error && <ErrorLine error={signals.error} />}
                         {signals.data && (
-                            <table className="w-full text-[var(--ds-text-sm)]">
+                            <table className="w-full text-ds-sm">
                                 <thead>
-                                    <tr className="text-left text-[var(--ds-text-xs)] font-medium text-[var(--ds-fg-muted)]">
+                                    <tr className="text-left text-ds-xs font-medium text-ds-fg-muted">
                                         <th className="py-1 pr-2">Signal</th>
                                         <th className="py-1 pr-2 text-right">Value</th>
                                         <th className="py-1 pr-2">Unit</th>
@@ -263,18 +256,18 @@ export default function DataInspector() {
                                     {signals.data.map((s) => (
                                         <tr
                                             key={s.signal_def_id}
-                                            className="border-t border-[var(--ds-border)]"
+                                            className="border-t border-ds-border"
                                         >
-                                            <td className="py-1.5 pr-2 text-[var(--ds-fg-primary)]">
+                                            <td className="py-1.5 pr-2 text-ds-fg-primary">
                                                 {s.display_name ?? s.signal_name}
                                             </td>
-                                            <td className="py-1.5 pr-2 text-right font-mono tabular-nums text-[var(--ds-fg-primary)]">
+                                            <td className="py-1.5 pr-2 text-right font-mono tabular-nums text-ds-fg-primary">
                                                 {s.raw_value.toFixed(2)}
                                             </td>
-                                            <td className="py-1.5 pr-2 text-[var(--ds-fg-muted)]">
+                                            <td className="py-1.5 pr-2 text-ds-fg-muted">
                                                 {s.unit_name ?? "—"}
                                             </td>
-                                            <td className="py-1.5 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                            <td className="py-1.5 text-ds-xs text-ds-fg-muted">
                                                 {new Date(s.time).toLocaleTimeString()}
                                             </td>
                                         </tr>
@@ -300,12 +293,12 @@ export default function DataInspector() {
                                     (k) => (
                                         <div
                                             key={k}
-                                            className="rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] p-3 text-center"
+                                            className="rounded-ds-sm border border-ds-border bg-ds-bg-elevated p-3 text-center"
                                         >
-                                            <div className="text-[var(--ds-text-xs)] font-medium text-[var(--ds-fg-muted)]">
+                                            <div className="text-ds-xs font-medium text-ds-fg-muted">
                                                 {labelFor(k)}
                                             </div>
-                                            <div className="mt-1 font-mono text-[var(--ds-text-2xl)] font-semibold tabular-nums text-[var(--ds-fg-primary)]">
+                                            <div className="mt-1 font-mono text-ds-2xl font-semibold tabular-nums text-ds-fg-primary">
                                                 {(Number(oee.data[0][k] ?? 0) * 100).toFixed(1)}%
                                             </div>
                                         </div>
@@ -337,16 +330,16 @@ export default function DataInspector() {
                             <Empty label="No work orders yet." />
                         )}
                         {workOrders.data && workOrders.data.length > 0 && (
-                            <ul className="space-y-2 text-[var(--ds-text-sm)]">
+                            <ul className="space-y-2 text-ds-sm">
                                 {workOrders.data.map((w) => (
                                     <li
                                         key={w.id}
-                                        className="flex items-center justify-between gap-3 rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] p-2.5"
+                                        className="flex items-center justify-between gap-3 rounded-ds-sm border border-ds-border bg-ds-bg-elevated p-2.5"
                                     >
-                                        <span className="font-medium text-[var(--ds-fg-primary)]">
+                                        <span className="font-medium text-ds-fg-primary">
                                             {w.title}
                                         </span>
-                                        <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                        <span className="text-ds-xs text-ds-fg-muted">
                                             {w.priority} · {w.status}
                                         </span>
                                     </li>
@@ -366,27 +359,27 @@ export default function DataInspector() {
                         {logbook.error && <ErrorLine error={logbook.error} />}
                         {logbook.data && logbook.data.length === 0 && <Empty label="No entries." />}
                         {logbook.data && logbook.data.length > 0 && (
-                            <ul className="space-y-3 text-[var(--ds-text-sm)]">
+                            <ul className="space-y-3 text-ds-sm">
                                 {logbook.data.map((l) => (
                                     <li
                                         key={l.id}
-                                        className="border-l-2 border-[var(--ds-border-strong)] pl-3"
+                                        className="border-l-2 border-ds-border-strong pl-3"
                                     >
                                         <div className="flex items-baseline justify-between gap-3">
-                                            <span className="font-medium text-[var(--ds-fg-primary)]">
+                                            <span className="font-medium text-ds-fg-primary">
                                                 {l.title}
                                             </span>
-                                            <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                            <span className="text-ds-xs text-ds-fg-muted">
                                                 {l.category} · {l.severity}
                                             </span>
                                         </div>
-                                        <p className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                                        <p className="text-ds-xs text-ds-fg-muted">
                                             {l.cell_name ?? `cell #${l.cell_id}`} ·{" "}
                                             {new Date(l.created_at).toLocaleString()} ·{" "}
                                             {l.author_username ?? "—"}
                                         </p>
                                         {l.body && (
-                                            <p className="mt-1 text-[var(--ds-text-xs)] text-[var(--ds-fg-primary)]">
+                                            <p className="mt-1 text-ds-xs text-ds-fg-primary">
                                                 {l.body}
                                             </p>
                                         )}

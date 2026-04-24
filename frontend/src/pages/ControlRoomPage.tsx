@@ -62,7 +62,7 @@ export default function ControlRoomPage() {
                 }
             />
             <Hairline />
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-ds-md border border-ds-border bg-ds-bg-surface">
                 <div
                     className="absolute inset-0"
                     style={{

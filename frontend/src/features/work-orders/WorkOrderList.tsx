@@ -144,7 +144,7 @@ export default function WorkOrderList() {
                 onChange={setFilters}
                 onReset={() => setFilters(INITIAL_FILTERS)}
             />
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-ds-md border border-ds-border bg-ds-bg-surface">
                 <div className="h-full overflow-auto">
                     {query.isPending ? (
                         <EmptyState>Loading work orders…</EmptyState>
@@ -155,9 +155,9 @@ export default function WorkOrderList() {
                     ) : rows.length === 0 ? (
                         <EmptyState>No work orders match the current filters.</EmptyState>
                     ) : (
-                        <table className="w-full border-separate border-spacing-0 text-[var(--ds-text-sm)]">
-                            <thead className="sticky top-0 z-10 bg-[var(--ds-bg-surface)]">
-                                <tr className="text-left text-[var(--ds-text-xs)] font-medium text-[var(--ds-fg-muted)]">
+                        <table className="w-full border-separate border-spacing-0 text-ds-sm">
+                            <thead className="sticky top-0 z-10 bg-ds-bg-surface">
+                                <tr className="text-left text-ds-xs font-medium text-ds-fg-muted">
                                     <HeaderCell
                                         label="Priority"
                                         col="priority"
@@ -166,7 +166,7 @@ export default function WorkOrderList() {
                                         onToggle={toggleSort}
                                     />
                                     <th
-                                        className="border-b border-[var(--ds-border)] px-4 py-2.5 font-medium"
+                                        className="border-b border-ds-border px-4 py-2.5 font-medium"
                                         scope="col"
                                     >
                                         Title
@@ -193,7 +193,7 @@ export default function WorkOrderList() {
                                         onToggle={toggleSort}
                                     />
                                     <th
-                                        className="border-b border-[var(--ds-border)] px-4 py-2.5 font-medium"
+                                        className="border-b border-ds-border px-4 py-2.5 font-medium"
                                         scope="col"
                                     >
                                         RCA
@@ -228,8 +228,8 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
     const statusId = useId();
     const cellId = useId();
     const inputClass =
-        "h-8 rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-2 text-[var(--ds-text-sm)] text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]";
-    const fieldClass = "flex flex-col gap-1 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]";
+        "h-8 rounded-ds-sm border border-ds-border bg-ds-bg-surface px-2 text-ds-sm text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring";
+    const fieldClass = "flex flex-col gap-1 text-ds-xs text-ds-fg-muted";
     return (
         <div className="flex flex-wrap items-end gap-3">
             <div className={fieldClass}>
@@ -284,7 +284,7 @@ function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
             <button
                 type="button"
                 onClick={onReset}
-                className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-2.5 text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:border-[var(--ds-border-strong)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-ds-sm border border-ds-border bg-ds-bg-surface px-2.5 text-ds-sm text-ds-fg-muted transition-colors duration-ds-fast hover:border-ds-border-strong hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
             >
                 <Icons.RefreshCw className="size-3.5" aria-hidden />
                 Reset
@@ -310,11 +310,11 @@ function HeaderCell({ label, col, active, dir, onToggle }: HeaderCellProps) {
             : "descending"
         : "none";
     return (
-        <th className="border-b border-[var(--ds-border)] font-medium" scope="col" aria-sort={sort}>
+        <th className="border-b border-ds-border font-medium" scope="col" aria-sort={sort}>
             <button
                 type="button"
                 onClick={() => onToggle(col)}
-                className="inline-flex h-full w-full items-center gap-1 px-4 py-2.5 text-left font-medium text-[var(--ds-fg-muted)] transition-colors hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                className="inline-flex h-full w-full items-center gap-1 px-4 py-2.5 text-left font-medium text-ds-fg-muted transition-colors hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
             >
                 <span>{label}</span>
                 {isActive && <Arrow className="size-3" aria-hidden />}
@@ -336,41 +336,37 @@ function Row({ wo, onOpen }: { wo: WorkOrder; onOpen: () => void }) {
                     onOpen();
                 }
             }}
-            className="cursor-pointer border-b border-[var(--ds-border)] transition-colors hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+            className="cursor-pointer border-b border-ds-border transition-colors hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
         >
             <td className="px-4 py-3 align-middle">
                 <Badge variant={priorityVariant(wo.priority)}>{wo.priority}</Badge>
             </td>
             <td className="px-4 py-3 align-middle">
                 <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate font-medium text-[var(--ds-fg-primary)]">
-                        {wo.title}
-                    </span>
-                    <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                    <span className="truncate font-medium text-ds-fg-primary">{wo.title}</span>
+                    <span className="text-ds-xs text-ds-fg-subtle">
                         WO #{wo.id}
                         {wo.generated_by_agent ? " · Generated by agent" : ""}
                     </span>
                 </div>
             </td>
-            <td className="px-4 py-3 align-middle text-[var(--ds-fg-muted)]">
+            <td className="px-4 py-3 align-middle text-ds-fg-muted">
                 {wo.cell_name ?? `#${wo.cell_id}`}
             </td>
             <td className="px-4 py-3 align-middle">
-                <span className="inline-flex items-center gap-2 text-[var(--ds-fg-muted)]">
+                <span className="inline-flex items-center gap-2 text-ds-fg-muted">
                     <StatusDot status={statusToDotStatus(wo.status)} />
-                    <span className="text-[var(--ds-fg-primary)]">
-                        {wo.status.replace(/_/g, " ")}
-                    </span>
+                    <span className="text-ds-fg-primary">{wo.status.replace(/_/g, " ")}</span>
                 </span>
             </td>
-            <td className="px-4 py-3 align-middle text-[var(--ds-fg-muted)]">
+            <td className="px-4 py-3 align-middle text-ds-fg-muted">
                 {formatDateTime(wo.created_at)}
             </td>
             <td className="px-4 py-3 align-middle">
                 {hasRca ? (
                     <Badge variant="accent">RCA ready</Badge>
                 ) : (
-                    <span className="text-[var(--ds-fg-subtle)]">—</span>
+                    <span className="text-ds-fg-subtle">—</span>
                 )}
             </td>
         </tr>
@@ -380,10 +376,8 @@ function Row({ wo, onOpen }: { wo: WorkOrder; onOpen: () => void }) {
 function EmptyState({ children, tone }: { children: React.ReactNode; tone?: "critical" }) {
     return (
         <div
-            className={`flex h-full min-h-[180px] items-center justify-center px-6 py-10 text-[var(--ds-text-sm)] ${
-                tone === "critical"
-                    ? "text-[var(--ds-status-critical)]"
-                    : "text-[var(--ds-fg-subtle)]"
+            className={`flex h-full min-h-[180px] items-center justify-center px-6 py-10 text-ds-sm ${
+                tone === "critical" ? "text-ds-critical" : "text-ds-fg-subtle"
             }`}
         >
             {children}

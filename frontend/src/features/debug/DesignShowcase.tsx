@@ -39,19 +39,17 @@ export default function DesignShowcase() {
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[var(--ds-bg-base)] text-[var(--ds-fg-primary)] font-sans">
+        <div className="min-h-screen bg-ds-bg-base text-ds-fg-primary font-sans">
             <div className="max-w-5xl mx-auto px-8 py-10 space-y-10">
                 {/* Page header — operator-calm meta-line */}
                 <header className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                             <AriaMark size={22} />
-                            <span className="text-[var(--ds-text-md)] font-semibold tracking-[-0.01em]">
+                            <span className="text-ds-md font-semibold tracking-[-0.01em]">
                                 ARIA
                             </span>
-                            <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
-                                Design system
-                            </span>
+                            <span className="text-ds-sm text-ds-fg-muted">Design system</span>
                         </div>
                         <ThemeToggle />
                     </div>
@@ -67,10 +65,10 @@ export default function DesignShowcase() {
                             />
                         }
                     />
-                    <p className="max-w-2xl text-[var(--ds-text-base)] text-[var(--ds-fg-muted)]">
+                    <p className="max-w-2xl text-ds-base text-ds-fg-muted">
                         The v2 design register — dark-first with a real light mode, warm neutrals,
                         one calm product blue. Linear / Vercel / Stripe cousin. See
-                        <code className="mx-1 rounded-[var(--ds-radius-sm)] bg-[var(--ds-bg-elevated)] px-1 py-0.5 font-mono text-[12px] text-[var(--ds-fg-primary)]">
+                        <code className="mx-1 rounded-ds-sm bg-ds-bg-elevated px-1 py-0.5 font-mono text-[12px] text-ds-fg-primary">
                             DESIGN_PLAN_v2.md
                         </code>
                         for the full spec.
@@ -82,13 +80,13 @@ export default function DesignShowcase() {
                 <section className="space-y-4">
                     <SectionHeader label="Brand mark" size="md" marker="§5.6" />
                     <div className="flex flex-wrap items-end gap-10">
-                        <AriaMark size={16} className="text-[var(--ds-fg-muted)]" />
+                        <AriaMark size={16} className="text-ds-fg-muted" />
                         <AriaMark size={24} />
                         <AriaMark size={40} />
                         <AriaMark size={64} />
-                        <AriaMark size={40} className="text-[var(--ds-accent)]" />
+                        <AriaMark size={40} className="text-ds-accent" />
                     </div>
-                    <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
+                    <p className="text-ds-sm text-ds-fg-subtle">
                         Default color is primary fg. Accent tone is opt-in only.
                     </p>
                 </section>
@@ -151,31 +149,29 @@ export default function DesignShowcase() {
                 <section className="space-y-4">
                     <SectionHeader label="Typography" size="md" marker="§3" />
                     <div className="space-y-3">
-                        <p className="text-[var(--ds-text-3xl)] font-bold tracking-[-0.02em] leading-tight">
+                        <p className="text-ds-3xl font-bold tracking-[-0.02em] leading-tight">
                             Inter — 30/700. Display only.
                         </p>
-                        <p className="text-[var(--ds-text-2xl)] font-semibold tracking-[-0.01em] leading-tight">
+                        <p className="text-ds-2xl font-semibold tracking-[-0.01em] leading-tight">
                             Inter — 24/600. Page header.
                         </p>
-                        <p className="text-[var(--ds-text-xl)] font-semibold leading-tight">
+                        <p className="text-ds-xl font-semibold leading-tight">
                             Inter — 20/600. Section header.
                         </p>
-                        <p className="text-[var(--ds-text-lg)] font-semibold">
-                            Inter — 17/600. Card title.
-                        </p>
-                        <p className="text-[var(--ds-text-md)] font-medium">
+                        <p className="text-ds-lg font-semibold">Inter — 17/600. Card title.</p>
+                        <p className="text-ds-md font-medium">
                             Inter — 15/500. Primary UI controls.
                         </p>
-                        <p className="text-[var(--ds-text-base)]">
+                        <p className="text-ds-base">
                             Inter — 14/400. Default body. The app runs on this.
                         </p>
-                        <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                        <p className="text-ds-sm text-ds-fg-muted">
                             Inter — 13/400–500. Captions, labels.
                         </p>
-                        <p className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                        <p className="text-ds-xs text-ds-fg-subtle">
                             Inter — 11/500. Fine print, metadata.
                         </p>
-                        <p className="font-mono text-[13px] text-[var(--ds-fg-muted)]">
+                        <p className="font-mono text-[13px] text-ds-fg-muted">
                             JetBrains Mono — 13. Rare: numerics, kbd, code.
                         </p>
                     </div>
@@ -218,7 +214,7 @@ export default function DesignShowcase() {
                                     Vibration calibrated from operator feedback.
                                 </CardDescription>
                             </CardHeader>
-                            <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                            <p className="text-ds-sm text-ds-fg-muted">
                                 Nominal read — no rail. Absence is the default state.
                             </p>
                         </Card>
@@ -260,7 +256,7 @@ export default function DesignShowcase() {
 
                 <section className="space-y-3">
                     <SectionHeader label="Status" size="md" marker="04" />
-                    <div className="flex flex-wrap items-center gap-6 text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                    <div className="flex flex-wrap items-center gap-6 text-ds-sm text-ds-fg-muted">
                         {statuses.map((s) => (
                             <div key={s} className="flex items-center gap-2">
                                 <StatusDot status={s} />
@@ -276,7 +272,7 @@ export default function DesignShowcase() {
 
                 <section className="space-y-3">
                     <SectionHeader label="Keyboard keys" size="md" marker="05" />
-                    <div className="flex items-center gap-2 text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                    <div className="flex items-center gap-2 text-ds-sm text-ds-fg-muted">
                         <span>Toggle chat drawer</span>
                         <KbdKey>⌘</KbdKey>
                         <KbdKey>K</KbdKey>
@@ -300,7 +296,7 @@ export default function DesignShowcase() {
                         <div className="mt-4">
                             <TabsContent value="thinking">
                                 <Card padding="sm">
-                                    <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] leading-relaxed">
+                                    <p className="text-ds-sm text-ds-fg-muted leading-relaxed">
                                         The vibration spike at t-4h correlates with the bearing
                                         temperature increase at t-3h30. Both signals deviated from
                                         nominal at…
@@ -309,7 +305,7 @@ export default function DesignShowcase() {
                             </TabsContent>
                             <TabsContent value="tools">
                                 <Card padding="sm">
-                                    <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                                    <p className="text-ds-sm text-ds-fg-muted">
                                         get_signal_trends · get_failure_history · ask_kb_builder ·
                                         submit_rca
                                     </p>
@@ -317,14 +313,14 @@ export default function DesignShowcase() {
                             </TabsContent>
                             <TabsContent value="io">
                                 <Card padding="sm">
-                                    <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                                    <p className="text-ds-sm text-ds-fg-muted">
                                         Raw JSON inputs/outputs dev view.
                                     </p>
                                 </Card>
                             </TabsContent>
                             <TabsContent value="memory">
                                 <Card padding="sm">
-                                    <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                                    <p className="text-ds-sm text-ds-fg-muted">
                                         Failure history entries consulted during this turn.
                                     </p>
                                 </Card>
@@ -351,7 +347,7 @@ export default function DesignShowcase() {
                                     </Button>
                                 }
                             />
-                            <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                            <p className="text-ds-sm text-ds-fg-muted">
                                 Placeholder drawer — the real chat panel lands in M6.5.
                             </p>
                         </div>
@@ -370,9 +366,7 @@ export default function DesignShowcase() {
                 <Hairline weight={2} />
 
                 <footer className="flex items-baseline justify-between pb-10">
-                    <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
-                        End of design system
-                    </p>
+                    <p className="text-ds-sm text-ds-fg-subtle">End of design system</p>
                     <MetaStrip
                         items={[
                             { label: "Version", value: "v2 · operator-calm" },
@@ -391,12 +385,10 @@ function Palette({ swatches }: { swatches: [string, string][] }) {
             {swatches.map(([name, color]) => (
                 <div key={name}>
                     <div
-                        className="h-14 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)]"
+                        className="h-14 rounded-ds-md border border-ds-border"
                         style={{ backgroundColor: color }}
                     />
-                    <div className="mt-1.5 text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
-                        {name}
-                    </div>
+                    <div className="mt-1.5 text-ds-xs text-ds-fg-muted">{name}</div>
                 </div>
             ))}
         </div>
@@ -419,7 +411,7 @@ function MotionDemo({
                     variants={variants}
                     initial="hidden"
                     animate="visible"
-                    className="flex h-16 items-center justify-center rounded-[var(--ds-radius-sm)] border text-[var(--ds-text-sm)] font-medium"
+                    className="flex h-16 items-center justify-center rounded-ds-sm border text-ds-sm font-medium"
                     style={{
                         backgroundColor: "var(--ds-accent-soft)",
                         borderColor: "color-mix(in oklab, var(--ds-accent), transparent 70%)",
@@ -432,7 +424,7 @@ function MotionDemo({
             <button
                 type="button"
                 onClick={() => setKey((k) => k + 1)}
-                className="mt-1.5 text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)] hover:text-[var(--ds-fg-muted)]"
+                className="mt-1.5 text-ds-sm text-ds-fg-subtle hover:text-ds-fg-muted"
             >
                 Replay →
             </button>

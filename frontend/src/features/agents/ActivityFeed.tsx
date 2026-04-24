@@ -85,17 +85,13 @@ export function ActivityFeed() {
     return (
         <section
             aria-label="Agent activity feed"
-            className="flex h-full min-h-0 flex-col bg-[var(--ds-bg-surface)]"
+            className="flex h-full min-h-0 flex-col bg-ds-bg-surface"
         >
-            <header className="flex flex-none flex-col gap-2 border-b border-[var(--ds-border)] px-3 py-2">
+            <header className="flex flex-none flex-col gap-2 border-b border-ds-border px-3 py-2">
                 <div className="flex items-center gap-2">
-                    <Icons.Activity className="size-3.5 text-[var(--ds-fg-muted)]" aria-hidden />
-                    <h3 className="text-[var(--ds-text-sm)] font-semibold text-[var(--ds-fg-primary)]">
-                        Activity
-                    </h3>
-                    <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
-                        {visible.length} recent
-                    </span>
+                    <Icons.Activity className="size-3.5 text-ds-fg-muted" aria-hidden />
+                    <h3 className="text-ds-sm font-semibold text-ds-fg-primary">Activity</h3>
+                    <span className="text-ds-xs text-ds-fg-subtle">{visible.length} recent</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                     {FILTER_CHIPS.map((chip) => (
@@ -116,7 +112,7 @@ export function ActivityFeed() {
                 className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2"
             >
                 {visible.length === 0 ? (
-                    <li className="px-2 py-3 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                    <li className="px-2 py-3 text-ds-xs text-ds-fg-subtle">
                         No agent activity yet.
                     </li>
                 ) : (
@@ -148,10 +144,10 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
             type="button"
             onClick={onClick}
             aria-pressed={active}
-            className={`inline-flex h-6 items-center rounded-[var(--ds-radius-sm)] px-2 text-[11px] font-medium transition-colors duration-[var(--ds-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] ${
+            className={`inline-flex h-6 items-center rounded-ds-sm px-2 text-[11px] font-medium transition-colors duration-ds-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring ${
                 active
-                    ? "bg-[var(--ds-accent-soft)] text-[var(--ds-accent)]"
-                    : "text-[var(--ds-fg-muted)] hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)]"
+                    ? "bg-ds-accent-soft text-ds-accent"
+                    : "text-ds-fg-muted hover:bg-ds-bg-hover hover:text-ds-fg-primary"
             }`}
         >
             {children}
@@ -194,13 +190,11 @@ const ActivityRow = memo(function ActivityRow({ evt, now, onOpenInspector }: Act
                         {agentLabel}
                     </Badge>
                 ) : (
-                    <span className="text-[var(--ds-text-xs)] font-medium text-[var(--ds-fg-muted)]">
-                        {agentLabel}
-                    </span>
+                    <span className="text-ds-xs font-medium text-ds-fg-muted">{agentLabel}</span>
                 )}
                 <ActivityDescription evt={evt} />
             </span>
-            <span className="ml-auto flex-none text-[10px] text-[var(--ds-fg-subtle)]">
+            <span className="ml-auto flex-none text-[10px] text-ds-fg-subtle">
                 {formatRelativeTime(evt.receivedAt, now)}
             </span>
         </>
@@ -219,12 +213,12 @@ const ActivityRow = memo(function ActivityRow({ evt, now, onOpenInspector }: Act
                 <button
                     type="button"
                     onClick={() => primaryAgent && onOpenInspector(primaryAgent)}
-                    className="flex w-full items-center gap-2 rounded-[var(--ds-radius-sm)] px-2 py-1.5 text-left text-[11px] transition-colors duration-[var(--ds-motion-fast)] hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                    className="flex w-full items-center gap-2 rounded-ds-sm px-2 py-1.5 text-left text-[11px] transition-colors duration-ds-fast hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
                 >
                     {body}
                 </button>
             ) : (
-                <div className="flex w-full items-center gap-2 rounded-[var(--ds-radius-sm)] px-2 py-1.5 text-[11px]">
+                <div className="flex w-full items-center gap-2 rounded-ds-sm px-2 py-1.5 text-[11px]">
                     {body}
                 </div>
             )}
@@ -248,8 +242,8 @@ function AgentDot({ agent }: { agent: string | null }) {
 }
 
 function ActivityDescription({ evt }: { evt: ActivityEvent }) {
-    const muted = "text-[var(--ds-fg-muted)]";
-    const primary = "text-[var(--ds-fg-primary)]";
+    const muted = "text-ds-fg-muted";
+    const primary = "text-ds-fg-primary";
     switch (evt.kind) {
         case "agent_start":
             return <span className={muted}>thinking…</span>;
@@ -269,18 +263,15 @@ function ActivityDescription({ evt }: { evt: ActivityEvent }) {
             return (
                 <span className={muted}>
                     returned <span className={`${primary} font-mono`}>{evt.tool_name}</span>{" "}
-                    <span className="text-[var(--ds-fg-subtle)]">· {evt.duration_ms} ms</span>
+                    <span className="text-ds-fg-subtle">· {evt.duration_ms} ms</span>
                 </span>
             );
         case "agent_handoff":
             return (
                 <span className={`${muted} flex min-w-0 items-center gap-1`}>
-                    <Icons.ArrowRight
-                        className="size-3 flex-none text-[var(--ds-fg-subtle)]"
-                        aria-hidden
-                    />
+                    <Icons.ArrowRight className="size-3 flex-none text-ds-fg-subtle" aria-hidden />
                     <span className={`${primary} font-mono`}>{formatAgentLabel(evt.to_agent)}</span>
-                    <span className="truncate text-[var(--ds-fg-subtle)]">· {evt.reason}</span>
+                    <span className="truncate text-ds-fg-subtle">· {evt.reason}</span>
                 </span>
             );
         case "anomaly_detected":

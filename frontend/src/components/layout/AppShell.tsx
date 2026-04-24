@@ -131,7 +131,7 @@ export function AppShell() {
     const sidebarWidth = safeSidebar.collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-[var(--ds-bg-base)] text-[var(--ds-fg-primary)]">
+        <div className="flex h-screen w-screen overflow-hidden bg-ds-bg-base text-ds-fg-primary">
             <Sidebar collapsed={safeSidebar.collapsed} onToggle={toggleSidebar} />
             <div
                 className="flex min-w-0 flex-1 flex-col"

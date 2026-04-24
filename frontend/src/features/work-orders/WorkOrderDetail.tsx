@@ -53,9 +53,7 @@ export default function WorkOrderDetail() {
         return (
             <section className="flex h-full flex-col gap-4 p-6 print:hidden">
                 <BackLink />
-                <p className="text-[var(--ds-text-sm)] text-[var(--ds-status-critical)]">
-                    Invalid work order id.
-                </p>
+                <p className="text-ds-sm text-ds-critical">Invalid work order id.</p>
             </section>
         );
     }
@@ -64,7 +62,7 @@ export default function WorkOrderDetail() {
         return (
             <section className="flex h-full flex-col gap-4 p-6 print:hidden">
                 <BackLink />
-                <p className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">Loading…</p>
+                <p className="text-ds-sm text-ds-fg-subtle">Loading…</p>
             </section>
         );
     }
@@ -73,7 +71,7 @@ export default function WorkOrderDetail() {
         return (
             <section className="flex h-full flex-col gap-4 p-6 print:hidden">
                 <BackLink />
-                <p className="text-[var(--ds-text-sm)] text-[var(--ds-status-critical)]">
+                <p className="text-ds-sm text-ds-critical">
                     Failed to load work order. {query.error?.message ?? ""}
                 </p>
             </section>
@@ -108,7 +106,7 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
                     type="button"
                     onClick={() => window.print()}
                     aria-label="Print this work order"
-                    className="inline-flex h-9 items-center gap-1.5 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] px-3 text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)] transition-colors duration-[var(--ds-motion-fast)] hover:border-[var(--ds-border-strong)] hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-ds-md border border-ds-border bg-ds-bg-surface px-3 text-ds-sm font-medium text-ds-fg-primary transition-colors duration-ds-fast hover:border-ds-border-strong hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
                 >
                     <Icons.Printer className="size-4" aria-hidden />
                     Print
@@ -120,9 +118,9 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
                 meta={
                     <span className="flex items-center gap-2">
                         <Badge variant={priorityVariant(wo.priority)}>{wo.priority}</Badge>
-                        <span className="inline-flex items-center gap-1.5 text-[var(--ds-fg-muted)]">
+                        <span className="inline-flex items-center gap-1.5 text-ds-fg-muted">
                             <StatusDot status={statusToDotStatus(wo.status)} />
-                            <span className="text-[var(--ds-fg-primary)]">
+                            <span className="text-ds-fg-primary">
                                 {wo.status.replace(/_/g, " ")}
                             </span>
                         </span>
@@ -145,21 +143,21 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
             <Hairline />
             {wo.description && (
                 <Panel title="Description">
-                    <p className="whitespace-pre-wrap text-[var(--ds-text-sm)] leading-[1.55] text-[var(--ds-fg-primary)]">
+                    <p className="whitespace-pre-wrap text-ds-sm leading-[1.55] text-ds-fg-primary">
                         {wo.description}
                     </p>
                 </Panel>
             )}
             {wo.rca_summary && (
                 <Panel title="Root cause analysis" meta={<Badge variant="accent">RCA ready</Badge>}>
-                    <p className="whitespace-pre-wrap text-[var(--ds-text-sm)] leading-[1.55] text-[var(--ds-fg-primary)]">
+                    <p className="whitespace-pre-wrap text-ds-sm leading-[1.55] text-ds-fg-primary">
                         {wo.rca_summary}
                     </p>
                 </Panel>
             )}
             {actions.length > 0 && (
                 <Panel title="Recommended actions">
-                    <ol className="list-decimal space-y-1.5 pl-5 text-[var(--ds-text-sm)] leading-[1.55] text-[var(--ds-fg-primary)]">
+                    <ol className="list-decimal space-y-1.5 pl-5 text-ds-sm leading-[1.55] text-ds-fg-primary">
                         {actions.map((a) => (
                             <li key={a}>{a}</li>
                         ))}
@@ -190,7 +188,7 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
             )}
             {(wo.suggested_window_start || wo.estimated_duration_min != null) && (
                 <Panel title="Scheduling">
-                    <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-[var(--ds-text-sm)]">
+                    <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-ds-sm">
                         {wo.suggested_window_start && (
                             <Field
                                 label="Suggested start"
@@ -220,7 +218,7 @@ function BackLink() {
     return (
         <Link
             to="/work-orders"
-            className="inline-flex h-8 items-center gap-1.5 rounded-[var(--ds-radius-sm)] px-2 text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)] transition-colors hover:bg-[var(--ds-bg-hover)] hover:text-[var(--ds-fg-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+            className="inline-flex h-8 items-center gap-1.5 rounded-ds-sm px-2 text-ds-sm text-ds-fg-muted transition-colors hover:bg-ds-bg-hover hover:text-ds-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
         >
             <Icons.ChevronLeft className="size-4" aria-hidden />
             Back to list
@@ -238,11 +236,9 @@ function Panel({
     children: React.ReactNode;
 }) {
     return (
-        <section className="flex flex-col gap-3 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] p-5">
+        <section className="flex flex-col gap-3 rounded-ds-md border border-ds-border bg-ds-bg-surface p-5">
             <header className="flex items-center justify-between gap-3">
-                <h3 className="text-[var(--ds-text-md)] font-semibold text-[var(--ds-fg-primary)]">
-                    {title}
-                </h3>
+                <h3 className="text-ds-md font-semibold text-ds-fg-primary">{title}</h3>
                 {meta}
             </header>
             {children}
@@ -253,8 +249,8 @@ function Panel({
 function Field({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex flex-col gap-0.5">
-            <dt className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">{label}</dt>
-            <dd className="text-[var(--ds-fg-primary)]">{value}</dd>
+            <dt className="text-ds-xs text-ds-fg-muted">{label}</dt>
+            <dd className="text-ds-fg-primary">{value}</dd>
         </div>
     );
 }

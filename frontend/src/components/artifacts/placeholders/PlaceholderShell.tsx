@@ -25,14 +25,10 @@ export function PlaceholderShell({ label, detail, children }: PlaceholderShellPr
                 <Badge variant="accent" size="sm">
                     {label}
                 </Badge>
-                {detail && (
-                    <span className="font-mono text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
-                        {detail}
-                    </span>
-                )}
+                {detail && <span className="font-mono text-ds-xs text-ds-fg-muted">{detail}</span>}
             </div>
             {children && (
-                <div className="mt-2 font-mono text-[var(--ds-text-xs)] leading-[1.55] text-[var(--ds-fg-subtle)] break-words">
+                <div className="mt-2 font-mono text-ds-xs leading-[1.55] text-ds-fg-subtle break-words">
                     {children}
                 </div>
             )}

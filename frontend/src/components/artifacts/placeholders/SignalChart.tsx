@@ -128,15 +128,11 @@ function CustomTooltip({ active, payload, unitName }: CustomTooltipProps) {
     const point = payload[0]?.payload;
     if (!point) return null;
     return (
-        <div className="rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] px-2 py-1.5 text-[var(--ds-text-xs)] shadow-[var(--ds-shadow-overlay)]">
-            <div className="font-mono text-[var(--ds-fg-muted)]">
-                {formatTooltipTime(point.time)}
-            </div>
-            <div className="mt-0.5 text-[var(--ds-fg-primary)]">
+        <div className="rounded-ds-sm border border-ds-border bg-ds-bg-elevated px-2 py-1.5 text-ds-xs shadow-ds-overlay">
+            <div className="font-mono text-ds-fg-muted">{formatTooltipTime(point.time)}</div>
+            <div className="mt-0.5 text-ds-fg-primary">
                 <span className="font-mono">{formatValue(point.raw_value)}</span>
-                {unitName ? (
-                    <span className="ml-1 text-[var(--ds-fg-muted)]">{unitName}</span>
-                ) : null}
+                {unitName ? <span className="ml-1 text-ds-fg-muted">{unitName}</span> : null}
             </div>
         </div>
     );
@@ -173,10 +169,8 @@ export function SignalChart(props: SignalChartProps) {
     // Loading — sober text, no shimmer (§9).
     if (isLoading) {
         return (
-            <div className="flex h-[200px] w-full max-w-[400px] items-center justify-center rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]">
-                <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
-                    Loading signal…
-                </span>
+            <div className="flex h-[200px] w-full max-w-[400px] items-center justify-center rounded-ds-md border border-ds-border bg-ds-bg-surface">
+                <span className="text-ds-xs text-ds-fg-muted">Loading signal…</span>
             </div>
         );
     }
@@ -184,11 +178,9 @@ export function SignalChart(props: SignalChartProps) {
     // Error / empty — inline card, retry handled by TanStack Query.
     if (isError || !series || series.length === 0) {
         return (
-            <div className="w-full max-w-[400px] rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] p-3">
-                <div className="mb-1 text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)]">
-                    {displayName}
-                </div>
-                <div className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+            <div className="w-full max-w-[400px] rounded-ds-md border border-ds-border bg-ds-bg-surface p-3">
+                <div className="mb-1 text-ds-sm font-medium text-ds-fg-primary">{displayName}</div>
+                <div className="text-ds-xs text-ds-fg-subtle">
                     No data for signal #{signal_def_id} in the last {window_hours}h.
                 </div>
             </div>
@@ -198,12 +190,10 @@ export function SignalChart(props: SignalChartProps) {
     const anomalyValue = mark_anomaly_at ? findValueAtTime(series, mark_anomaly_at) : null;
 
     return (
-        <div className="w-full max-w-[400px] rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] p-3">
+        <div className="w-full max-w-[400px] rounded-ds-md border border-ds-border bg-ds-bg-surface p-3">
             <div className="mb-2 flex items-baseline justify-between gap-3">
-                <span className="text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)]">
-                    {displayName}
-                </span>
-                <span className="font-mono text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)]">
+                <span className="text-ds-sm font-medium text-ds-fg-primary">{displayName}</span>
+                <span className="font-mono text-ds-xs text-ds-fg-muted">
                     Last {window_hours}h · Cell {cell_id}
                 </span>
             </div>

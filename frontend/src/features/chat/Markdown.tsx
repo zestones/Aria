@@ -3,22 +3,19 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const ANCHOR_CLASS =
-    "underline underline-offset-2 text-[var(--ds-accent)] hover:text-[var(--ds-accent-hover)] transition-colors duration-[var(--ds-motion-fast)]";
+    "underline underline-offset-2 text-ds-accent hover:text-ds-accent-hover transition-colors duration-ds-fast";
 
 const CODE_INLINE_CLASS =
-    "font-mono bg-[var(--ds-bg-elevated)] text-[var(--ds-fg-primary)] px-1.5 py-0.5 rounded-[var(--ds-radius-sm)] text-[var(--ds-text-xs)] border border-[var(--ds-border)]";
+    "font-mono bg-ds-bg-elevated text-ds-fg-primary px-1.5 py-0.5 rounded-ds-sm text-ds-xs border border-ds-border";
 
 const CODE_BLOCK_CLASS =
-    "font-mono bg-[var(--ds-bg-elevated)] text-[var(--ds-fg-primary)] p-3 rounded-[var(--ds-radius-md)] overflow-x-auto text-[var(--ds-text-xs)] leading-relaxed border border-[var(--ds-border)]";
+    "font-mono bg-ds-bg-elevated text-ds-fg-primary p-3 rounded-ds-md overflow-x-auto text-ds-xs leading-relaxed border border-ds-border";
 
 type CodeProps = ComponentPropsWithoutRef<"code"> & { inline?: boolean };
 
 const components: Components = {
     p: ({ children, ...rest }) => (
-        <p
-            {...rest}
-            className="mb-2 last:mb-0 leading-[1.55] text-[var(--ds-text-sm)] text-[var(--ds-fg-primary)]"
-        >
+        <p {...rest} className="mb-2 last:mb-0 leading-[1.55] text-ds-sm text-ds-fg-primary">
             {children}
         </p>
     ),
@@ -28,19 +25,19 @@ const components: Components = {
         </a>
     ),
     strong: ({ children, ...rest }) => (
-        <strong {...rest} className="font-semibold text-[var(--ds-fg-primary)]">
+        <strong {...rest} className="font-semibold text-ds-fg-primary">
             {children}
         </strong>
     ),
     em: ({ children, ...rest }) => (
-        <em {...rest} className="italic text-[var(--ds-fg-primary)]">
+        <em {...rest} className="italic text-ds-fg-primary">
             {children}
         </em>
     ),
     ul: ({ children, ...rest }) => (
         <ul
             {...rest}
-            className="mb-2 last:mb-0 ml-4 list-disc space-y-1 text-[var(--ds-text-sm)] marker:text-[var(--ds-fg-subtle)]"
+            className="mb-2 last:mb-0 ml-4 list-disc space-y-1 text-ds-sm marker:text-ds-fg-subtle"
         >
             {children}
         </ul>
@@ -48,20 +45,20 @@ const components: Components = {
     ol: ({ children, ...rest }) => (
         <ol
             {...rest}
-            className="mb-2 last:mb-0 ml-5 list-decimal space-y-1 text-[var(--ds-text-sm)] marker:text-[var(--ds-fg-subtle)]"
+            className="mb-2 last:mb-0 ml-5 list-decimal space-y-1 text-ds-sm marker:text-ds-fg-subtle"
         >
             {children}
         </ol>
     ),
     li: ({ children, ...rest }) => (
-        <li {...rest} className="leading-[1.55] text-[var(--ds-fg-primary)]">
+        <li {...rest} className="leading-[1.55] text-ds-fg-primary">
             {children}
         </li>
     ),
     h1: ({ children, ...rest }) => (
         <h1
             {...rest}
-            className="mb-2 mt-3 first:mt-0 text-[var(--ds-text-lg)] font-semibold tracking-[-0.01em] text-[var(--ds-fg-primary)]"
+            className="mb-2 mt-3 first:mt-0 text-ds-lg font-semibold tracking-[-0.01em] text-ds-fg-primary"
         >
             {children}
         </h1>
@@ -69,7 +66,7 @@ const components: Components = {
     h2: ({ children, ...rest }) => (
         <h2
             {...rest}
-            className="mb-2 mt-3 first:mt-0 text-[var(--ds-text-md)] font-semibold tracking-[-0.01em] text-[var(--ds-fg-primary)]"
+            className="mb-2 mt-3 first:mt-0 text-ds-md font-semibold tracking-[-0.01em] text-ds-fg-primary"
         >
             {children}
         </h2>
@@ -77,7 +74,7 @@ const components: Components = {
     h3: ({ children, ...rest }) => (
         <h3
             {...rest}
-            className="mb-1.5 mt-2 first:mt-0 text-[var(--ds-text-sm)] font-semibold text-[var(--ds-fg-primary)]"
+            className="mb-1.5 mt-2 first:mt-0 text-ds-sm font-semibold text-ds-fg-primary"
         >
             {children}
         </h3>
@@ -85,40 +82,34 @@ const components: Components = {
     blockquote: ({ children, ...rest }) => (
         <blockquote
             {...rest}
-            className="mb-2 last:mb-0 border-l-2 border-[var(--ds-border-strong)] pl-3 text-[var(--ds-fg-muted)] italic"
+            className="mb-2 last:mb-0 border-l-2 border-ds-border-strong pl-3 text-ds-fg-muted italic"
         >
             {children}
         </blockquote>
     ),
-    hr: () => <hr className="my-3 border-t border-[var(--ds-border)]" />,
+    hr: () => <hr className="my-3 border-t border-ds-border" />,
     table: ({ children, ...rest }) => (
-        <div className="mb-2 last:mb-0 overflow-x-auto rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)]">
-            <table
-                {...rest}
-                className="w-full border-collapse text-[var(--ds-text-xs)] text-[var(--ds-fg-primary)]"
-            >
+        <div className="mb-2 last:mb-0 overflow-x-auto rounded-ds-sm border border-ds-border">
+            <table {...rest} className="w-full border-collapse text-ds-xs text-ds-fg-primary">
                 {children}
             </table>
         </div>
     ),
     thead: ({ children, ...rest }) => (
-        <thead {...rest} className="bg-[var(--ds-bg-elevated)] text-left">
+        <thead {...rest} className="bg-ds-bg-elevated text-left">
             {children}
         </thead>
     ),
     th: ({ children, ...rest }) => (
         <th
             {...rest}
-            className="border-b border-[var(--ds-border)] px-2.5 py-1.5 font-medium text-[var(--ds-fg-muted)]"
+            className="border-b border-ds-border px-2.5 py-1.5 font-medium text-ds-fg-muted"
         >
             {children}
         </th>
     ),
     td: ({ children, ...rest }) => (
-        <td
-            {...rest}
-            className="border-b border-[var(--ds-border)] px-2.5 py-1.5 align-top last:border-b-0"
-        >
+        <td {...rest} className="border-b border-ds-border px-2.5 py-1.5 align-top last:border-b-0">
             {children}
         </td>
     ),

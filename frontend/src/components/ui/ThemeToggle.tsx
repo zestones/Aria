@@ -19,7 +19,7 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
 
     return (
         <div
-            className={`inline-flex items-center gap-0.5 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] p-0.5 ${className}`}
+            className={`inline-flex items-center gap-0.5 rounded-ds-md border border-ds-border bg-ds-bg-surface p-0.5 ${className}`}
         >
             {options.map((opt) => {
                 const active = mode === opt.value;
@@ -30,10 +30,10 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
                         aria-pressed={active}
                         aria-label={`Use ${opt.label.toLowerCase()} theme`}
                         onClick={() => setMode(opt.value)}
-                        className={`h-7 rounded-[var(--ds-radius-sm)] px-2.5 text-[var(--ds-text-sm)] font-medium transition-colors duration-[var(--ds-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)] ${
+                        className={`h-7 rounded-ds-sm px-2.5 text-ds-sm font-medium transition-colors duration-ds-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring ${
                             active
-                                ? "bg-[var(--ds-bg-elevated)] text-[var(--ds-fg-primary)]"
-                                : "text-[var(--ds-fg-muted)] hover:text-[var(--ds-fg-primary)]"
+                                ? "bg-ds-bg-elevated text-ds-fg-primary"
+                                : "text-ds-fg-muted hover:text-ds-fg-primary"
                         }`}
                     >
                         {opt.label}

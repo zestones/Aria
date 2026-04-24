@@ -113,7 +113,7 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="relative flex items-center gap-3 border-b border-[var(--ds-border)] px-4"
+            className="relative flex items-center gap-3 border-b border-ds-border px-4"
             style={{
                 minHeight: 44,
                 paddingLeft: 16,
@@ -130,20 +130,18 @@ function BannerBody({ event, count, signalLabel, onDismiss, onInvestigate }: Ban
             <Icon size={16} style={{ color: fgVar }} aria-hidden="true" />
 
             <span
-                className="text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)] truncate"
+                className="text-ds-sm font-medium text-ds-fg-primary truncate"
                 data-testid="anomaly-banner-text"
             >
                 {description}
             </span>
 
-            <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-muted)] whitespace-nowrap">
-                {relativeTime}
-            </span>
+            <span className="text-ds-xs text-ds-fg-muted whitespace-nowrap">{relativeTime}</span>
 
             {count > 1 && (
                 <span
                     data-testid="anomaly-banner-count"
-                    className="ml-auto rounded-[var(--ds-radius-sm)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] px-2 py-0.5 text-[var(--ds-text-xs)] font-medium text-[var(--ds-fg-muted)]"
+                    className="ml-auto rounded-ds-sm border border-ds-border bg-ds-bg-elevated px-2 py-0.5 text-ds-xs font-medium text-ds-fg-muted"
                 >
                     +{count - 1} more
                 </span>

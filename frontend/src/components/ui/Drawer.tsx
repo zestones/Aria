@@ -55,10 +55,10 @@ export function Drawer({
     // Round the top edges when the drawer sits flush against a viewport edge.
     const radiusClass =
         side === "bottom"
-            ? "rounded-t-[var(--ds-radius-md)]"
+            ? "rounded-t-ds-md"
             : side === "left"
-              ? "rounded-r-[var(--ds-radius-md)]"
-              : "rounded-l-[var(--ds-radius-md)]";
+              ? "rounded-r-ds-md"
+              : "rounded-l-ds-md";
 
     return (
         <AnimatePresence>
@@ -76,7 +76,7 @@ export function Drawer({
                         />
                     )}
                     <motion.aside
-                        className={`fixed ${position} z-50 bg-[var(--ds-bg-surface)] border-[var(--ds-border)] ${radiusClass} ${
+                        className={`fixed ${position} z-50 bg-ds-bg-surface border-ds-border ${radiusClass} ${
                             side === "right"
                                 ? "border-l"
                                 : side === "left"

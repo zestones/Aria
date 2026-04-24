@@ -368,22 +368,22 @@ export function EquipmentPicker({ selection, onChange }: EquipmentPickerProps) {
                 aria-haspopup="tree"
                 aria-expanded={open}
                 aria-controls={treeId}
-                className="group inline-flex h-8 max-w-full items-center gap-2.5 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)] pr-2 pl-3 text-left transition-colors duration-[var(--ds-motion-fast)] hover:border-[var(--ds-border-strong)] hover:bg-[var(--ds-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-accent-ring)]"
+                className="group inline-flex h-8 max-w-full items-center gap-2.5 rounded-ds-md border border-ds-border bg-ds-bg-surface pr-2 pl-3 text-left transition-colors duration-ds-fast hover:border-ds-border-strong hover:bg-ds-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ds-accent-ring"
                 style={{ width: TRIGGER_WIDTH }}
             >
                 <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                    <span className="truncate text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)]">
+                    <span className="truncate text-ds-sm font-medium text-ds-fg-primary">
                         {triggerLabel}
                     </span>
                     {triggerContext && (
-                        <span className="hidden truncate text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)] md:inline">
+                        <span className="hidden truncate text-ds-xs text-ds-fg-subtle md:inline">
                             {triggerContext}
                         </span>
                     )}
                 </span>
                 <KbdKey className="flex-none">⌘⇧E</KbdKey>
                 <Icons.ChevronDown
-                    className={`size-4 flex-none text-[var(--ds-fg-muted)] transition-transform duration-[var(--ds-motion-fast)] ${open ? "rotate-180" : ""}`}
+                    className={`size-4 flex-none text-ds-fg-muted transition-transform duration-ds-fast ${open ? "rotate-180" : ""}`}
                 />
             </button>
 
@@ -411,7 +411,7 @@ export function EquipmentPicker({ selection, onChange }: EquipmentPickerProps) {
                             aria-modal="true"
                             aria-label="Plant structure"
                             onKeyDown={handleKeyDown}
-                            className="absolute top-full left-0 z-50 overflow-hidden rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-surface)]"
+                            className="absolute top-full left-0 z-50 overflow-hidden rounded-ds-md border border-ds-border bg-ds-bg-surface"
                             style={{
                                 width: POPOVER_WIDTH,
                                 maxHeight: POPOVER_MAX_HEIGHT,
@@ -497,18 +497,16 @@ function PickerHeader({
     return (
         <div className="flex flex-col gap-2 px-3 pt-3 pb-2">
             <div className="flex items-baseline justify-between">
-                <span className="text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-primary)]">
-                    Plant structure
-                </span>
-                <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+                <span className="text-ds-sm font-medium text-ds-fg-primary">Plant structure</span>
+                <span className="text-ds-xs text-ds-fg-subtle">
                     {total === 0 ? "—" : `${shown} of ${total} cells`}
                 </span>
             </div>
             <label htmlFor={searchInputId} className="sr-only">
                 Filter plant structure
             </label>
-            <div className="flex items-center gap-2 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-base)] px-2.5 focus-within:border-[var(--ds-accent)] focus-within:ring-2 focus-within:ring-[var(--ds-accent-ring)]">
-                <Icons.Search className="size-4 flex-none text-[var(--ds-fg-subtle)]" />
+            <div className="flex items-center gap-2 rounded-ds-md border border-ds-border bg-ds-bg-base px-2.5 focus-within:border-ds-accent focus-within:ring-2 focus-within:ring-ds-accent-ring">
+                <Icons.Search className="size-4 flex-none text-ds-fg-subtle" />
                 <input
                     ref={inputRef}
                     id={searchInputId}
@@ -519,14 +517,14 @@ function PickerHeader({
                     placeholder="Filter by site, area, line, or cell…"
                     spellCheck={false}
                     autoComplete="off"
-                    className="h-8 min-w-0 flex-1 bg-transparent text-[var(--ds-text-sm)] text-[var(--ds-fg-primary)] placeholder:text-[var(--ds-fg-subtle)] focus:outline-none"
+                    className="h-8 min-w-0 flex-1 bg-transparent text-ds-sm text-ds-fg-primary placeholder:text-ds-fg-subtle focus:outline-none"
                 />
                 {query && (
                     <button
                         type="button"
                         onClick={() => onQueryChange("")}
                         aria-label="Clear filter"
-                        className="text-[var(--ds-fg-subtle)] transition-colors duration-[var(--ds-motion-fast)] hover:text-[var(--ds-fg-muted)]"
+                        className="text-ds-fg-subtle transition-colors duration-ds-fast hover:text-ds-fg-muted"
                     >
                         <Icons.X className="size-3.5" />
                     </button>
@@ -582,9 +580,7 @@ function PickerBody({
                 className="flex min-h-[220px] items-center justify-center px-4 py-6"
                 aria-busy
             >
-                <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
-                    Loading plant structure…
-                </span>
+                <span className="text-ds-sm text-ds-fg-subtle">Loading plant structure…</span>
             </div>
         );
     }
@@ -596,16 +592,16 @@ function PickerBody({
                 role="alert"
                 className="flex min-h-[220px] flex-col items-start justify-center gap-2 px-4 py-6"
             >
-                <span className="text-[var(--ds-text-sm)] font-medium text-[var(--ds-status-critical)]">
+                <span className="text-ds-sm font-medium text-ds-critical">
                     Plant structure unavailable
                 </span>
-                <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-muted)]">
+                <span className="text-ds-sm text-ds-fg-muted">
                     {errorMessage ?? "Failed to load plant structure."}
                 </span>
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="mt-1 inline-flex h-7 items-center gap-1.5 rounded-[var(--ds-radius-md)] border border-[var(--ds-border)] bg-[var(--ds-bg-elevated)] px-2.5 text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-muted)] transition-colors duration-[var(--ds-motion-fast)] hover:border-[var(--ds-border-strong)] hover:text-[var(--ds-fg-primary)]"
+                    className="mt-1 inline-flex h-7 items-center gap-1.5 rounded-ds-md border border-ds-border bg-ds-bg-elevated px-2.5 text-ds-sm font-medium text-ds-fg-muted transition-colors duration-ds-fast hover:border-ds-border-strong hover:text-ds-fg-primary"
                 >
                     <Icons.RefreshCw className="size-3.5" />
                     Retry
@@ -620,12 +616,8 @@ function PickerBody({
                 ref={listRef}
                 className="flex min-h-[220px] flex-col items-center justify-center gap-1.5 px-4 py-6 text-center"
             >
-                <span className="text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-muted)]">
-                    No equipment yet
-                </span>
-                <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
-                    The plant structure is empty.
-                </span>
+                <span className="text-ds-sm font-medium text-ds-fg-muted">No equipment yet</span>
+                <span className="text-ds-sm text-ds-fg-subtle">The plant structure is empty.</span>
             </div>
         );
     }
@@ -636,11 +628,9 @@ function PickerBody({
                 ref={listRef}
                 className="flex min-h-[220px] flex-col items-center justify-center gap-1.5 px-4 py-6 text-center"
             >
-                <span className="text-[var(--ds-text-sm)] font-medium text-[var(--ds-fg-muted)]">
-                    No match
-                </span>
-                <span className="text-[var(--ds-text-sm)] text-[var(--ds-fg-subtle)]">
-                    Nothing matches <span className="text-[var(--ds-fg-primary)]">“{query}”</span>.
+                <span className="text-ds-sm font-medium text-ds-fg-muted">No match</span>
+                <span className="text-ds-sm text-ds-fg-subtle">
+                    Nothing matches <span className="text-ds-fg-primary">“{query}”</span>.
                 </span>
             </div>
         );
@@ -720,7 +710,7 @@ function TreeItem({
     };
 
     const bg = active ? "var(--ds-bg-hover)" : "transparent";
-    const nameColor = dimmed ? "text-[var(--ds-fg-subtle)]" : "text-[var(--ds-fg-primary)]";
+    const nameColor = dimmed ? "text-ds-fg-subtle" : "text-ds-fg-primary";
 
     return (
         <div
@@ -735,7 +725,7 @@ function TreeItem({
             onMouseEnter={() => !disabled && onHover(node.key)}
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleClick}
-            className={`group relative mx-2 flex cursor-pointer items-center gap-1.5 rounded-[var(--ds-radius-sm)] py-1.5 pr-2 transition-colors duration-[var(--ds-motion-fast)] ${
+            className={`group relative mx-2 flex cursor-pointer items-center gap-1.5 rounded-ds-sm py-1.5 pr-2 transition-colors duration-ds-fast ${
                 disabled ? "cursor-not-allowed opacity-40" : ""
             }`}
             style={{ backgroundColor: bg, paddingLeft: indentPx }}
@@ -751,10 +741,10 @@ function TreeItem({
                     onClick={handleChevronClick}
                     onMouseDown={(e) => e.preventDefault()}
                     aria-label={expanded ? "Collapse" : "Expand"}
-                    className="inline-flex size-4 flex-none items-center justify-center rounded-[var(--ds-radius-sm)] text-[var(--ds-fg-subtle)] transition-colors duration-[var(--ds-motion-fast)] hover:text-[var(--ds-fg-primary)]"
+                    className="inline-flex size-4 flex-none items-center justify-center rounded-ds-sm text-ds-fg-subtle transition-colors duration-ds-fast hover:text-ds-fg-primary"
                 >
                     <Icons.ChevronRight
-                        className={`size-3.5 transition-transform duration-[var(--ds-motion-fast)] ${
+                        className={`size-3.5 transition-transform duration-ds-fast ${
                             expanded ? "rotate-90" : ""
                         }`}
                     />
@@ -765,37 +755,31 @@ function TreeItem({
                 level={node.level}
                 className={
                     dimmed
-                        ? "size-4 flex-none text-[var(--ds-fg-subtle)]"
-                        : "size-4 flex-none text-[var(--ds-fg-muted)]"
+                        ? "size-4 flex-none text-ds-fg-subtle"
+                        : "size-4 flex-none text-ds-fg-muted"
                 }
             />
 
             <span className="flex min-w-0 flex-1 items-baseline gap-2">
                 <span
-                    className={`truncate text-[var(--ds-text-sm)] ${
+                    className={`truncate text-ds-sm ${
                         matched ? "font-semibold" : "font-medium"
                     } ${nameColor}`}
                 >
                     {node.name}
                 </span>
                 {isLeaf ? (
-                    <span className="truncate text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
-                        #{node.id}
-                    </span>
+                    <span className="truncate text-ds-xs text-ds-fg-subtle">#{node.id}</span>
                 ) : (
-                    <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)] tabular-nums">
+                    <span className="text-ds-xs text-ds-fg-subtle tabular-nums">
                         {node.cellCount}
                     </span>
                 )}
             </span>
 
-            {isLeaf && disabled && (
-                <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
-                    Disabled
-                </span>
-            )}
+            {isLeaf && disabled && <span className="text-ds-xs text-ds-fg-subtle">Disabled</span>}
             {isLeaf && selected && !disabled && (
-                <Icons.Check className="size-4 flex-none text-[var(--ds-accent)]" />
+                <Icons.Check className="size-4 flex-none text-ds-accent" />
             )}
         </div>
     );
@@ -825,7 +809,7 @@ interface PickerFooterProps {
 function PickerFooter({ shown, total }: PickerFooterProps) {
     return (
         <div className="flex items-center justify-between gap-3 px-3 py-2">
-            <div className="flex items-center gap-3 text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+            <div className="flex items-center gap-3 text-ds-xs text-ds-fg-subtle">
                 <span className="flex items-center gap-1">
                     <KbdKey>↑</KbdKey>
                     <KbdKey>↓</KbdKey>
@@ -845,7 +829,7 @@ function PickerFooter({ shown, total }: PickerFooterProps) {
                     <span>Close</span>
                 </span>
             </div>
-            <span className="text-[var(--ds-text-xs)] text-[var(--ds-fg-subtle)]">
+            <span className="text-ds-xs text-ds-fg-subtle">
                 {total > 0 ? `${shown} cell${shown === 1 ? "" : "s"}` : "—"}
             </span>
         </div>
