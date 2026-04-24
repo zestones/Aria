@@ -26,6 +26,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from agents.investigator import run_investigator
 from aria_mcp.client import mcp_client
 from core.database import db
 from core.db_helpers import must
@@ -253,18 +254,7 @@ def _spawn_investigator(work_order_id: int) -> None:
     Investigator so it can be merged and demoed on its own — the WO
     simply stays in ``status='detected'`` with no RCA attached.
     """
-    try:
-        from agents.investigator import \
-            run_investigator  # type: ignore[import-not-found]
-    except ImportError:
-        log.info(
-            "Sentinel: Investigator not yet implemented (#25) — WO %d left in status=detected",
-            work_order_id,
-        )
-        return
-
     asyncio.create_task(
         run_investigator(work_order_id),
         name=f"investigator-wo-{work_order_id}",
-    )
     )
