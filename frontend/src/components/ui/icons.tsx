@@ -23,6 +23,7 @@ import {
     Gauge as RawGauge,
     GitBranch as RawGitBranch,
     Layers as RawLayers,
+    Loader2 as RawLoader2,
     LogOut as RawLogOut,
     MapPin as RawMapPin,
     Maximize2 as RawMaximize2,
@@ -87,6 +88,7 @@ export const Filter = styled(RawFilter, "Filter");
 export const Gauge = styled(RawGauge, "Gauge");
 export const GitBranch = styled(RawGitBranch, "GitBranch");
 export const Layers = styled(RawLayers, "Layers");
+export const Loader2 = styled(RawLoader2, "Loader2");
 export const LogOut = styled(RawLogOut, "LogOut");
 export const Maximize2 = styled(RawMaximize2, "Maximize2");
 export const MapPin = styled(RawMapPin, "MapPin");

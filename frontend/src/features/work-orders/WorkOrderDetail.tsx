@@ -7,9 +7,11 @@
  * (see `PrintableWorkOrder`) so the printed page uses the dedicated layout.
  */
 
+import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { Badge, Hairline, Icons, MetaStrip, SectionHeader, StatusDot } from "../../components/ui";
+import { fadeInUp } from "../../components/ui/motion";
 import { PrintableWorkOrder } from "./PrintableWorkOrder";
 import type { WorkOrder } from "./types";
 import { useWorkOrder } from "./useWorkOrders";
@@ -41,6 +43,166 @@ function statusToDotStatus(status: string): "nominal" | "warning" | "critical" |
     if (status === "in_progress" || status === "open") return "nominal";
     if (status === "cancelled") return "warning";
     return "critical";
+}
+
+/**
+ * Full-screen centered animation shown while ARIA agents are processing.
+ * Replaces the content area (no other panels show during detected/analyzed).
+ *
+ * Phase colors:
+ *   detected  → agent-investigator (blue-purple arc)
+ *   analyzed  → agent-work-order   (signal orange)
+ */
+function AgentWorkingBanner({ status }: { status: string }) {
+    const isDetected = status === "detected";
+    const isAnalyzed = status === "analyzed";
+    const active = isDetected || isAnalyzed;
+
+    const label = isDetected ? "Investigating anomaly" : "Building work order";
+    const sub = isDetected
+        ? "Root-cause analysis in progress — may take up to 2 min"
+        : "Generating recommended actions and parts list";
+    const phase: "investigate" | "generate" = isDetected ? "investigate" : "generate";
+
+    return (
+        <AnimatePresence initial={false}>
+            {active && (
+                <motion.div
+                    key="agent-working"
+                    variants={fadeInUp}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    className="flex flex-1 flex-col items-center justify-center gap-8 py-16"
+                    role="status"
+                    aria-live="polite"
+                    aria-label={label}
+                    data-testid="wo-agent-working-banner"
+                >
+                    <RadarScanSVG phase={phase} />
+                    <div className="flex flex-col items-center gap-1.5 text-center">
+                        <span className="text-base font-semibold tracking-tight text-foreground">
+                            {label}
+                        </span>
+                        <span className="max-w-xs text-sm text-muted-foreground">{sub}</span>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
+/**
+ * Radar-sweep SVG — a rotating scan line with a 60° trail and staggered
+ * "blip" dots that pulse as if being discovered. Communicates "scanning /
+ * analyzing" without shimmer, glow, or decorative loops.
+ *
+ * The outer ring radius is 70 px; center at (80, 80) in a 160×160 viewBox.
+ * Arc math: scan line points to (80, 10) = 270°; trail end at 210°
+ * → path `M80,80 L80,10 A70,70 0 0,0 19.4,45 Z` (60° counterclockwise wedge).
+ */
+function RadarScanSVG({ phase }: { phase: "investigate" | "generate" }) {
+    const accent =
+        phase === "investigate"
+            ? "var(--agent-investigator, var(--accent-arc))"
+            : "var(--agent-work-order, var(--warning))";
+
+    const blips: { cx: number; cy: number; delay: number }[] = [
+        { cx: 48, cy: 38, delay: 0.3 },
+        { cx: 112, cy: 55, delay: 1.2 },
+        { cx: 42, cy: 100, delay: 2.6 },
+        { cx: 108, cy: 108, delay: 0.9 },
+        { cx: 122, cy: 78, delay: 3.1 },
+        { cx: 65, cy: 125, delay: 1.8 },
+    ];
+
+    return (
+        <svg
+            viewBox="0 0 160 160"
+            width="160"
+            height="160"
+            aria-hidden="true"
+            style={{ overflow: "visible" }}
+        >
+            {/* Concentric guide rings */}
+            <circle
+                cx="80"
+                cy="80"
+                r="70"
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth="1"
+                opacity="0.5"
+            />
+            <circle
+                cx="80"
+                cy="80"
+                r="50"
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth="0.75"
+                opacity="0.4"
+            />
+            <circle
+                cx="80"
+                cy="80"
+                r="30"
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth="0.5"
+                opacity="0.3"
+            />
+
+            {/* Rotating scanner: 60° sweep wedge + scan line.
+                Uses SVG-native SMIL <animateTransform> for bulletproof rotation
+                (immune to CSS transform-origin quirks, framer-motion config, and
+                OS prefers-reduced-motion). Pivot is (80,80) via `from`/`to`. */}
+            <g>
+                <animateTransform
+                    attributeName="transform"
+                    attributeType="XML"
+                    type="rotate"
+                    from="0 80 80"
+                    to="360 80 80"
+                    dur="4s"
+                    repeatCount="indefinite"
+                />
+                {/* Wedge trail behind the scan line */}
+                <path d="M80,80 L80,10 A70,70 0 0,0 19.4,45 Z" fill={accent} opacity="0.1" />
+                {/* Scan line */}
+                <line
+                    x1="80"
+                    y1="80"
+                    x2="80"
+                    y2="10"
+                    stroke={accent}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                />
+            </g>
+
+            {/* Blip dots: staggered appear → fade, as if discovered by sweep */}
+            {blips.map(({ cx, cy, delay }) => (
+                <motion.circle
+                    key={`${cx}-${cy}`}
+                    cx={cx}
+                    cy={cy}
+                    r={3.5}
+                    fill={accent}
+                    animate={{ opacity: [0, 0.9, 0.5, 0], scale: [0.3, 1, 0.8, 0.3] }}
+                    transition={{ duration: 4, delay, repeat: Infinity, ease: "easeOut" }}
+                    style={{ transformOrigin: `${cx}px ${cy}px` }}
+                />
+            ))}
+
+            {/* Center crosshair */}
+            <circle cx="80" cy="80" r="7" fill={accent} opacity="0.12" />
+            <circle cx="80" cy="80" r="3.5" fill={accent} />
+            <line x1="73" y1="80" x2="87" y2="80" stroke="var(--card)" strokeWidth="1.25" />
+            <line x1="80" y1="73" x2="80" y2="87" stroke="var(--card)" strokeWidth="1.25" />
+        </svg>
+    );
 }
 
 export default function WorkOrderDetail() {
@@ -139,6 +301,7 @@ function ScreenView({ wo }: { wo: WorkOrder }) {
                 ]}
             />
             <Hairline />
+            <AgentWorkingBanner status={wo.status} />
             {wo.description && (
                 <Panel title="Description">
                     <p className="whitespace-pre-wrap text-sm leading-[1.55] text-foreground">
