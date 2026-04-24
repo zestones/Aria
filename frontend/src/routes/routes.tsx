@@ -6,6 +6,7 @@ import {
     ControlRoomPage,
     DataPage,
     DesignPage,
+    LogbookPage,
     LoginPage,
     OnboardingPage,
     WorkspacePage,
@@ -37,6 +38,7 @@ export function AppRoutes() {
                 <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/work-orders" element={<WorkOrderList />} />
                 <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
+                <Route path="/logbook" element={<LogbookPage />} />
                 <Route path="/data" element={<DataPage />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/onboarding/:session_id" element={<OnboardingPage />} />

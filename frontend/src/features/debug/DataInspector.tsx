@@ -304,7 +304,7 @@ export default function DataInspector() {
                                     <li key={l.id} className="border-l-2 border-input pl-3">
                                         <div className="flex items-baseline justify-between gap-3">
                                             <span className="font-medium text-foreground">
-                                                {l.title}
+                                                {l.category}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
                                                 {l.category} · {l.severity}
@@ -315,8 +315,10 @@ export default function DataInspector() {
                                             {new Date(l.created_at).toLocaleString()} ·{" "}
                                             {l.author_username ?? "—"}
                                         </p>
-                                        {l.body && (
-                                            <p className="mt-1 text-xs text-foreground">{l.body}</p>
+                                        {l.content && (
+                                            <p className="mt-1 text-xs text-foreground">
+                                                {l.content}
+                                            </p>
                                         )}
                                     </li>
                                 ))}
