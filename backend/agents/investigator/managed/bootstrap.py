@@ -25,10 +25,17 @@ import logging
 from typing import Any, cast
 
 from agents.anthropic_client import anthropic, model_for
-from agents.investigator.prompts import INVESTIGATOR_SYSTEM
+from agents.investigator.prompts import INVESTIGATOR_SYSTEM, SANDBOX_DIAGNOSTICS_SECTION
 from agents.investigator.schemas import ASK_KB_BUILDER_TOOL, SUBMIT_RCA_TOOL
 from agents.ui_tools import INVESTIGATOR_RENDER_TOOLS
 from core.config import get_settings
+
+# Python packages pre-installed in the Investigator's cloud container so
+# the agent can run numerical diagnostics (FFT, regression, statistics)
+# via ``bash`` without a first-session ``pip install`` cold-start (#105).
+# The SDK accepts this as ``config.packages.pip`` — see
+# ``anthropic.types.beta.beta_packages_params.BetaPackagesParams``.
+_ENV_PIP_PACKAGES = ["numpy", "pandas", "scipy"]
 
 log = logging.getLogger("aria.investigator.managed.bootstrap")
 
@@ -60,9 +67,25 @@ async def ensure_agent_and_env() -> tuple[str, str]:
 
         beta = get_settings().managed_agents_beta
 
+        # ``networking: unrestricted`` is mandatory for #105 — the Investigator
+        # curls our sandbox CSV endpoint from inside the container. Without
+        # it the agent's bash calls silently fail on DNS / egress and the
+        # diagnostic examples in the system prompt produce no numerical
+        # output. ``packages.pip`` pre-bakes numpy/pandas/scipy so the first
+        # session does not pay a ~30-60s install latency on cold-start.
         env = await anthropic.beta.environments.create(
             name=_ENV_NAME,
-            config={"type": "cloud"},
+            config=cast(
+                Any,
+                {
+                    "type": "cloud",
+                    "networking": {"type": "unrestricted"},
+                    "packages": {
+                        "type": "packages",
+                        "pip": _ENV_PIP_PACKAGES,
+                    },
+                },
+            ),
             betas=cast(Any, [beta]),
         )
         _environment_id = env.id
@@ -126,17 +149,50 @@ async def create_session(agent_id: str, env_id: str, turn_id: str) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _resolve_sandbox_base_url() -> str:
+    """Return the URL the Investigator's container will curl for CSVs.
+
+    Prefers the Cloudflare-tunneled public URL when configured (so the
+    container on Anthropic's side can reach us), falls back to the
+    internal docker-compose hostname for local dry-runs with no tunnel.
+    Neither branch leaks the secret to anything except the system prompt
+    itself, which is pinned on the agent definition and not logged.
+    """
+    public = (get_settings().aria_mcp_public_url or "").strip()
+    secret = get_settings().aria_mcp_path_secret
+
+    if public:
+        # Strip any trailing ``/mcp/<secret>`` to recover the base so we
+        # can re-append ``/sandbox/<secret>``. Users set
+        # ``ARIA_MCP_PUBLIC_URL`` to the full mount URL per README.
+        base = public.rstrip("/")
+        mcp_suffix = f"/mcp/{secret}"
+        if base.endswith(mcp_suffix):
+            base = base[: -len(mcp_suffix)]
+        return f"{base}/sandbox/{secret}"
+
+    # No tunnel configured — dry-runs from a dev machine hit the backend
+    # over the docker-compose network. ``backend`` is the compose service
+    # name; port 8000 is the FastAPI default.
+    return f"http://backend:8000/sandbox/{secret}"
+
+
 def _build_system_prompt() -> str:
-    """Resolve the M4.5 ``{past_failures}`` placeholder for static reuse.
+    """Resolve the M4.5 ``{past_failures}`` and M5.7 ``{diagnostics_section}``
+    placeholders for static reuse.
 
     Managed Agents pins the system prompt at agent-creation time and
     reuses it across sessions — so per-run context (the actual failure
     history for the anomaly's cell) lands in the initial ``user.message``
     instead, and the prompt carries a pointer to it.
     """
+    diagnostics = SANDBOX_DIAGNOSTICS_SECTION.format(
+        sandbox_base_url=_resolve_sandbox_base_url(),
+    )
     return INVESTIGATOR_SYSTEM.format(
+        diagnostics_section=diagnostics,
         past_failures="(The specific past-failure context for this cell "
-        "is provided in the first user message.)"
+        "is provided in the first user message.)",
     )
 
 
@@ -162,14 +218,32 @@ def _strip_additional_properties(schema: dict[str, Any]) -> dict[str, Any]:
 
 
 def _build_custom_tools() -> list[dict[str, Any]]:
-    """Wrap the three tool kinds that need our backend in the custom envelope.
+    """Wrap the three tool kinds that need our backend in the custom envelope,
+    and enable the built-in container toolset (bash + file tools) for #105.
 
     MCP tools are NOT wrapped — they route via hosted MCP (see
-    :func:`_build_mcp_servers`). The agent definition sees only the
-    custom escape-hatch tools plus whatever the hosted MCP server
-    advertises.
+    :func:`_build_mcp_servers`). The agent definition sees:
+
+    - The ``agent_toolset_20260401`` entry enabling ``bash``, ``edit``,
+      ``read``, ``write``, ``glob``, ``grep``, ``web_fetch``,
+      ``web_search`` inside the cloud container (M5.7 / #105). Without
+      this entry the agent has no ``bash`` and the diagnostics section
+      in the system prompt points at a tool the model cannot call —
+      the RCA then degrades to pure prose arithmetic. ``always_allow``
+      matches the MCP toolset policy so the agent does not stall
+      waiting for a human confirmation that never arrives.
+    - ``submit_rca`` / ``ask_kb_builder`` / ``render_*`` custom tools.
+    - Whatever the hosted MCP server advertises (added separately).
     """
+    builtin_toolset: dict[str, Any] = {
+        "type": "agent_toolset_20260401",
+        "default_config": {
+            "enabled": True,
+            "permission_policy": {"type": "always_allow"},
+        },
+    }
     custom: list[dict[str, Any]] = [
+        builtin_toolset,
         {
             "type": "custom",
             "name": SUBMIT_RCA_TOOL["name"],

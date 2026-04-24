@@ -195,7 +195,13 @@ async def _run_investigator_body(work_order_id: int, turn_id: str) -> None:
         + [SUBMIT_RCA_TOOL, ASK_KB_BUILDER_TOOL]
     )
 
-    system_prompt = INVESTIGATOR_SYSTEM.format(past_failures=past_text)
+    # Messages API has no ``bash`` tool — the sandbox diagnostics guidance
+    # only applies to the Managed Agents path, so this branch passes an
+    # empty ``diagnostics_section`` (see ``prompts.py`` for rationale).
+    system_prompt = INVESTIGATOR_SYSTEM.format(
+        diagnostics_section="",
+        past_failures=past_text,
+    )
     user_text = (
         f"Anomaly detected on cell {cell_id}. "
         f"Work order #{work_order_id}: {wo_data.get('title', '(untitled)')}. "

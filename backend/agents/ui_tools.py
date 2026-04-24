@@ -344,6 +344,71 @@ RENDER_BAR_CHART: dict[str, Any] = {
     },
 }
 
+RENDER_SANDBOX_EXECUTION: dict[str, Any] = {
+    "name": "render_sandbox_execution",
+    "description": (
+        "Render a card showing a Python script you just ran in the cloud "
+        "sandbox (Managed Agents bash tool) together with its numerical "
+        "output. Call this exactly once AFTER a successful bash analysis "
+        "and BEFORE submit_rca so the operator and the judges can see the "
+        "math actually ran — not just that a number appears in the RCA. "
+        "The card renders inline in chat with the script, the output, and "
+        "an 'ran in Anthropic sandbox' chip. See the diagnostics section "
+        "of the system prompt for the failure-mode-keyed rules that "
+        "govern when this must fire."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "cell_id": {
+                "type": "integer",
+                "description": "Production cell the analysis was run for.",
+            },
+            "technique": {
+                "type": "string",
+                "enum": ["regression", "correlation", "fft", "cusum", "other"],
+                "description": (
+                    "Which statistical technique the script implements. Used by "
+                    "the frontend to title the card and pick a matching icon."
+                ),
+            },
+            "script": {
+                "type": "string",
+                "description": (
+                    "The Python script that ran in the sandbox, verbatim — "
+                    "without the outer bash/curl wrapper. Will be rendered in "
+                    "a monospaced code block."
+                ),
+            },
+            "output": {
+                "type": "string",
+                "description": (
+                    "The key=value lines the script printed, verbatim, one per "
+                    "line. Must match the Sandbox: prefix the agent adds to "
+                    "submit_rca.root_cause so the two surfaces corroborate."
+                ),
+            },
+            "signal_def_ids": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "description": (
+                    "Signal definition IDs whose CSVs were pulled from the "
+                    "/sandbox/.../signal/<id>/csv endpoint. Lets the card show "
+                    "which series the agent analysed."
+                ),
+            },
+            "window_hours": {
+                "type": "number",
+                "description": "Length of the time window the script analysed, in hours.",
+            },
+        },
+        "required": ["cell_id", "technique", "script", "output"],
+        # Permit server-side enrichment in future (e.g. attach an MCP-derived
+        # reference value like bearing BPFO) without breaking the contract.
+        "additionalProperties": True,
+    },
+}
+
 RENDER_KB_PROGRESS: dict[str, Any] = {
     "name": "render_kb_progress",
     "description": (
@@ -433,6 +498,7 @@ INVESTIGATOR_RENDER_TOOLS: list[dict[str, Any]] = [
     RENDER_SIGNAL_CHART,
     RENDER_DIAGNOSTIC_CARD,
     RENDER_PATTERN_MATCH,
+    RENDER_SANDBOX_EXECUTION,
 ]
 
 QA_RENDER_TOOLS: list[dict[str, Any]] = [
@@ -459,4 +525,5 @@ ALL_LLM_RENDER_TOOLS: list[dict[str, Any]] = [
     RENDER_PATTERN_MATCH,
     RENDER_BAR_CHART,
     RENDER_KB_PROGRESS,
+    RENDER_SANDBOX_EXECUTION,
 ]

@@ -606,6 +606,10 @@ async def test_bootstrap_registers_mcp_server_and_custom_tools(patch_managed) ->
         "render_signal_chart",
         "render_diagnostic_card",
         "render_pattern_match",
+        # M5.7 / #105 — the sandbox-execution visible-proof card, added to
+        # INVESTIGATOR_RENDER_TOOLS so the managed agent can call it after
+        # bash/Python diagnostics and before submit_rca.
+        "render_sandbox_execution",
     }
     # mcp_toolset entries are present alongside the custom tools
     mcp_toolset_entries = [t for t in agent_kwargs["tools"] if t["type"] == "mcp_toolset"]

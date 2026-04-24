@@ -130,6 +130,17 @@ def create_app() -> FastAPI:
     if not settings.aria_mcp_public_url:
         app.mount("/mcp", mcp_http_app)
 
+    # Mount the sandbox data endpoints behind the same path-secret gate as
+    # MCP (#105 / M5.7). The Managed Investigator's cloud container curls
+    # this URL for raw signal CSVs during numerical diagnostics. No cookie
+    # auth — the mount path itself is the secret, identical threat model
+    # to ``/mcp/<secret>``.
+    from modules.sandbox.app import sandbox_app
+
+    app.mount(
+        f"/sandbox/{settings.aria_mcp_path_secret}", sandbox_app, name="sandbox-secret"
+    )
+
     return app
 
 
