@@ -63,8 +63,7 @@ def test_sandbox_section_contains_at_least_two_worked_examples() -> None:
     """
     fence_count = SANDBOX_DIAGNOSTICS_SECTION.count("PY")
     assert fence_count >= 4, (
-        f"expected at least 2 Python heredoc examples (>=4 'PY' fences), "
-        f"found {fence_count}"
+        f"expected at least 2 Python heredoc examples (>=4 'PY' fences), " f"found {fence_count}"
     )
 
 
@@ -76,9 +75,9 @@ def test_sandbox_section_references_fft_and_trend_techniques() -> None:
     lower = SANDBOX_DIAGNOSTICS_SECTION.lower()
     assert "fft" in lower, "FFT example is missing"
     # polyfit / linear regression wording — either form is acceptable.
-    assert any(term in lower for term in ("polyfit", "regression", "slope")), (
-        "linear-trend / regression example is missing"
-    )
+    assert any(
+        term in lower for term in ("polyfit", "regression", "slope")
+    ), "linear-trend / regression example is missing"
 
 
 # ---------------------------------------------------------------------------
@@ -91,9 +90,9 @@ def test_sandbox_section_mandates_sandbox_colon_prefix() -> None:
     so the numerical evidence lands in the work-order text itself.
     Dropping this rule makes the capability indistinguishable from
     Messages API token arithmetic in the RCA surface."""
-    assert "Sandbox:" in SANDBOX_DIAGNOSTICS_SECTION, (
-        "the Sandbox: prefix rule for submit_rca.root_cause is missing"
-    )
+    assert (
+        "Sandbox:" in SANDBOX_DIAGNOSTICS_SECTION
+    ), "the Sandbox: prefix rule for submit_rca.root_cause is missing"
 
 
 def test_sandbox_section_has_failure_mode_keyed_rules() -> None:
@@ -109,18 +108,18 @@ def test_sandbox_section_has_failure_mode_keyed_rules() -> None:
 def test_sandbox_section_mandates_render_sandbox_execution_call() -> None:
     """The visible-proof card must be called after bash + before submit_rca.
     Without this line the artifact is orphaned."""
-    assert "render_sandbox_execution" in SANDBOX_DIAGNOSTICS_SECTION, (
-        "render_sandbox_execution mandate is missing from the prompt"
-    )
+    assert (
+        "render_sandbox_execution" in SANDBOX_DIAGNOSTICS_SECTION
+    ), "render_sandbox_execution mandate is missing from the prompt"
 
 
 def test_sandbox_section_references_required_regression_metrics() -> None:
     """Drift-class rule requires slope / r_squared / eta — all three must
     appear so the agent knows the expected Sandbox: line shape."""
     for metric in ("slope_per_hour", "r_squared", "eta_"):
-        assert metric in SANDBOX_DIAGNOSTICS_SECTION, (
-            f"drift-class metric {metric!r} is missing from the prompt"
-        )
+        assert (
+            metric in SANDBOX_DIAGNOSTICS_SECTION
+        ), f"drift-class metric {metric!r} is missing from the prompt"
 
 
 def test_sandbox_section_references_correlation_metrics() -> None:
@@ -128,9 +127,9 @@ def test_sandbox_section_references_correlation_metrics() -> None:
     parseable in the Sandbox: prefix."""
     lower = SANDBOX_DIAGNOSTICS_SECTION.lower()
     assert "rho" in lower, "coupling-class rho metric is missing"
-    assert any(token in lower for token in ("n_samples", "n=")), (
-        "coupling-class sample-count metric is missing"
-    )
+    assert any(
+        token in lower for token in ("n_samples", "n=")
+    ), "coupling-class sample-count metric is missing"
 
 
 # ---------------------------------------------------------------------------

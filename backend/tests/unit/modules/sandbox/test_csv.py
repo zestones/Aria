@@ -89,9 +89,7 @@ async def _collect_body(response: Any) -> bytes:
 @pytest.mark.asyncio
 async def test_happy_path_returns_csv_ordered_ascending() -> None:
     t0 = datetime(2026, 4, 24, 12, 0, 0, tzinfo=timezone.utc)
-    rows = [
-        _sample_row(t0 + timedelta(seconds=30 * i), 2.2 + 0.01 * i) for i in range(5)
-    ]
+    rows = [_sample_row(t0 + timedelta(seconds=30 * i), 2.2 + 0.01 * i) for i in range(5)]
     conn = _FakeConn(definition=_sample_definition(), rows=rows)
 
     response = await sandbox_mod.signal_csv(

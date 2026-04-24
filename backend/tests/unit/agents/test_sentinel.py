@@ -736,10 +736,7 @@ async def test_forecast_tick_skips_flat_series(patch_forecast) -> None:
     from datetime import timedelta
 
     now = datetime.now(timezone.utc)
-    flat = [
-        {"time": now - timedelta(minutes=i), "raw_value": 10.0}
-        for i in range(60, 0, -1)
-    ]
+    flat = [{"time": now - timedelta(minutes=i), "raw_value": 10.0} for i in range(60, 0, -1)]
     signals = [
         {
             "signal_def_id": 10,

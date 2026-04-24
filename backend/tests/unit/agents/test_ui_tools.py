@@ -42,9 +42,9 @@ def test_all_llm_render_tools_are_anthropic_format():
     """Every tool in ALL_LLM_RENDER_TOOLS is a valid Anthropic tool descriptor."""
     # 7 original LLM render tools (render_correlation_matrix dropped per audit
     # §2) + render_sandbox_execution (M5.7 / #105) = 8.
-    assert len(ALL_LLM_RENDER_TOOLS) == 8, (
-        "Expected 8 LLM render tools: 7 original + render_sandbox_execution (M5.7 / #105)"
-    )
+    assert (
+        len(ALL_LLM_RENDER_TOOLS) == 8
+    ), "Expected 8 LLM render tools: 7 original + render_sandbox_execution (M5.7 / #105)"
     for tool in ALL_LLM_RENDER_TOOLS:
         _assert_anthropic_format(tool)
 
