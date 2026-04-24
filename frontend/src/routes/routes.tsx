@@ -3,7 +3,7 @@ import { AppShell } from "../components/layout";
 import { WorkOrderDetail, WorkOrderList } from "../features/work-orders";
 import {
     AnomaliesPage,
-    ControlRoomPage,
+    DashboardPage,
     EquipmentPage,
     LogbookPage,
     LoginPage,
@@ -33,7 +33,7 @@ export function AppRoutes() {
                     </RequireAuth>
                 }
             >
-                <Route path="/control-room" element={<ControlRoomPage />} />
+                <Route path="/control-room" element={<DashboardPage />} />
                 <Route path="/equipment" element={<EquipmentPage />} />
                 <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/work-orders" element={<WorkOrderList />} />

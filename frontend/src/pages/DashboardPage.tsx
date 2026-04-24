@@ -30,7 +30,7 @@ import { formatHeaderDate } from "../lib/date";
 import type { EquipmentSelection } from "../lib/hierarchy";
 import { useLocalStorage } from "../lib/useLocalStorage";
 
-export default function ControlRoomPage() {
+export default function DashboardPage() {
     const [selection] = useLocalStorage<EquipmentSelection | null>(EQUIPMENT_KEY, null, {
         validator: validateEquipmentSelection,
     });
