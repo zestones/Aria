@@ -39,16 +39,10 @@
 
 ### Scene 1 — Onboarding Bottle Labeler (0:25–0:50)
 
-**0:25–0:35**
-*"A water-bottling plant. Five machines. Today a new one comes online — the Bottle Labeler."*
+**0:25–0:50**
+*"Take a water-bottling factory. One line, four machines. Today a fifth one comes online — the Bottle Labeler. Normally, configuring its monitoring takes a specialist two days. Drop in the manual. ARIA reads it. Asks three questions. Two minutes later, it's live."*
 
 > [Dashboard `/control-room` avec ses 5 tiles visibles brievement (Source Pump, UV Sterilizer, Bottle Filler, Bottle Capper, Bottle Labeler). Click sur Labeler tile → OnboardingPage avec EquipmentBootstrap.]
-
----
-
-**0:35–0:50**
-*"Drop in the manual. ARIA reads it with Opus 4.7 vision. Asks three questions. Two minutes later, it's live."*
-
 > [Drag & drop PDF Grundfos NB-G. 5-phase KbProgress ("Validating PDF / Reading pages with Opus vision / Extracting thresholds / Validating schema / Saving KB") → MultiTurnDialog → EquipmentKbCard reveal avec thresholds calibres.]
 > `[ANNOTATION : "Opus 4.7 vision · 1M context"]`
 
