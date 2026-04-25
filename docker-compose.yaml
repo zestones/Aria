@@ -42,10 +42,18 @@ services:
     restart: "no"
     networks: [aria]
 
-  simulator:
+  # ── Simulators — one per monitored cell ───────────────────────────
+  # Four containers share the same image but each runs a different
+  # CELL_NAME + SIMULATOR_SCENARIO so live signal data flows on every
+  # tile in the Control Room grid (not just the Bottle Filler).
+  # The Bottle Labeler is intentionally excluded — it's the onboarding-
+  # wizard target and stays signal-less until the operator uploads the
+  # IOM PDF.
+
+  simulator-filler:
     build:
       context: ./simulator
-    container_name: aria-simulator
+    container_name: aria-sim-filler
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -55,10 +63,70 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      SIMULATOR_MODE: ${SIMULATOR_MODE:-demo}
-      SIMULATOR_SCENARIO: ${SIMULATOR_SCENARIO:-p02_bearing_failure}
+      SIMULATOR_MODE: ${SIMULATOR_MODE:-realtime}
+      SIMULATOR_SCENARIO: bottle_filler
       SIMULATOR_TICK_INTERVAL_S: ${SIMULATOR_TICK_INTERVAL_S:-1.0}
-      CELL_NAME: P-02
+      CELL_NAME: Bottle Filler
+    restart: unless-stopped
+    networks: [aria]
+
+  simulator-source-pump:
+    build:
+      context: ./simulator
+    container_name: aria-sim-source-pump
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_HOST: timescaledb
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      SIMULATOR_MODE: ${SIMULATOR_MODE:-realtime}
+      SIMULATOR_SCENARIO: source_pump
+      SIMULATOR_TICK_INTERVAL_S: ${SIMULATOR_TICK_INTERVAL_S:-1.0}
+      CELL_NAME: Source Pump
+    restart: unless-stopped
+    networks: [aria]
+
+  simulator-uv:
+    build:
+      context: ./simulator
+    container_name: aria-sim-uv
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_HOST: timescaledb
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      SIMULATOR_MODE: ${SIMULATOR_MODE:-realtime}
+      SIMULATOR_SCENARIO: uv_sterilizer
+      SIMULATOR_TICK_INTERVAL_S: ${SIMULATOR_TICK_INTERVAL_S:-1.0}
+      CELL_NAME: UV Sterilizer
+    restart: unless-stopped
+    networks: [aria]
+
+  simulator-capper:
+    build:
+      context: ./simulator
+    container_name: aria-sim-capper
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_HOST: timescaledb
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      SIMULATOR_MODE: ${SIMULATOR_MODE:-realtime}
+      SIMULATOR_SCENARIO: bottle_capper
+      SIMULATOR_TICK_INTERVAL_S: ${SIMULATOR_TICK_INTERVAL_S:-1.0}
+      CELL_NAME: Bottle Capper
     restart: unless-stopped
     networks: [aria]
 

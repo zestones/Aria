@@ -523,7 +523,7 @@ function DowntimeParetoCard({ cellId, window }: { cellId: number; window: TrendW
                 <span className="text-sm font-medium text-foreground">
                     Downtime Pareto · last {window}
                 </span>
-                <span className="text-[11px] text-text-tertiary">unplanned stops</span>
+                <span className="text-[11px] text-text-tertiary">all stops</span>
             </div>
             {isLoading ? (
                 <p className="px-2 py-3 text-sm text-text-tertiary">Loading…</p>
@@ -535,7 +535,7 @@ function DowntimeParetoCard({ cellId, window }: { cellId: number; window: TrendW
                         display: formatDuration(e.seconds),
                     }))}
                     color="var(--critical, #dc2626)"
-                    emptyText="No unplanned stops in this window."
+                    emptyText="No stops in this window."
                     aria-label="Downtime Pareto"
                 />
             )}

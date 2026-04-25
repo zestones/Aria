@@ -260,7 +260,7 @@ def patch_inv(monkeypatch: pytest.MonkeyPatch):
 def _wo_loaded() -> dict[str, _ToolResult]:
     return {
         "get_work_order": _ToolResult(
-            content=json.dumps({"cell_id": 2, "title": "Anomaly on P-02"})
+            content=json.dumps({"cell_id": 2, "title": "Anomaly on Bottle Filler"})
         ),
         "get_failure_history": _ToolResult(content="[]"),
     }

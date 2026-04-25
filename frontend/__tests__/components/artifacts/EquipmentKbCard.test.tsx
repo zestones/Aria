@@ -38,7 +38,7 @@ function errorResponse(status = 500): Response {
 const KB_FIXTURE = {
     id: 1,
     cell_id: 1,
-    cell_name: "P-02",
+    cell_name: "Bottle Filler",
     equipment_type: "Centrifugal Pump",
     manufacturer: "Grundfos",
     model: "CR 32-2",
@@ -116,7 +116,7 @@ describe("EquipmentKbCard", () => {
         render(withClient(<EquipmentKbCard cell_id={1} />));
 
         // Header
-        await waitFor(() => expect(screen.getByText("P-02")).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText("Bottle Filler")).toBeInTheDocument());
         expect(screen.getByText(/· Centrifugal Pump/)).toBeInTheDocument();
         expect(screen.getByText(/Grundfos · CR 32-2 · Installed 2024-10-23/)).toBeInTheDocument();
 

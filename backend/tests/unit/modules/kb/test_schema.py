@@ -1,7 +1,7 @@
 """Contract tests for EquipmentKB domain model (backend/modules/kb/kb_schema.py).
 
 Unit tests run with no external dependencies and lock the JSON shape agreed in
-migration 007 (P-02 Grundfos CR 32-2 seed blob).
+migration 007 (Grundfos CR 32-2 demo-cell seed blob).
 
 Integration test (marked `integration`, skipped by `make test`) validates the
 real DB row once the stack is up.
@@ -22,7 +22,7 @@ from modules.kb.kb_schema import (
 )
 
 # ---------------------------------------------------------------------------
-# Canonical P-02 fixture — mirrors the jsonb_build_object blob in
+# Canonical demo-cell fixture — mirrors the jsonb_build_object blob in
 # 007_aria_kb_workorder_extension.up.sql.  Any shape change to the migration
 # seed MUST be reflected here and vice-versa.
 # ---------------------------------------------------------------------------
@@ -153,7 +153,7 @@ def test_equipment_kb_empty_construction():
 
 @pytest.mark.unit
 def test_p02_seed_validates():
-    """EquipmentKB.model_validate accepts the canonical P-02 seed shape."""
+    """EquipmentKB.model_validate accepts the canonical demo-cell seed shape."""
     kb = EquipmentKB.model_validate(P02_STRUCTURED_DATA)
 
     assert isinstance(kb.equipment, EquipmentMeta)
@@ -205,7 +205,7 @@ def test_threshold_empty_not_filled():
 
 @pytest.mark.unit
 def test_compute_completeness_p02_is_high():
-    """P-02 full seed completeness should be >= 0.85."""
+    """Full demo-cell seed completeness should be >= 0.85."""
     kb = EquipmentKB.model_validate(P02_STRUCTURED_DATA)
     score = kb.compute_completeness()
     assert score >= 0.85, f"Expected >= 0.85, got {score}"
@@ -252,7 +252,7 @@ def test_upsert_roundtrip_structured_data():
     fake_row = {
         **encoded,
         "id": 1,
-        "cell_name": "P-02",
+        "cell_name": "Bottle Filler",
         "notes": None,
         "last_updated_by": "kb_builder_agent",
         "last_updated_at": "2026-04-22T00:00:00+00:00",
@@ -280,12 +280,12 @@ def test_upsert_roundtrip_structured_data():
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_p02_db_row_validates_as_equipment_kb(db_conn):
-    """Live DB: structured_data for P-02 must validate as EquipmentKB."""
+    """Live DB: structured_data for the demo cell must validate as EquipmentKB."""
     row = await db_conn.fetchrow(
         "SELECT k.structured_data FROM equipment_kb k "
-        "JOIN cell c ON k.cell_id = c.id WHERE c.name = 'P-02'"
+        "JOIN cell c ON k.cell_id = c.id WHERE c.name = 'Bottle Filler'"
     )
-    assert row is not None, "P-02 row not found — run migrations first"
+    assert row is not None, "Bottle Filler row not found — run migrations + seed first"
     kb = EquipmentKB.model_validate(json.loads(row["structured_data"]))
     assert kb.equipment.manufacturer == "Grundfos"
     assert kb.compute_completeness() >= 0.85

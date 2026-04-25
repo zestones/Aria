@@ -1,13 +1,20 @@
 """
-ARIA — P-02 FlowTech CP-3200 bearing failure scenario.
+ARIA — Bottle Filler bearing-failure scenario (the demo star).
 
-Mode behavior:
-  - realtime: scenario unfolds over real 72h (drift rate calibrated for 1 tick = 1 s)
-  - demo:     scenario unfolds over ~4 minutes wall-clock (240 ticks at 1 s) for live demo
+Mirrors the original P-02 scenario but keyed off the seed's new tag names
+(``filler_vibration``, ``filler_bearing_temp``, ``filler_pressure``,
+``filler_flow``, ``filler_bpm``). The status / quality code mapping matches
+the per-cell rows installed by migration 006_aria_demo_plant.up.sql.
 
-Vibration drift target: 2.2 mm/s (nominal) → 3.4 mm/s (alarm zone) over the scenario.
-Bearing temperature follows vibration with a multiplicative factor.
-Discharge flow is the production accumulator source (≈ 533 L/min nominal).
+Mode behaviour:
+  - realtime: scenario unfolds over real 72 h (drift rate calibrated for 1 tick = 1 s)
+  - demo:     scenario unfolds over ~4 minutes wall-clock (240 ticks at 1 s)
+
+Vibration drift target: 2.2 mm/s (nominal) → 5.6 mm/s (asymptote) — well past
+the KB ``vibration_mm_s.alert`` (4.5 mm/s) so the live anomaly fires inside
+the rehearsal window. Bearing temperature follows vibration via a derived
+multiplier; flow is the production accumulator source (~533 L/min nominal);
+pressure tracks the duty point; bottles-per-minute echoes the running flow.
 """
 
 from __future__ import annotations
@@ -22,13 +29,12 @@ _DRIFT_RATES = {
 
 
 def build(mode: str = "demo") -> dict:
-    """Build the P-02 scenario config for MachineSimulator + SignalSet + ProductionCounter."""
+    """Build the Bottle Filler scenario config for MachineSimulator + SignalSet + ProductionCounter."""
     if mode not in _DRIFT_RATES:
         raise ValueError(f"Unknown SIMULATOR_MODE='{mode}'. Expected: realtime, demo")
 
     vib_drift_rate = _DRIFT_RATES[mode]
 
-    # Demo mode wants more dramatic events; realtime mimics a real shift profile.
     if mode == "demo":
         transitions = {
             "stop": {"run": 0.30, "fault": 0.0},
@@ -46,8 +52,10 @@ def build(mode: str = "demo") -> dict:
 
     return {
         "machine": {
-            # Status code mapping must match cell_status_mapping in 006_aria_seed_p02.up.sql:
-            #   0=STOP, 1=RUN, 2=FAULT:VFD, 3=FAULT:VIB, 4=FAULT:TEMP, 5=PAUSE:LOCAL, 6=PAUSE:MAINT
+            # Status code mapping must match cell_status_mapping in
+            # 006_aria_demo_plant.up.sql:
+            #   0=STOP, 1=RUN, 2=FAULT:VFD, 3=FAULT:VIB, 4=FAULT:TEMP,
+            #   5=PAUSE:LOCAL, 6=PAUSE:MAINT
             "stop_code": 0,
             "run_code": 1,
             "fault_codes": [2, 3, 4],
@@ -66,36 +74,36 @@ def build(mode: str = "demo") -> dict:
             "good_rate": 0.985,
             "quality_bad_codes": [1],
         },
-        # Signals (names MUST match signal_tag.tag_name in seed)
+        # Signal names MUST match signal_tag.tag_name rows seeded for the
+        # Bottle Filler cell.
         "signals": [
             {
-                "name": "vibration_refoulement",
+                "name": "filler_vibration",
                 "setpoint": 2.2,
                 "noise": 0.08,
                 "unit": "mm/s",
                 # Bearing wear: monotonic upward drift while running.
-                # Cap raised so the bearing scenario actually breaches the KB
-                # ``vibration_mm_s.alert`` (4.5 mm/s) target on its intended
-                # signal — demo path: 2.2 → 5.6 mm/s over the run.
+                # Cap raised so vibration breaches the KB alert (4.5 mm/s)
+                # within the demo run — asymptote 2.2 + 3.4 = 5.6 mm/s.
                 "drift": {
                     "rate_run": vib_drift_rate,
                     "rate_stop": 0.0,
                     "min": 0.0,
-                    "max": 3.4,  # cap drift at +3.4 → asymptote 5.6 mm/s
+                    "max": 3.4,
                 },
                 "on_stop": {"mode": "decay_to", "target": 0.5, "rate": 0.05},
-                # Trip vibration above 4.5 mm/s (alarm threshold from KB)
+                # Trip vibration above the KB alert threshold.
                 "fault_trigger": {"above": 4.5, "fault_code": 3},
             },
             {
-                "name": "temperature_palier",
+                "name": "filler_bearing_temp",
                 "setpoint": 48.0,
                 "noise": 0.4,
                 "unit": "°C",
-                # Bearing temp correlates with vibration (derived signal).
-                # T = vibration × 6 + 35  → 2.2 mm/s ≈ 48 °C, 3.4 mm/s ≈ 55 °C, 4.5 → 62 °C
+                # Bearing temp follows vibration — derived signal.
+                # T = vibration × 6 + 35  → 2.2 ≈ 48 °C, 4.5 ≈ 62 °C
                 "derived_from": {
-                    "source": "vibration_refoulement",
+                    "source": "filler_vibration",
                     "factor": 6.0,
                     "offset": 35.0,
                 },
@@ -103,26 +111,33 @@ def build(mode: str = "demo") -> dict:
                 "fault_trigger": {"above": 75.0, "fault_code": 4},
             },
             {
-                "name": "debit_refoulement",
+                "name": "filler_pressure",
+                "setpoint": 5.5,
+                "noise": 0.05,
+                "unit": "bar",
+                "on_stop": {"mode": "zero"},
+            },
+            {
+                "name": "filler_flow",
                 "setpoint": 533.0,
                 "noise": 4.5,
                 "unit": "L/min",
                 "on_stop": {"mode": "zero"},
             },
             {
-                "name": "pression_refoulement",
-                "setpoint": 12.0,
-                "noise": 0.2,
-                "unit": "bar",
+                "name": "filler_bpm",
+                "setpoint": 180.0,
+                "noise": 1.5,
+                "unit": "/min",
                 "on_stop": {"mode": "zero"},
             },
         ],
-        # Production: pump produces volume — count 1 piece per ~1000 L pumped.
+        # Production: count one piece per ~1000 L pumped (≈ 1 m³).
         "production": {
             "mode": "accumulator",
-            "source_signal": "debit_refoulement",
-            "time_unit": "minute",  # signal is L/min, so use minutes
-            "unit_per_count": 1000.0,  # 1 "piece" = 1 m³ pumped
+            "source_signal": "filler_flow",
+            "time_unit": "minute",
+            "unit_per_count": 1000.0,
             "good_rate": 0.985,
             "quality_bad_codes": [1],
         },

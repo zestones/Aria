@@ -15,6 +15,7 @@ import {
     KpiBar,
     validateEquipmentSelection,
 } from "../../features/control-room";
+import { DemoControlStrip } from "../../features/demo";
 import type { EquipmentSelection } from "../../lib/hierarchy";
 import { useLocalStorage } from "../../lib/useLocalStorage";
 import { pageTransition } from "../ui/motion";
@@ -201,6 +202,14 @@ export function AppShell() {
                 open={constellationOpen}
                 onClose={() => setConstellationOpen(false)}
             />
+            {/*
+             * DEV-only demo dock (#54 / M9.4). Bottom-right, collapsed by
+             * default so it does not intrude on the main canvas during a
+             * recording. Vite tree-shakes the import in prod; the backend
+             * endpoints it calls are additionally gated server-side behind
+             * `ARIA_DEMO_ENABLED`.
+             */}
+            {import.meta.env.DEV && <DemoControlStrip />}
         </div>
     );
 }

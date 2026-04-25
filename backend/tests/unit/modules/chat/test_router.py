@@ -97,14 +97,14 @@ async def test_valid_user_frame_invokes_run_turn_with_content(
 
     ws = _FakeWS(
         inbound=[
-            {"type": "user", "content": "OEE of P-02?"},
+            {"type": "user", "content": "OEE of Bottle Filler?"},
             {"type": "user", "content": "how about MTBF?"},
         ]
     )
     await chat_router.agent_chat_ws(ws)  # type: ignore[arg-type]
 
     assert ws.accepted is True
-    assert [c["content"] for c in calls] == ["OEE of P-02?", "how about MTBF?"]
+    assert [c["content"] for c in calls] == ["OEE of Bottle Filler?", "how about MTBF?"]
     # messages list is shared across turns — second call sees the first turn's appends.
     # (fake turn is a no-op so the list stays empty — this just confirms it is the same
     # object passed in, not a fresh list each time).
@@ -127,7 +127,7 @@ async def test_user_frame_emits_agent_start_before_run_turn(
     monkeypatch.setattr(chat_router, "require_access_cookie", allow_cookie)
     monkeypatch.setattr(chat_router, "run_qa_turn", capturing_turn)
 
-    ws = _FakeWS(inbound=[{"type": "user", "content": "OEE on P-02?"}])
+    ws = _FakeWS(inbound=[{"type": "user", "content": "OEE on Bottle Filler?"}])
 
     # Record send_json relative to the turn invocation.
     original_send = ws.send_json

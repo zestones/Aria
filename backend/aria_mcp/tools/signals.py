@@ -147,7 +147,7 @@ async def get_signal_anomalies(
                 f"cell {cell_id}: no process_signal_definition.kb_threshold_key "
                 f"matches a key in equipment_kb.thresholds. "
                 f"signal_def keys={sig_keys}, kb keys={kb_keys}. "
-                "Run `make db.seed.p02` (or fix the kb_threshold_key column) to recover."
+                "Re-seed the equipment_kb (or fix the kb_threshold_key column) to recover."
             )
 
         sig_to_kb: dict[int, str] = {r["id"]: r["kb_threshold_key"] for r in sig_rows}

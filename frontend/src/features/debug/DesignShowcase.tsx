@@ -204,7 +204,7 @@ export default function DesignShowcase() {
                                 <SectionHeader
                                     label="Pump overview"
                                     size="sm"
-                                    meta={<span>P-02 · Apr 22</span>}
+                                    meta={<span>Bottle Filler · Apr 22</span>}
                                 />
                                 <CardTitle className="mt-2">Grundfos CR 32-120</CardTitle>
                                 <CardDescription>

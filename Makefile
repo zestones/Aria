@@ -147,26 +147,30 @@ doctor.frontend: ## Compare frontend/package.json against installed node_modules
 # ============================================================
 # Database
 # ============================================================
-.PHONY: db.shell db.reset migrate db.seed.p02
+.PHONY: db.shell db.reset migrate db.seed
 
 db.shell: ## Open a psql shell into the database
 	$(COMPOSE) exec timescaledb psql -U $${POSTGRES_USER:-aria} -d $${POSTGRES_DB:-aria}
 
-db.reset: ## ⚠️  Drop the database volume and re-run migrations (destroys all data)
+db.reset: ## ⚠️  Drop the database volume and re-run migrations + seeds (destroys all data)
 	@printf "$(C_YELLOW)This will destroy all data. Press Ctrl-C to abort or Enter to continue.$(C_RESET)\n"
 	@read _
 	$(COMPOSE) down -v
 	$(COMPOSE) up -d timescaledb
 	$(COMPOSE) up migrate
 
-migrate: ## Re-run database migrations
+migrate: ## Re-run database migrations + idempotent demo seeds
 	$(COMPOSE) up migrate
 
-db.seed.p02: ## Restore the canonical P-02 KB row (idempotent — safe to re-run after KB drift)
-	@printf "$(C_CYAN)→ Re-seeding equipment_kb for P-02$(C_RESET)\n"
+db.seed: ## Re-apply the demo seeds (KB + human context + 24h history) without re-running migrations
+	@printf "$(C_CYAN)→ Re-applying demo seeds$(C_RESET)\n"
 	@$(COMPOSE) exec -T timescaledb psql -U $${POSTGRES_USER:-aria} -d $${POSTGRES_DB:-aria} \
-		< $(BACKEND_DIR)/infrastructure/database/seeds/p02_kb.sql
-	@printf "$(C_GREEN)  ✓ P-02 KB restored$(C_RESET)\n"
+		< $(BACKEND_DIR)/infrastructure/database/seeds/01_demo_kb.sql
+	@$(COMPOSE) exec -T timescaledb psql -U $${POSTGRES_USER:-aria} -d $${POSTGRES_DB:-aria} \
+		< $(BACKEND_DIR)/infrastructure/database/seeds/02_demo_human_context.sql
+	@$(COMPOSE) exec -T timescaledb psql -U $${POSTGRES_USER:-aria} -d $${POSTGRES_DB:-aria} \
+		< $(BACKEND_DIR)/infrastructure/database/seeds/03_demo_history.sql
+	@printf "$(C_GREEN)  ✓ Demo seeds applied$(C_RESET)\n"
 
 # ============================================================
 # Backend quality gates
@@ -231,9 +235,6 @@ e2e: ## Run backend E2E smoke test (requires stack to be up)
 
 backend.smoke.mcp: ## Run MCP server E2E smoke (requires stack + canonical KB; see issue #69)
 	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/e2e/aria_mcp_smoke.py
-
-backend.smoke.tools: ## Run per-tool MCPClient isolation smoke on P-02 (issue #15; requires stack + canonical KB)
-	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/integration/aria_mcp/tools_p02_isolation.py
 
 backend.smoke.kb_upload: ## M3.2: PDF upload + Opus vision smoke (requires stack + ANTHROPIC_API_KEY; skips if key missing)
 	cd $(BACKEND_DIR) && PYTHONPATH=. $(VENV_BIN)/python tests/e2e/kb_upload_smoke.py

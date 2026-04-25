@@ -5,7 +5,7 @@ Loads a scenario, instantiates MachineSimulator + SignalSet + ProductionCounter,
 and writes ticks into TimescaleDB (machine_status, production_event, process_signal_data).
 
 Resolves cell_id, status mapping, quality mapping, and signal_def_ids by name
-from the database (seeded by 006_aria_seed_p02.up.sql).
+from the database (seeded by the canonical demo seed).
 """
 
 from __future__ import annotations
@@ -37,8 +37,8 @@ PG_USER = os.environ["POSTGRES_USER"]
 PG_PASS = os.environ["POSTGRES_PASSWORD"]
 PG_DB = os.environ["POSTGRES_DB"]
 
-CELL_NAME = os.environ.get("CELL_NAME", "P-02")
-SCENARIO = os.environ.get("SIMULATOR_SCENARIO", "p02_bearing_failure")
+CELL_NAME = os.environ.get("CELL_NAME", "Bottle Filler")
+SCENARIO = os.environ.get("SIMULATOR_SCENARIO", "bottle_filler")
 MODE = os.environ.get("SIMULATOR_MODE", "demo")
 TICK_INTERVAL_S = float(os.environ.get("SIMULATOR_TICK_INTERVAL_S", "1.0"))
 

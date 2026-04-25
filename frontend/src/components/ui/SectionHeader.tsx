@@ -23,7 +23,7 @@ const sizeClasses: Record<Required<SectionHeaderProps>["size"], string> = {
 /**
  * Section meta-line — the v2 signature. See DESIGN_PLAN_v2 §5.1.
  *
- *   Pump overview                               P-02 · Apr 22, 2026
+ *   Pump overview                               Bottle Filler · Apr 22, 2026
  *
  * Title: Inter 600, sentence case, primary fg.
  * Meta: sentence-case sans muted, `·` separators.

@@ -7,15 +7,24 @@ VALUES
     (0, 'STOP', FALSE, 'planned_stop'),
 (1, 'RUN', TRUE, 'running'),
 (2, 'FAULT', FALSE, 'unplanned_stop'),
-(3, 'PAUSE', FALSE, 'planned_stop')
+(3, 'PAUSE', FALSE, 'planned_stop'),
+(4, 'MAINTENANCE', FALSE, 'planned_stop'),
+(5, 'CHANGEOVER', FALSE, 'planned_stop')
 ON CONFLICT
     DO NOTHING;
 
--- Quality codes
+-- Quality codes — expanded set so the Quality Pareto chart on the
+-- Equipment page renders with meaningful reject-reason buckets instead
+-- of a single GOOD vs BAD split. All non-conformant codes share
+-- is_conformant=FALSE; KPI / OEE math treats them identically.
 INSERT INTO quality_code(quality_code, quality_name, is_conformant)
 VALUES
     (0, 'GOOD', TRUE),
-(1, 'BAD', FALSE)
+(1, 'OUT_OF_SPEC', FALSE),
+(2, 'LOW_FILL', FALSE),
+(3, 'CAP_DEFECT', FALSE),
+(4, 'LABEL_DEFECT', FALSE),
+(5, 'BOTTLE_DAMAGE', FALSE)
 ON CONFLICT
     DO NOTHING;
 

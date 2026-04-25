@@ -7,7 +7,7 @@
  *   ┌─────────────────────────────────────────────────────────────┐
  *   │  scroll area  (centered content, max-w-3xl)                 │
  *   │  ┌─ user bubble ─────────────────────────────────────────┐  │
- *   │  │ "What's the anomaly on pump P-02?"                    │  │
+ *   │  │ "What's the anomaly on Bottle Filler?"                │  │
  *   │  └────────────────────────────────────────────────────────┘  │
  *   │  ┌─ agent turn ──────────────────────────────────────────┐  │
  *   │  │ [Sentinel] Analysing sensor data…                     │  │
@@ -415,7 +415,7 @@ const CAPABILITY_CARDS = [
         icon: "FileText" as const,
         title: "Generate a work order",
         description: "Describe the fault and ARIA drafts a complete maintenance work order.",
-        prompt: "Create a work order for a bearing overheating on pump P-02",
+        prompt: "Create a work order for a bearing overheating on the Bottle Filler",
     },
     {
         icon: "BookOpen" as const,

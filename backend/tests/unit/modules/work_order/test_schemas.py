@@ -113,7 +113,7 @@ def test_recommended_actions_roundtrip():
     fake_row = {
         **encoded,
         "id": 42,
-        "cell_name": "P-02",
+        "cell_name": "Bottle Filler",
         "required_parts": None,
         "required_skills": None,
         "description": None,
