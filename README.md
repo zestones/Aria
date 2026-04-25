@@ -2,6 +2,7 @@
 <br />
 
 <div align="center">
+
 [![CI](https://github.com/zestones/ARIA/actions/workflows/ci.yml/badge.svg)](https://github.com/zestones/ARIA/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-24.0%2B-blue?logo=docker)](https://docs.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
