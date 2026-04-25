@@ -1,15 +1,9 @@
-# ARIA — Script Voix-Off Final (v6)
+## ARIA — Script Voix-Off Final (v7)
 
 > Version grand public. Zero jargon. Comprehensible par n'importe qui.
 > 3:00 strict · Anglais · Voice-over AI (ElevenLabs) OU voix reelle Adam
 >
-> **v6 — aligne sur `docs/planning/M9-polish-e2e/demo-build-spec.md` §4 (storyboard autoritaire zestones 2026-04-25) :**
-> - Sandbox Python execution = HERO (1:15–1:45, 30s), jaw-drop beat zestones
-> - Shift page + Priya's logbook note (2:35–2:50), human-in-the-loop beat
-> - Operator names internationaux : Priya Patel (night), Sarah Miller (day), Marco Ferrari (evening), Tom Anderson (supervisor)
-> - **Neutralisation geographique complete** : plus d'Algeria, plus de "50,000 people", plus de nom client (zestones a wipe le contexte specifique pour prudence). On garde l'ancrage industriel sans citer qui ou ou.
-> - Hook emotionnel ouverture conserve ("one person who knows" — prize Creative Opus 4.7 "made us feel something")
-> - Callback closing sur "the one person who knows" (emotional arc boucle)
+> **v7 — v6 + ajout note de tournage WO card framing identique acte 1 → scene 4 (boucle visuelle cinematographique zestones)**
 
 ---
 
@@ -114,6 +108,8 @@
 
 > [Navigation vers `/work-orders/:id`. WorkOrderDetail affiche actions list + parts "1x bearing 6205-2RS" + failure-history strip. Click Print → PrintableWorkOrder A4 avec QR code. Layout noir sur blanc propre.]
 
+> **📽️ NOTE DE TOURNAGE CRITIQUE — boucle visuelle :** Le WO card ici doit avoir **exactement le même framing** que celui visible dans le zoom arrière de l'ACT I (même crop, même taille, même position à l'écran). Le cerveau du juge fait le match subconscient sans qu'on lui explique — il réalise que ce WO était déjà là depuis la première seconde. C'est du cinéma, pas du pitch deck. Enregistre le WO card en plein écran dans les deux cas, même résolution, même zoom. Si tu dois choisir entre un beau travelling et ce framing identique — choisis le framing identique.
+
 ---
 
 ### Scene 5 — Memory recall Bottle Capper (2:15–2:35)
@@ -159,9 +155,9 @@
 | Ligne | Direction |
 |---|---|
 | *"He just knows."* (0:10) | Pause 0.5s AVANT. Moment humain. |
-| *"Powered by Claude Opus 4.7."* (0:22) | Debit ralenti. Premiere mention. |
-| *"Predictive, not reactive."* (0:58) | Emphase "forecasts". Pivot predictive. |
-| *"see it think"* (1:10) | Emphase. Pause 0.3s avant. |
+| *"Claude Opus 4.7."* (0:22) | Debit ralenti. Premiere mention. |
+| *"Predictive, not reactive."* (0:58) | Emphase "forecasts". Pivot predictif. |
+| *"Watch what happens next."* (1:10) | Emphase. Pause 0.3s avant. |
 | *"Here is the part that cannot happen without Managed Agents."* (1:15) | Phrase pivot. Emphase grave sur "Managed Agents". |
 | *"That is real Python — not tokens."* (1:43) | Punchline technique. Pause 0.3s. |
 | *"And ARIA remembers."* (2:20) | Pause 0.5s avant. Beat memoire. |
@@ -170,8 +166,8 @@
 
 ### Mots-cles a prononcer distinctement
 
-- **"Opus 4.7"** : 2-3 mentions (0:22, 0:40 "Opus 4.7 vision", 1:10 "extended thinking on Opus 4.7")
-- **"Claude Managed Agents"** : 2 mentions (0:22 implicite + 1:15 explicite "cannot happen without Managed Agents" + 2:50 "Five agents")
+- **"Opus 4.7"** : 3 mentions (0:22, 0:40 "Opus 4.7 vision", 1:10 "extended thinking on Opus 4.7")
+- **"Claude Managed Agents"** : 2 mentions (1:15 explicite + 2:50 "Five agents")
 - **"Anthropic's cloud sandbox"** : Scene 3b (1:20) — HERO
 - **"Extended thinking"** : Scene 3a (1:10) — prize Creative
 - **"MCP"** / **"17 tools"** : Act III (2:51)
@@ -236,4 +232,4 @@ Debit moyen ~2.7 mots/sec = documentaire. Marge de ~15s pour pauses + title card
 
 ---
 
-**Status :** v6 final · aligne sur demo-build-spec.md + neutralisation geo + Sandbox HERO + Shift Priya · pret pour voice-over samedi
+**Status :** v7 final · v6 + boucle visuelle WO card framing identique ACT I → Scene 4 · pret pour tournage
