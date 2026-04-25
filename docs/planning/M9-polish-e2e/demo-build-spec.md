@@ -48,8 +48,8 @@ Ordered by narration-beat priority (scene 0 → scene 7).
 | 1  | Plant reads as a real plant            | Land on `/control-room` after stack up                                                              | Grid of 5 tiles with human-readable machine names (Source Pump, UV Sterilizer, Bottle Filler, Bottle Capper, Bottle Labeler) + populated KPI bar | `user-owned` — the user's seed + migrations provide the cells, KB rows, signal definitions, and 7-day history. This spec treats it as a precondition (see §2.1).      |
 | 2  | Agent Constellation wow-open           | Hotkey `A` on any page                                                                              | Full-screen overlay: 5 agents, live handoff particles, tool-call rail                                                                            | `shipped+verified` — from the M9 plan, previously live                                                                                         |
 | 3  | New machine onboarding                 | Click an onboarding-target tile (e.g. `Bottle Labeler`) → upload Grundfos NB-G PDF                  | Wizard: `KbProgress` 5 phases → `MultiTurnDialog` 3-4 questions → `EquipmentKbCard` reveal                                                       | `shipped+verified` on the legacy cell name, `shipped+untested` on whatever name the user's seed produces. Wizard itself is manufacturer-agnostic. |
-| 4  | Predictive forecast (cool banner)      | `POST /api/v1/demo/scene/seed-forecast` with `{target:"Bottle Filler"}`                             | `AnomalyBanner` appears in accent-arc tone within ≤ 60 s: *"forecast to breach alert (4.1 → 4.5) in ~2.3h · 92% confidence"*                     | `shipped+untested` (forecast-watch loop) / `pending` (demo endpoint that guarantees the firing)                                                |
-| 5  | Real anomaly — Sentinel catches it     | `POST /api/v1/demo/scene/trigger-breach` with `{target:"Bottle Filler"}` OR natural simulator drift | `AnomalyBanner` flips to destructive tone; WO row appears in `/work-orders` with `status=detected`                                               | `shipped+verified` (breach path, dry-run 21:38 UTC) / `pending` (the demo endpoint wrapper)                                                    |
+| 4  | Predictive forecast (cool banner)      | `POST /api/v1/demo/scene/seed-forecast` with `{target:"Bottle Filler"}`                             | `AnomalyBanner` appears in accent-arc tone within ≤ 60 s: *"forecast to breach alert (4.1 → 4.5) in ~2.3h · 92% confidence"*                     | `shipped+verified` — live 23:22 UTC: endpoint injected 40 samples, `forecast_warning cell=1 signal_def=1 eta=2.92h trend=rising r2=0.82` fired within ~30s |
+| 5  | Real anomaly — Sentinel catches it     | `POST /api/v1/demo/scene/trigger-breach` with `{target:"Bottle Filler"}` OR natural simulator drift | `AnomalyBanner` flips to destructive tone; WO row appears in `/work-orders` with `status=detected`                                               | `shipped+verified` — endpoint injected 5 readings, WO 55 opened at 23:22:26 `status=detected`, Investigator session `sesn_011CaPTQSWCdaNtv8LXk5DKW` spawned |
 | 6  | Extended-thinking stream               | Automatic once Investigator spawns                                                                  | `thinking_delta` frames stream in Agent Inspector + chat drawer                                                                                  | `shipped+verified` (visible on every Investigator run in every dry-run today)                                                                  |
 | 7  | **Sandbox Python execution card**      | Automatic on drift-class breach; prompt forces bash+render                                          | Inline `SandboxExecution` card: verbatim Python, verbatim `key=value` output, cyan **"Ran in Anthropic sandbox"** chip                           | `shipped+verified` — 3 frames captured live 21:38 UTC, technique=correlation, rho to 4 decimals over 20k+ samples                              |
 | 8  | `Sandbox:` prefix in RCA               | Automatic after bash run                                                                            | WO detail page RCA text begins `Sandbox: rho=..., n=... Root cause: ...`                                                                         | `shipped+verified` — WOs 43/44/45 all have it                                                                                                  |
@@ -61,9 +61,9 @@ Ordered by narration-beat priority (scene 0 → scene 7).
 | 14 | Chat Q&A grounded in KB                | Chat: *"show me the KB for the Bottle Filler"*                                                      | `EquipmentKbCard` renders inline in chat message stream                                                                                          | `shipped+untested` on new cell name                                                                                                            |
 | 15 | Chat Q&A with `BarChart`               | Chat: *"bottles per minute last week by shift"*                                                     | `BarChart` renders inline                                                                                                                        | `shipped+untested`                                                                                                                             |
 | 16 | Forecast + anomaly banner co-exist     | Fire scene 4 then scene 5 on same cell within 60 s                                                  | Banner head-slot: destructive anomaly wins over cool forecast; `+1 more` badge on the tail                                                       | `shipped+verified` — merge logic in `AnomalyBanner` passes unit tests                                                                          |
-| 17 | DEV control strip for scene-triggering | Press any button in the fixed bottom-right strip                                                    | Corresponding endpoint fires; toast confirms; observables per row 4/5/11 above                                                                   | `pending` — component not yet built                                                                                                            |
+| 17 | DEV control strip for scene-triggering | Click the ghost-circle toggle bottom-right → pick an action from the expanded strip                 | Endpoint fires; inline status shows for ~3s; strip auto-collapses; observables per row 4/5/11 above                                              | `shipped+untested` — component merged, typecheck + lint clean, 112 frontend tests green. Click-level smoke-test pending in the browser.        |
 
-**Summary**: 10/17 `shipped+verified`, 5/17 `shipped+untested`, 1/17 `user-owned`, 1/17 `pending`. The single `pending` row is the demo endpoint + control-strip bundle (§2.2 + §2.3). The four `shipped+untested` rows all flip to `verified` as soon as the user's seed is applied and one clean dry-run runs. The `user-owned` row flips to `shipped+verified` against the user's own deploy once the seed + migrations are in place.
+**Summary as of this pass**: 12/17 `shipped+verified`, 4/17 `shipped+untested`, 1/17 `user-owned`, 0/17 `pending`. §2.2 (demo endpoints) and §2.3 (DemoControlStrip) both landed; rows 4 and 5 flipped to verified after the live 23:22 UTC dry-run captured a forecast_warning (ETA 2.92 h, R² 0.82) plus WO 55 opened and an Investigator session spawned. The four `shipped+untested` rows (onboarding, memory recall, chat Q&A × 2) flip to verified as soon as the user applies a seed that exercises them. The `user-owned` row flips against the user's own deploy.
 
 ---
 
@@ -254,25 +254,25 @@ const BUTTONS: Array<{ label: string; action: () => Promise<Response>; tone?: "p
 
 ### 2.4 Env + rollout tasks
 
-**`.env` addition:**
+**`.env` addition** — shipped 2026-04-24:
 
 ```
 ARIA_DEMO_ENABLED=true
 ```
 
-Without this line the new endpoints are 404. Restart backend after adding.
+Without this line the demo router does not mount (404s). **`docker compose restart backend` does NOT re-read `.env`** — use `docker compose up -d backend` after any env change. Application startup confirms via the log line `Demo endpoints enabled at /api/v1/demo/*`.
 
-**Grundfos NB-G PDF:**
+**Grundfos NB-G PDF** — shipped 2026-04-24:
 
-- Download `net.grundfos.com` Grundfos NB-G 65-250 installation manual.
-- Place at `test-assets/grundfos-nb-g-65-250-iom.pdf`.
-- Do NOT check the PDF into git if it's copyrighted; instead document the fetch in `test-assets/README.md`.
+- `test-assets/README.md` now documents the fetch. The PDF itself is not checked into git (copyrighted); the presenter fetches once before demo day per the README's instructions.
+- Alternative: any Grundfos pump IOM of similar vintage produces comparable extraction quality — the demo narrative frames the cell as a `Bottle Labeler` regardless of PDF specifics.
 
-**Docs to update after the above lands:**
+**Docs flipped to reflect what shipped** — done this pass:
 
-- [ ] `demo-plant-design.md` §11 gantt — strike the rows for items now `shipped`.
-- [ ] `demo-playbook.md` — update for the new machine names and the new demo endpoints.
-- [ ] This file (§1 matrix) — flip `pending` rows to `shipped+verified` with timestamps.
+- [x] This file (§1 matrix) — rows 4 and 5 flipped to `shipped+verified` after live 23:22 UTC dry-run; row 17 flipped to `shipped+untested` after DemoControlStrip landed.
+- [x] Summary line recomputed (12/17 verified, 4/17 untested, 1/17 user-owned, 0/17 pending).
+- [ ] `demo-plant-design.md` §11 gantt — still carries stale "rollout" rows for work now done; can be struck whenever convenient (no blocking impact).
+- [ ] `demo-playbook.md` — still written against the pump-only naming; will drift further if the user renames cells in the seed. Updating when the user's naming is final.
 
 ---
 

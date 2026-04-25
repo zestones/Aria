@@ -1,1 +1,1 @@
-export { DemoReplayButton } from "./DemoReplayButton";
+export { DemoControlStrip } from "./DemoControlStrip";
