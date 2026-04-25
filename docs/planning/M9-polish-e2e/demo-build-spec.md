@@ -74,6 +74,9 @@ Ordered by narration-beat priority (scene 0 → scene 7).
 > [!IMPORTANT]
 > **The user owns schema, migrations, and seed SQL.** Nothing in this spec writes migration files or seed scripts — the DB can be nuked and reseeded at will. This section describes only what the demo endpoints (§2.2) and the dry-run checklist (§3) *assume* the user's seed will have produced. If a dry-run observation fails and the assumption below is not satisfied, the fix is in the user's seed, not in this spec.
 
+> [!TIP]
+> **The companion doc [`demo-seed-content.md`](./demo-seed-content.md) now ships the literal content the seed should populate** — 5 cells with signal envelopes, 12 specific work orders, 20 scripted logbook entries, 5 failure-history rows with `signal_patterns` jsonb, a 7-day rota, machine-status transitions, production-event distribution, and §10 integrity checks. Copy the tables, translate to SQL / `asyncpg` / SQLAlchemy — no invention required.
+
 **What the endpoints need at steady state (i.e. once the user's seed + migrations are applied):**
 
 | Assumption | Used by | Failure mode if missing |
@@ -374,6 +377,7 @@ Target duration: **3:00 minutes**. Seven sections. Aggressive cutting.
 ## 6. Reference map
 
 - [demo-plant-design.md](./demo-plant-design.md) — story doc: plant, scenes, narration.
+- [demo-seed-content.md](./demo-seed-content.md) — literal seed content (5 cells, 12 WOs, 20 log entries, 5 failures, rota, production events, integrity checks).
 - [demo-playbook.md](./demo-playbook.md) — operator-level runbook.
 - [win-plan-48h.md](./win-plan-48h.md) — strategic plan that spawned the M9 work.
 - [docs/architecture/06-forecast-watch.md](../../architecture/06-forecast-watch.md) — forecast-watch loop architecture.

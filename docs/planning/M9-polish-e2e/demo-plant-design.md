@@ -462,48 +462,42 @@ This rename is *not* a refactor of the KB schema or the MCP tool contracts. `kb_
 
 ## 11. Rollout order
 
-Landing in this order so each stage is independently demo-usable and the quality gates stay green between stages.
+> [!NOTE]
+> **Status as of latest pass** — most of the original rollout rows are done. The gantt below is kept as a historical reference; the live status lives in [demo-build-spec.md §1](./demo-build-spec.md#1-capability--trigger--observable--status-matrix). Done rows are marked `done` in the chart.
 
 ```mermaid
 gantt
-    title Demo-plant build order — J-2 through J-1
+    title Demo-plant build order — original rollout (most rows now done)
     dateFormat  HH:mm
     axisFormat %H:%M
-    section Prep
-    Migration 010 (rename + new cells)     :m1, 00:00, 45m
-    Seed script scaffold (empty classes)   :m2, after m1, 30m
-    Signal-definition rows                 :m3, after m2, 30m
-    section History
-    History generator (7 d signal data)    :h1, after m3, 90m
-    WO + logbook + failure history         :h2, after h1, 60m
-    section Endpoints
-    reset/full + reset/light               :e1, after h2, 45m
-    seed-forecast + trigger-breach         :e2, after e1, 45m
-    trigger-memory-scene update to Capper  :e3, after e2, 20m
-    run-full wrapper                       :e4, after e3, 30m
-    section Shift page
-    TopBar shift pill + /shifts route      :s1, after e4, 45m
-    Rota panel                             :s2, after s1, 45m
-    This shift's activity panel            :s3, after s2, 60m
-    Shift logbook panel                    :s4, after s3, 45m
-    Handover note (stretch)                :s5, after s4, 60m
-    section Frontend
-    DemoControlStrip (6 buttons)           :f1, after s4, 45m
+    section Prep (user-owned)
+    Naming migration + new cells           :done, m1, 00:00, 45m
+    Signal-definition rows                 :done, m3, after m1, 30m
+    section History (user-owned)
+    7 d signal history                     :active, h1, after m3, 90m
+    WO + logbook + failure history         :active, h2, after h1, 60m
+    section Endpoints (agent-owned)
+    reset/light                            :done, e1, after h2, 20m
+    seed-forecast + trigger-breach         :done, e2, after e1, 45m
+    run-full wrapper                       :done, e4, after e2, 30m
+    section Shift page (shipped earlier)
+    Full /shifts route + panels            :done, s1, after e4, 3h
+    section Frontend (agent-owned)
+    DemoControlStrip                       :done, f1, after s1, 45m
     section Verify
-    Gate sweep (make test / lint / tc)     :v1, after f1, 20m
-    End-to-end dry run (full scene)        :v2, after v1, 30m
+    Gate sweep (make test / lint / tc)     :done, v1, after f1, 20m
+    End-to-end dry run                     :active, v2, after v1, 30m
 ```
 
-Totals:
+**What's left on the critical path:**
 
-- **Core path (without handover stretch)**: ~10 hours 25 minutes.
-- **With handover stretch**: ~11 hours 25 minutes.
-- **Two dry-run rehearsals** fit in the remaining demo-day buffer.
+- **User-owned**: apply the seed content from [demo-seed-content.md](./demo-seed-content.md) — five cells, 7-day history, 12 WOs, 20 log entries, 5 failures, rota, production events.
+- **Agent-assisted**: one 2-minute in-browser click-smoke of the DemoControlStrip, one full dry-run through [demo-build-spec.md §3](./demo-build-spec.md#3-dry-run-checklist).
 
-Dependencies that matter:
+Dependencies that still matter:
 
-- The shift page needs the seed to exist (shift assignments + logbook entries) before it can render anything meaningful, so it must land after the History section.
-- The DemoControlStrip can ship in parallel with the shift-page work if needed — it has no dependency on it. The gantt sequences them purely for cognitive simplicity.
+- Shift page renders empty until the user's seed populates `shift_assignment` + `logbook_entry`. The page itself is code-complete; it's waiting on data.
+- Forecast-watch correctness requires the last-6-h drift clamp per [demo-seed-content.md §3.2](./demo-seed-content.md#32-mandatory-clamp-on-the-last-6-hours). If the seed skips this, forecast-watch fires on seeded drift and the `seed-forecast` demo endpoint loses its punch.
 
 ---
 
