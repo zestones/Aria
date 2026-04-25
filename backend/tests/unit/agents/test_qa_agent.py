@@ -255,22 +255,22 @@ def patch_qa(monkeypatch: pytest.MonkeyPatch):
 @pytest.mark.asyncio
 async def test_text_only_turn_streams_deltas_and_ends_with_done(patch_qa) -> None:
     ws = _FakeClientWS()
-    deltas = ["OEE on P-02 ", "this month is ", "91%."]
-    final_content: list[Any] = [_FakeTextBlock(text="OEE on P-02 this month is 91%.")]
+    deltas = ["OEE on Bottle Filler ", "this month is ", "91%."]
+    final_content: list[Any] = [_FakeTextBlock(text="OEE on Bottle Filler this month is 91%.")]
     _antr, _mcp, bus = patch_qa(stream_plans=[(deltas, final_content)])
 
     messages: list[dict[str, Any]] = []
-    await qa.run_qa_turn(ws=ws, messages=messages, user_content="OEE on P-02?")  # type: ignore[arg-type]
+    await qa.run_qa_turn(ws=ws, messages=messages, user_content="OEE on Bottle Filler?")  # type: ignore[arg-type]
 
     # Client stream: 3 text_delta + 1 done
     types = [f["type"] for f in ws.sent]
     assert types == ["text_delta", "text_delta", "text_delta", "done"]
-    assert ws.sent[0]["content"] == "OEE on P-02 "
+    assert ws.sent[0]["content"] == "OEE on Bottle Filler "
     assert ws.sent[-1] == {"type": "done"}
 
     # messages holds: user + assistant (content blocks).
     assert len(messages) == 2
-    assert messages[0] == {"role": "user", "content": "OEE on P-02?"}
+    assert messages[0] == {"role": "user", "content": "OEE on Bottle Filler?"}
     assert messages[1]["role"] == "assistant"
 
     # Events bus carries agent_start / agent_end.
@@ -294,7 +294,7 @@ async def test_mcp_tool_call_streams_tool_call_and_result_summary(patch_qa) -> N
     # Turn 1: empty text, one tool_use. Turn 2: final text, no tool_use.
     stream_plans = [
         ([], [get_oee]),
-        (["OEE on P-02 is 91%."], [_FakeTextBlock(text="OEE on P-02 is 91%.")]),
+        (["OEE on Bottle Filler is 91%."], [_FakeTextBlock(text="OEE on Bottle Filler is 91%.")]),
     ]
     mcp_results = {
         "get_oee": _ToolResult(content=json.dumps({"oee": 0.91, "cell_id": 2})),
@@ -302,7 +302,7 @@ async def test_mcp_tool_call_streams_tool_call_and_result_summary(patch_qa) -> N
     _antr, mcp, bus = patch_qa(stream_plans=stream_plans, mcp_results=mcp_results)
 
     messages: list[dict[str, Any]] = []
-    await qa.run_qa_turn(ws=ws, messages=messages, user_content="OEE on P-02?")  # type: ignore[arg-type]
+    await qa.run_qa_turn(ws=ws, messages=messages, user_content="OEE on Bottle Filler?")  # type: ignore[arg-type]
 
     types = [f["type"] for f in ws.sent]
     assert "tool_call" in types
@@ -452,7 +452,7 @@ async def test_ask_investigator_dual_channel_handoff(
     ask = _FakeToolUseBlock(
         id="tu_1",
         name="ask_investigator",
-        input={"cell_id": 2, "question": "Why did P-02 trip yesterday?"},
+        input={"cell_id": 2, "question": "Why did Bottle Filler trip yesterday?"},
     )
     stream_plans = [
         ([], [ask]),
@@ -461,7 +461,7 @@ async def test_ask_investigator_dual_channel_handoff(
     antr, _, bus = patch_qa(stream_plans=stream_plans)
 
     ws = _FakeClientWS()
-    await qa.run_qa_turn(ws=ws, messages=[], user_content="Why did P-02 trip yesterday?")  # type: ignore[arg-type]
+    await qa.run_qa_turn(ws=ws, messages=[], user_content="Why did Bottle Filler trip yesterday?")  # type: ignore[arg-type]
 
     # Events bus: underscored field names.
     ho_bus = next(e for e in bus.events if e[0] == "agent_handoff")[1]
@@ -472,7 +472,7 @@ async def test_ask_investigator_dual_channel_handoff(
     ho_chat = next(f for f in ws.sent if f["type"] == "agent_handoff")
     assert ho_chat["from"] == "qa"
     assert ho_chat["to"] == "investigator"
-    assert ho_chat["reason"].startswith("Why did P-02")
+    assert ho_chat["reason"].startswith("Why did Bottle Filler")
 
     # Child investigator agent_start / agent_end fired.
     starts = [e for e in bus.events if e[0] == "agent_start" and e[1]["agent"] == "investigator"]

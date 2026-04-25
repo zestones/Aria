@@ -1,7 +1,7 @@
 """Hierarchy tools (M2.4 audit add-on) — `list_cells` for name → id resolution.
 
 The Q&A agent (M5.x) receives natural-language queries like "what's the OEE of
-P-02?" and needs to resolve "P-02" → ``cell_id`` before calling KPI tools.
+Bottle Filler?" and needs to resolve the name → ``cell_id`` before calling KPI tools.
 Without this tool, the LLM either invents an id or we inject the full cell
 list into the system prompt — both break for multi-cell sites.
 """

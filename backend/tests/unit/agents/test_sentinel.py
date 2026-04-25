@@ -221,7 +221,7 @@ async def test_skips_cells_not_onboarded(patch_sentinel) -> None:
     mcp, ws, _conn = patch_sentinel(
         cells=[
             {"cell_id": 1, "cell_name": "P-01", "onboarding_complete": False},
-            {"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True},
+            {"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True},
         ]
     )
     await sentinel_mod._sentinel_tick()
@@ -234,7 +234,7 @@ async def test_skips_cells_not_onboarded(patch_sentinel) -> None:
 @pytest.mark.asyncio
 async def test_no_breaches_emits_no_events(patch_sentinel) -> None:
     mcp, ws, _conn = patch_sentinel(
-        cells=[{"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True}],
+        cells=[{"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True}],
         mcp_results={2: _ToolResult(content="[]")},
     )
     await sentinel_mod._sentinel_tick()
@@ -249,7 +249,7 @@ async def test_is_error_logs_and_continues(
     mcp, ws, _conn = patch_sentinel(
         cells=[
             {"cell_id": 1, "cell_name": "P-01", "onboarding_complete": True},
-            {"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True},
+            {"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True},
         ],
         mcp_results={
             1: _ToolResult(content="KB misconfigured", is_error=True),
@@ -273,7 +273,7 @@ async def test_fresh_breach_creates_wo_and_broadcasts(patch_sentinel) -> None:
         signal_def_id=10, value=5.0, threshold_value=4.5, severity="alert", direction="high"
     )
     _mcp, ws, conn = patch_sentinel(
-        cells=[{"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True}],
+        cells=[{"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True}],
         mcp_results={2: _ToolResult(content=json.dumps([breach]))},
     )
 
@@ -318,7 +318,7 @@ async def test_double_sided_low_flow_breach_is_handled(patch_sentinel) -> None:
         threshold_field="low_alert",
     )
     _mcp, ws, conn = patch_sentinel(
-        cells=[{"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True}],
+        cells=[{"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True}],
         mcp_results={2: _ToolResult(content=json.dumps([breach]))},
     )
 
@@ -334,7 +334,7 @@ async def test_double_sided_low_flow_breach_is_handled(patch_sentinel) -> None:
 async def test_debounce_skips_when_existing_open_wo(patch_sentinel) -> None:
     breach = _breach(signal_def_id=10)
     _mcp, ws, conn = patch_sentinel(
-        cells=[{"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True}],
+        cells=[{"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True}],
         mcp_results={2: _ToolResult(content=json.dumps([breach]))},
         existing_wo=1,  # debounce probe returns a row -> skip
     )
@@ -350,7 +350,7 @@ async def test_same_signal_within_tick_only_creates_one_wo(patch_sentinel) -> No
     breach_a = _breach(signal_def_id=10, value=5.0)
     breach_b = _breach(signal_def_id=10, value=5.2)  # same signal, later reading
     _mcp, ws, conn = patch_sentinel(
-        cells=[{"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True}],
+        cells=[{"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True}],
         mcp_results={2: _ToolResult(content=json.dumps([breach_a, breach_b]))},
     )
 
@@ -399,7 +399,7 @@ async def test_startup_log_fires_exactly_once(
     patch_sentinel(
         cells=[
             {"cell_id": 1, "cell_name": "P-01", "onboarding_complete": False},
-            {"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True},
+            {"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True},
         ]
     )
     with caplog.at_level("INFO"):
@@ -470,7 +470,7 @@ async def test_fastmcp_wrapped_breaches_are_unwrapped(patch_sentinel) -> None:
     breach = _breach(signal_def_id=10, value=5.0, threshold_value=4.5)
     wrapped_payload = json.dumps({"result": [breach]})
     _mcp, ws, conn = patch_sentinel(
-        cells=[{"cell_id": 2, "cell_name": "P-02", "onboarding_complete": True}],
+        cells=[{"cell_id": 2, "cell_name": "Bottle Filler", "onboarding_complete": True}],
         mcp_results={2: _ToolResult(content=wrapped_payload)},
     )
 
@@ -686,7 +686,7 @@ async def test_forecast_tick_emits_warning_on_rising_drift(patch_forecast) -> No
             "cell_id": 2,
             "display_name": "Vibration",
             "kb_threshold_key": "vibration_mm_s",
-            "cell_name": "P-02",
+            "cell_name": "Bottle Filler",
             "thresholds_json": {"alert": 15.0, "trip": 25.0},
         }
     ]
@@ -720,7 +720,7 @@ async def test_forecast_tick_skips_when_too_few_samples(patch_forecast) -> None:
             "cell_id": 2,
             "display_name": "Vibration",
             "kb_threshold_key": "vibration_mm_s",
-            "cell_name": "P-02",
+            "cell_name": "Bottle Filler",
             "thresholds_json": {"alert": 15.0},
         }
     ]
@@ -743,7 +743,7 @@ async def test_forecast_tick_skips_flat_series(patch_forecast) -> None:
             "cell_id": 2,
             "display_name": "Vibration",
             "kb_threshold_key": "vibration_mm_s",
-            "cell_name": "P-02",
+            "cell_name": "Bottle Filler",
             "thresholds_json": {"alert": 15.0},
         }
     ]
@@ -763,7 +763,7 @@ async def test_forecast_tick_skips_when_threshold_unreachable(patch_forecast) ->
             "cell_id": 2,
             "display_name": "Vibration",
             "kb_threshold_key": "vibration_mm_s",
-            "cell_name": "P-02",
+            "cell_name": "Bottle Filler",
             # Only a low_alert — the rising series is drifting AWAY from it.
             "thresholds_json": {"low_alert": 5.0},
         }
@@ -784,7 +784,7 @@ async def test_forecast_tick_debounces_second_emission(patch_forecast) -> None:
             "cell_id": 2,
             "display_name": "Vibration",
             "kb_threshold_key": "vibration_mm_s",
-            "cell_name": "P-02",
+            "cell_name": "Bottle Filler",
             "thresholds_json": {"alert": 15.0},
         }
     ]

@@ -215,7 +215,7 @@ def _wo_loaded() -> dict[str, _ToolResult]:
             content=json.dumps(
                 {
                     "cell_id": 2,
-                    "title": "Anomaly on P-02",
+                    "title": "Anomaly on Bottle Filler",
                     "rca_summary": "Bearing wear; replace impeller bearing.",
                 }
             )
@@ -225,10 +225,10 @@ def _wo_loaded() -> dict[str, _ToolResult]:
 
 def _full_submit_args() -> dict[str, Any]:
     return {
-        "title": "Replace impeller bearing on P-02",
+        "title": "Replace impeller bearing on Bottle Filler",
         "description": "Planned replacement of the discharge impeller bearing.",
         "recommended_actions": [
-            "Isolate and lock-out pump P-02",
+            "Isolate and lock-out Bottle Filler",
             "Drain discharge line to the recovery tank",
             "Remove impeller cover (8 x M10 bolts, 35 Nm)",
             "Extract bearing with puller kit P-02A",

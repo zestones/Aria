@@ -93,7 +93,7 @@ async def test_returns_400_when_signal_def_missing() -> None:
     conn = _FakeConn(cell_row={"id": 2}, sig_row=None)
     with pytest.raises(Exception) as excinfo:
         await demo_router.trigger_memory_scene(
-            cell_name="P-02", conn=conn  # type: ignore[arg-type]
+            cell_name="Bottle Filler", conn=conn  # type: ignore[arg-type]
         )
     assert getattr(excinfo.value, "status_code", None) == 400
     # Nothing written when signal lookup fails (we return before the txn).
@@ -105,12 +105,12 @@ async def test_happy_path_orchestrates_all_four_steps() -> None:
     conn = _FakeConn(cell_row={"id": 2}, sig_row={"id": 55}, past_id=99)
 
     resp = await demo_router.trigger_memory_scene(
-        cell_name="P-02", conn=conn  # type: ignore[arg-type]
+        cell_name="Bottle Filler", conn=conn  # type: ignore[arg-type]
     )
 
     assert resp["ok"] is True
     assert resp["cell_id"] == 2
-    assert resp["cell_name"] == "P-02"
+    assert resp["cell_name"] == "Bottle Filler"
     assert resp["past_failure_id"] == 99
     assert resp["signal_def_id"] == 55
     # 5 readings seeded by the handler.
@@ -130,7 +130,7 @@ async def test_happy_path_orchestrates_all_four_steps() -> None:
 async def test_happy_path_past_failure_row_carries_signal_patterns_jsonb() -> None:
     conn = _FakeConn(cell_row={"id": 2}, sig_row={"id": 55})
 
-    await demo_router.trigger_memory_scene(cell_name="P-02", conn=conn)  # type: ignore[arg-type]
+    await demo_router.trigger_memory_scene(cell_name="Bottle Filler", conn=conn)  # type: ignore[arg-type]
 
     insert_calls = [
         (q, args)
@@ -151,8 +151,8 @@ async def test_happy_path_past_failure_row_carries_signal_patterns_jsonb() -> No
 @pytest.mark.asyncio
 async def test_readings_all_above_alert_threshold() -> None:
     conn = _FakeConn(cell_row={"id": 2}, sig_row={"id": 55})
-    await demo_router.trigger_memory_scene(cell_name="P-02", conn=conn)  # type: ignore[arg-type]
-    # All seeded readings must exceed the P-02 vibration alert (4.5 mm/s)
+    await demo_router.trigger_memory_scene(cell_name="Bottle Filler", conn=conn)  # type: ignore[arg-type]
+    # All seeded readings must exceed the vibration alert (4.5 mm/s)
     # otherwise Sentinel will not open a work_order and the scene dies.
     reading_values = [
         args[-1]

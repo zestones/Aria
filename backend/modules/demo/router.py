@@ -53,14 +53,14 @@ router = APIRouter(
 
 _PAST_FAILURE_PATTERN: dict[str, Any] = {"vibration_mm_s": {"peak": 5.4, "duration_min": 14}}
 # Short burst of readings — 5 x 30s apart, each above the 4.5 mm/s alert
-# threshold seeded in migration 007's P-02 KB. Sentinel's 5-minute window
-# captures all of them.
+# threshold (ISO 10816-7 class II, the default seeded for the demo cell).
+# Sentinel's 5-minute window captures all of them.
 _FRESH_READINGS = [5.05, 5.12, 5.18, 5.22, 5.15]
 
 
 @router.post("/trigger-memory-scene")
 async def trigger_memory_scene(
-    cell_name: str = Body("P-02", embed=True),
+    cell_name: str = Body("Bottle Capper", embed=True),
     conn: asyncpg.Connection = Depends(get_db),
 ) -> dict[str, Any]:
     """Prime the "memory flex" demo scene — see module docstring.
