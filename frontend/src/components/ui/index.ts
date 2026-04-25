@@ -1,3 +1,4 @@
+export { AriaLogo } from "./AriaLogo";
 export { AriaMark } from "./AriaMark";
 export type { AgentId, BadgeProps } from "./Badge";
 export { Badge } from "./Badge";

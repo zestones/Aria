@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { AriaMark, Icons } from "../ui";
+import { AriaLogo, Icons } from "../ui";
 import { UserMenu } from "./UserMenu";
 
 /**
@@ -127,7 +127,7 @@ function SidebarHeader({ collapsed }: { collapsed: boolean }) {
                 className="inline-flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                 aria-label="ARIA — Control room"
             >
-                <AriaMark size={20} className="text-sidebar-foreground" />
+                <AriaLogo size={20} />
                 {!collapsed && (
                     <span className="text-base font-semibold tracking-[-0.01em] text-sidebar-foreground">
                         ARIA
