@@ -138,7 +138,7 @@ export function useDowntimePareto(cellId: number | null, window: TrendWindow) {
     const entries = useMemo<DowntimeParetoEntry[]>(() => {
         const totals = new Map<string, number>();
         for (const ev of query.data ?? []) {
-            if (ev.status_category !== "unplanned_stop") continue;
+            if (ev.status_category === "running") continue;
             const dur = ev.duration_seconds ?? 0;
             if (dur <= 0) continue;
             totals.set(ev.status_name, (totals.get(ev.status_name) ?? 0) + dur);

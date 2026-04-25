@@ -36,6 +36,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icons } from "../../components/ui";
+import type { EquipmentSelection } from "../../lib/hierarchy";
+import { useLocalStorage } from "../../lib/useLocalStorage";
+import { EQUIPMENT_KEY, validateEquipmentSelection } from "../control-room/equipmentSelection";
 
 interface Action {
     key: string;
@@ -62,23 +65,23 @@ async function postAndSummarise(url: string, body: object, key: string): Promise
     }
     const data = (await resp.json().catch(() => ({}))) as Record<string, unknown>;
     // Extract a short, meaningful value the presenter can glance at.
-    if (typeof data["expect_anomaly_within_seconds"] === "number") {
-        return `${key} → anomaly in ~${data["expect_anomaly_within_seconds"]}s`;
+    if (typeof data.expect_anomaly_within_seconds === "number") {
+        return `${key} → anomaly in ~${data.expect_anomaly_within_seconds}s`;
     }
-    if (typeof data["expected_forecast_within_seconds"] === "number") {
-        return `${key} → forecast in ~${data["expected_forecast_within_seconds"]}s`;
+    if (typeof data.expected_forecast_within_seconds === "number") {
+        return `${key} → forecast in ~${data.expected_forecast_within_seconds}s`;
     }
-    if (typeof data["expected_total_duration_seconds"] === "number") {
-        const min = Math.round(Number(data["expected_total_duration_seconds"]) / 60);
+    if (typeof data.expected_total_duration_seconds === "number") {
+        const min = Math.round(Number(data.expected_total_duration_seconds) / 60);
         return `${key} → chain running ~${min} min`;
     }
-    if (typeof data["cancelled_work_orders"] === "number") {
-        return `${key} → cancelled ${data["cancelled_work_orders"]} WOs · cleared ${String(
-            data["cleared_readings"] ?? 0,
+    if (typeof data.cancelled_work_orders === "number") {
+        return `${key} → cancelled ${data.cancelled_work_orders} WOs · cleared ${String(
+            data.cleared_readings ?? 0,
         )} readings`;
     }
-    if (typeof data["spawned"] === "boolean" || typeof data["work_order_id"] === "number") {
-        const woId = data["work_order_id"];
+    if (typeof data.spawned === "boolean" || typeof data.work_order_id === "number") {
+        const woId = data.work_order_id;
         return `${key} → WO ${woId ?? "?"} replayed`;
     }
     return `${key} → ok`;
@@ -97,50 +100,80 @@ async function replayLastInvestigator(): Promise<string> {
     return `replay → WO ${wo.id} (cell ${wo.cell_id})`;
 }
 
-const ACTIONS: Action[] = [
-    {
-        key: "Clear alerts",
-        label: "Clear",
-        run: () => postAndSummarise("/api/v1/demo/reset/light", {}, "Clear"),
-    },
-    {
-        key: "Predict failure",
-        label: "Forecast",
-        run: () => postAndSummarise("/api/v1/demo/scene/seed-forecast", {}, "Forecast"),
-    },
-    {
-        key: "Trigger breach",
-        label: "Breach",
-        run: () => postAndSummarise("/api/v1/demo/scene/trigger-breach", {}, "Breach"),
-    },
-    {
-        key: "Memory recall",
-        label: "Memory",
-        run: () => postAndSummarise("/api/v1/demo/trigger-memory-scene", {}, "Memory"),
-    },
-    {
-        key: "Run whole demo",
-        label: "Run all",
-        confirm:
-            "Fire the full demo chain? Takes ~6 minutes end-to-end and will cancel open WOs + trigger multiple investigations.",
-        run: () => postAndSummarise("/api/v1/demo/scene/run-full", {}, "Run all"),
-    },
-    {
-        key: "Replay investigator",
-        label: "Replay",
-        run: replayLastInvestigator,
-    },
-];
+/** Build the action list for a given cell target. When `cellName` is null
+ *  the backend falls back to its own defaults ("Bottle Filler" / "Bottle
+ *  Capper"). Pass the selected cell name from the TopBar to aim at the
+ *  currently-scoped cell. */
+function buildActions(cellName: string | null): Action[] {
+    // target is the cell the scene endpoints aim at. Memory always targets
+    // a "sibling" cell; when the user only has one cell, we use the same one.
+    const target = cellName ?? "Bottle Filler";
+    const memoryTarget = cellName ?? "Bottle Capper";
+
+    return [
+        {
+            key: "Clear alerts",
+            label: "Clear",
+            run: () => postAndSummarise("/api/v1/demo/reset/light", {}, "Clear"),
+        },
+        {
+            key: "Predict failure",
+            label: "Forecast",
+            run: () => postAndSummarise("/api/v1/demo/scene/seed-forecast", { target }, "Forecast"),
+        },
+        {
+            key: "Trigger breach",
+            label: "Breach",
+            run: () => postAndSummarise("/api/v1/demo/scene/trigger-breach", { target }, "Breach"),
+        },
+        {
+            key: "Memory recall",
+            label: "Memory",
+            run: () =>
+                postAndSummarise(
+                    "/api/v1/demo/trigger-memory-scene",
+                    { cell_name: memoryTarget },
+                    "Memory",
+                ),
+        },
+        {
+            key: "Run whole demo",
+            label: "Run all",
+            confirm:
+                "Fire the full demo chain? Takes ~6 minutes end-to-end and will cancel open WOs + trigger multiple investigations.",
+            run: () =>
+                postAndSummarise(
+                    "/api/v1/demo/scene/run-full",
+                    {
+                        forecast_target: target,
+                        breach_target: target,
+                        memory_target: memoryTarget,
+                    },
+                    "Run all",
+                ),
+        },
+        {
+            key: "Replay investigator",
+            label: "Replay",
+            run: replayLastInvestigator,
+        },
+    ];
+}
 
 const FEEDBACK_TIMEOUT_MS = 3200;
 
 export function DemoControlStrip() {
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState<string | null>(null);
-    const [message, setMessage] = useState<{ text: string; tone: "ok" | "err" } | null>(
-        null,
-    );
+    const [message, setMessage] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+
+    // Read the TopBar cell selection so demo triggers aim at the right cell.
+    const [selection] = useLocalStorage<EquipmentSelection | null>(EQUIPMENT_KEY, null, {
+        validator: validateEquipmentSelection,
+    });
+    const cellName = selection?.cellName ?? null;
+    const actions = buildActions(cellName);
 
     // Clear inline message after a short window so the UI returns to a
     // neutral state before the next take.
@@ -243,12 +276,21 @@ export function DemoControlStrip() {
                         <span className="px-1 text-[10px] font-semibold uppercase tracking-widest text-text-tertiary">
                             Demo
                         </span>
+                        {cellName && (
+                            <span
+                                className="rounded px-1.5 py-0.5 font-mono text-[10px] text-text-tertiary"
+                                style={{ background: "var(--accent)" }}
+                                title={`Targeting: ${cellName}`}
+                            >
+                                {cellName}
+                            </span>
+                        )}
                         <span
                             aria-hidden
                             className="mx-0.5 h-4 w-px"
                             style={{ background: "var(--border)" }}
                         />
-                        {ACTIONS.map((action) => {
+                        {actions.map((action) => {
                             const isBusy = busy === action.key;
                             return (
                                 <button
@@ -261,7 +303,10 @@ export function DemoControlStrip() {
                                     className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {isBusy && (
-                                        <Icons.Loader2 className="size-3 animate-spin" aria-hidden />
+                                        <Icons.Loader2
+                                            className="size-3 animate-spin"
+                                            aria-hidden
+                                        />
                                     )}
                                     {action.label}
                                 </button>
