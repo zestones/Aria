@@ -344,9 +344,7 @@ async def reset_light(
 # ---------------------------------------------------------------------------
 
 
-async def _do_seed_forecast(
-    conn: asyncpg.Connection, cell_name: str
-) -> dict[str, Any]:
+async def _do_seed_forecast(conn: asyncpg.Connection, cell_name: str) -> dict[str, Any]:
     """Inject 40 clean drift samples spanning the last 6 h on the target
     cell's vibration signal. Forecast-watch's next tick picks them up.
 
@@ -354,9 +352,7 @@ async def _do_seed_forecast(
     the trip threshold, but easily enough slope for the regression to
     project a breach inside the 12 h horizon.
     """
-    cell_id, signal_def_id, alert_threshold = await _resolve_cell_and_vibration(
-        conn, cell_name
-    )
+    cell_id, signal_def_id, alert_threshold = await _resolve_cell_and_vibration(conn, cell_name)
 
     start_value = alert_threshold * 0.60
     end_value = alert_threshold * 0.92
@@ -398,8 +394,7 @@ async def _do_seed_forecast(
     _clear_forecast_debounce()
 
     log.info(
-        "demo seed-forecast: cell=%s cell_id=%d signal_def=%d samples=%d "
-        "ramp=%.2f→%.2f mm/s",
+        "demo seed-forecast: cell=%s cell_id=%d signal_def=%d samples=%d " "ramp=%.2f→%.2f mm/s",
         cell_name,
         cell_id,
         signal_def_id,
@@ -441,16 +436,12 @@ async def seed_forecast(
 # ---------------------------------------------------------------------------
 
 
-async def _do_trigger_breach(
-    conn: asyncpg.Connection, cell_name: str
-) -> dict[str, Any]:
+async def _do_trigger_breach(conn: asyncpg.Connection, cell_name: str) -> dict[str, Any]:
     """Append 5 above-threshold samples so Sentinel fires on its next
     30 s tick. Also cancels any open agent WO on the (cell, signal) pair
     so Sentinel's debounce doesn't swallow the new anomaly.
     """
-    cell_id, signal_def_id, alert_threshold = await _resolve_cell_and_vibration(
-        conn, cell_name
-    )
+    cell_id, signal_def_id, alert_threshold = await _resolve_cell_and_vibration(conn, cell_name)
 
     async with conn.transaction():
         cancelled_tag = await conn.execute(

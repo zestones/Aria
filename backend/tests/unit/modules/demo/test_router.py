@@ -298,9 +298,7 @@ async def test_seed_forecast_happy_path_writes_40_ramped_samples() -> None:
     kb_row = {
         "structured_data": {"thresholds": {"vibration_mm_s": {"alert": 5.0}}},
     }
-    conn = _M94FakeConn(
-        cell_row={"id": 7}, sig_row={"id": 42}, kb_row=kb_row
-    )
+    conn = _M94FakeConn(cell_row={"id": 7}, sig_row={"id": 42}, kb_row=kb_row)
     resp = await _do_seed_forecast(conn, "Bottle Filler")  # type: ignore[arg-type]
 
     assert resp["ok"] is True
@@ -358,9 +356,7 @@ async def test_trigger_breach_inserts_5_readings_above_alert() -> None:
     )
 
     kb_row = {"structured_data": {"thresholds": {"vibration_mm_s": {"alert": 4.5}}}}
-    conn = _M94FakeConn(
-        cell_row={"id": 2}, sig_row={"id": 10}, kb_row=kb_row
-    )
+    conn = _M94FakeConn(cell_row={"id": 2}, sig_row={"id": 10}, kb_row=kb_row)
     resp = await _do_trigger_breach(conn, "Bottle Filler")  # type: ignore[arg-type]
 
     assert resp["ok"] is True
@@ -384,15 +380,11 @@ async def test_trigger_breach_cancels_open_agent_wos_on_same_signal() -> None:
     whole cell — so unrelated open WOs are not swept up."""
     from modules.demo.router import _do_trigger_breach
 
-    conn = _M94FakeConn(
-        cell_row={"id": 2}, sig_row={"id": 10}, kb_row={"structured_data": {}}
-    )
+    conn = _M94FakeConn(cell_row={"id": 2}, sig_row={"id": 10}, kb_row={"structured_data": {}})
     await _do_trigger_breach(conn, "Bottle Filler")  # type: ignore[arg-type]
 
     updates = [
-        (q, args)
-        for q, args in conn.execute_calls
-        if "UPDATE work_order" in " ".join(q.split())
+        (q, args) for q, args in conn.execute_calls if "UPDATE work_order" in " ".join(q.split())
     ]
     assert len(updates) == 1
     _, args = updates[0]

@@ -165,7 +165,9 @@ async def main() -> int:
             # ---- M2.4 human-context tools (issue #11) ----
             cells_all = await _call(session, "list_cells", {})
             assert isinstance(cells_all, list) and len(cells_all) > 0
-            assert any(c["name"] == "Bottle Filler" for c in cells_all), "P-02 not in list_cells output"
+            assert any(
+                c["name"] == "Bottle Filler" for c in cells_all
+            ), "P-02 not in list_cells output"
             print(f"[OK] list_cells -> {len(cells_all)} cells (P-02 present)")
 
             logbook = await _call(session, "get_logbook_entries", {"cell_id": cell_id, **window})
