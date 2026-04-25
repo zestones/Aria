@@ -3,6 +3,9 @@
 > [!NOTE]
 > The data layer is the foundation every other milestone depends on. M1 added migration 007, which extends `equipment_kb`, `work_order`, and `failure_history` with the JSONB columns the agents need, and ships the Pydantic schemas that mirror those columns. Migration 008 was added afterwards to enforce per-signal threshold-key integrity at write time.
 
+> [!NOTE]
+> This document covers the *agent-facing* tables — the JSONB columns the agents write through Pydantic schemas. The *operational* hypertables (`machine_status`, `production_event`, `process_signal_data`) plus the OEE / MTBF / MTTR / downtime / quality math built on top of them have a dedicated doc at [09-kpi-and-telemetry.md](./09-kpi-and-telemetry.md). The simulators that populate those hypertables are at [08-simulators.md](./08-simulators.md).
+
 ---
 
 ## Why M1 exists
@@ -227,3 +230,5 @@ The hackathon demo is built around a single canonical cell — `cell_id = 1`, P-
 - The MCP tools that make this data accessible to agents: [02-mcp-server.md](./02-mcp-server.md).
 - The KB Builder agent that fills the structured columns: [03-kb-builder.md](./03-kb-builder.md).
 - The Investigator agent that reads `failure_history` to recognise patterns: [04-sentinel-investigator.md](./04-sentinel-investigator.md).
+- The simulators that write to the operational hypertables: [08-simulators.md](./08-simulators.md).
+- The OEE / MTBF / MTTR / quality math computed from those hypertables: [09-kpi-and-telemetry.md](./09-kpi-and-telemetry.md).
