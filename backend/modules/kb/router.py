@@ -238,7 +238,12 @@ async def onboarding_message(
     ``{session_id, question_index, question, total_questions}`` or
     ``{session_id, complete: true, kb: EquipmentKbOut-shaped dict}``.
     """
-    result = await submit_onboarding_message(body.session_id, body.answer)
+    try:
+        result = await submit_onboarding_message(body.session_id, body.answer)
+    except ValueError as e:
+        # Extraction already retried once. Keep malformed LLM patches as a
+        # client-visible 422 instead of letting Pydantic bubble up as a 500.
+        raise HTTPException(422, f"Onboarding extraction failed after retry: {e}") from e
     if result.get("complete"):
         # Re-serialise via the canonical DTO so the response matches every
         # other ``equipment_kb`` endpoint (timestamps as ISO strings, etc.).

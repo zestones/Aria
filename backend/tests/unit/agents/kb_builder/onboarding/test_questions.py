@@ -9,6 +9,7 @@ validation error.
 from __future__ import annotations
 
 import pytest
+from agents.kb_builder.onboarding.extraction import _normalise_raw_patch
 from agents.kb_builder.onboarding.questions import QUESTIONS, OnboardingPatch
 from pydantic import ValidationError
 
@@ -48,6 +49,20 @@ def test_patch_rejects_failure_pattern_missing_mode():
     # ``mode`` is the only required field on FailurePattern.
     with pytest.raises(ValidationError):
         OnboardingPatch.model_validate({"failure_patterns": [{"symptoms": "noise"}]})
+
+
+@pytest.mark.unit
+def test_normalise_raw_patch_omits_null_only_failure_pattern_without_mode():
+    raw = {"failure_patterns": [{"mtbf_months": None}]}
+
+    assert _normalise_raw_patch(raw) == {}
+
+
+@pytest.mark.unit
+def test_normalise_raw_patch_keeps_meaningful_failure_pattern_without_mode():
+    raw = {"failure_patterns": [{"mtbf_months": 18}]}
+
+    assert _normalise_raw_patch(raw) == raw
 
 
 @pytest.mark.unit

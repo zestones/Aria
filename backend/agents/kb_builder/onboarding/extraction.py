@@ -35,6 +35,43 @@ _PATCH_SYSTEM = (
 )
 
 
+def _normalise_raw_patch(raw: Any) -> Any:
+    """Drop null-only failure-pattern candidates before validation.
+
+    Claude sometimes answers the bearing-age question with
+    ``{"failure_patterns": [{"mtbf_months": null}]}`` when it cannot infer a
+    concrete MTBF. ``FailurePattern.mode`` is intentionally required, and an
+    empty array would replace the existing patterns, so the safe patch is to
+    omit ``failure_patterns`` entirely.
+    """
+    if not isinstance(raw, dict):
+        return raw
+
+    failure_patterns = raw.get("failure_patterns")
+    if not isinstance(failure_patterns, list):
+        return raw
+
+    normalised_patterns: list[Any] = []
+    for pattern in failure_patterns:
+        if (
+            isinstance(pattern, dict)
+            and not pattern.get("mode")
+            and all(value is None for value in pattern.values())
+        ):
+            continue
+        normalised_patterns.append(pattern)
+
+    if len(normalised_patterns) == len(failure_patterns):
+        return raw
+
+    normalised = dict(raw)
+    if normalised_patterns:
+        normalised["failure_patterns"] = normalised_patterns
+    else:
+        normalised.pop("failure_patterns", None)
+    return normalised
+
+
 def _first_text(content: list[Any]) -> str:
     """Return the first ``TextBlock.text`` from a Claude response, or ''."""
     return next(
@@ -76,7 +113,7 @@ async def extract_patch(answer: str, hint: str, cell_id: int) -> dict:
     raw_text = _first_text(response.content)
 
     try:
-        raw = parse_json_response(response)
+        raw = _normalise_raw_patch(parse_json_response(response))
         patch = OnboardingPatch.model_validate(raw)
         return patch.model_dump(exclude_none=True)
     except (ValueError, ValidationError, json.JSONDecodeError) as first_err:
@@ -113,6 +150,6 @@ async def extract_patch(answer: str, hint: str, cell_id: int) -> dict:
         retry.usage.output_tokens,
         cell_id,
     )
-    raw = parse_json_response(retry)
+    raw = _normalise_raw_patch(parse_json_response(retry))
     patch = OnboardingPatch.model_validate(raw)
     return patch.model_dump(exclude_none=True)
