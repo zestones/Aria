@@ -172,6 +172,9 @@ This is the architectural reason Q&A stayed on the Messages API and did not migr
 
 ## Managed Agents migration (M5.5)
 
+> [!NOTE]
+> The dedicated Managed Agents architecture doc lives at [07-managed-agents.md](./07-managed-agents.md) — full module layout, lifecycle diagram, hosted-MCP wiring, sandbox CSV endpoint, and session-persistence contract. This section keeps a short summary because the migration is the climax of the M5 storyline, but new wiring details should land in 07-managed-agents.md.
+
 > [!IMPORTANT]
 > M5.4 originally migrated Q&A to Managed Agents to qualify for the "Best Use of Managed Agents" prize. The M5 audit (`docs/audits/M5-managed-agents-refactor-audit.md`) concluded that Q&A is the wrong target — interactive sub-second turns fight the platform's `agent.message`-block grain. The Investigator is the right target: long-running, tool-heavy, asynchronous. M5.5 implements that pivot.
 

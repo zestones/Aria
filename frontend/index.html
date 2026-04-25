@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <title>ARIA — Adaptive Runtime Intelligence</title>
+    <link id="aria-favicon" rel="icon" type="image/png" href="/favicon-dark.png" />
+    <!-- Open Graph -->
+    <meta property="og:title" content="ARIA — Adaptive Runtime Intelligence for Industrial Assets" />
+    <meta property="og:description"
+        content="Upload any machine's PDF manual. ARIA reads it cover-to-cover, learns from your operators, then watches the floor 24/7 — predicting failures hours in advance." />
+    <meta property="og:image" content="/og-home.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/og-home.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -24,6 +33,8 @@
                     ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
                     : mode;
                 document.documentElement.setAttribute("data-theme", resolved);
+                var faviconEl = document.getElementById("aria-favicon");
+                if (faviconEl) faviconEl.setAttribute("href", resolved === "light" ? "/favicon-light.png" : "/favicon-dark.png");
             } catch (e) {
                 document.documentElement.setAttribute("data-theme", "dark");
             }

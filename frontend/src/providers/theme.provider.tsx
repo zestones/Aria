@@ -35,6 +35,8 @@ function resolveTheme(mode: ThemeMode): ResolvedTheme {
 function applyTheme(resolved: ResolvedTheme) {
     if (typeof document === "undefined") return;
     document.documentElement.setAttribute("data-theme", resolved);
+    const favicon = document.getElementById("aria-favicon") as HTMLLinkElement | null;
+    if (favicon) favicon.href = resolved === "light" ? "/favicon-light.png" : "/favicon-dark.png";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

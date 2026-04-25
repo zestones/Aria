@@ -21,6 +21,9 @@ This documentation is structured to serve two audiences in a single pass:
 | Understand anomaly detection and root-cause analysis   | [04-sentinel-investigator.md](./04-sentinel-investigator.md) |
 | Understand the work order pipeline and operator chat   | [05-workorder-qa.md](./05-workorder-qa.md)                   |
 | Understand predictive alerting and pattern enrichment  | [06-forecast-watch.md](./06-forecast-watch.md)               |
+| Understand the Managed Agents migration of the Investigator | [07-managed-agents.md](./07-managed-agents.md)          |
+| Understand how the demo plant data is generated        | [08-simulators.md](./08-simulators.md)                       |
+| Understand the operational data tables and OEE / MTBF / MTTR / quality math | [09-kpi-and-telemetry.md](./09-kpi-and-telemetry.md) |
 | Understand the WebSocket bus, auth, and shared helpers | [cross-cutting.md](./cross-cutting.md)                       |
 | Understand why a non-obvious choice was made           | [decisions.md](./decisions.md)                               |
 
@@ -130,7 +133,8 @@ flowchart LR
     M2["M2<br/>FastMCP + MCPClient<br/>14 tools + render_* schemas"]
     M3["M3<br/>KB Builder agent<br/>PDF vision + onboarding"]
     M4["M4<br/>Sentinel + Investigator<br/>WSManager + thinking + handoffs"]
-    M5["M5<br/>WO Generator + Q&A<br/>Managed Agents migration"]
+    M5["M5<br/>WO Generator + Q&A<br/>chat WS + agent-as-tool handoffs"]
+    M55["M5.5<br/>Managed Agents<br/>hosted loop + hosted MCP + sandbox"]
     M9["M9<br/>Forecast-watch<br/>predictive alerting + enrichment"]
 
     M1 --> M2
@@ -138,10 +142,11 @@ flowchart LR
     M2 --> M4
     M3 --> M4
     M4 --> M5
+    M5 --> M55
     M4 --> M9
 
     classDef done fill:#0d3a1a,stroke:#2ea043,color:#fff
-    class M1,M2,M3,M4,M5,M9 done
+    class M1,M2,M3,M4,M5,M55,M9 done
 ```
 
 Each milestone is fully shipped on `main`. The roadmap and the original issue inventory live in [docs/planning/ROADMAP.md](../planning/ROADMAP.md). Per-issue audits performed before and after implementation live in [docs/audits/](../audits/) — they are excellent secondary reading for anyone investigating *why* a particular contract has the shape it does.
@@ -165,3 +170,6 @@ Each milestone is fully shipped on `main`. The roadmap and the original issue in
 - Frontend integrator: read [cross-cutting.md](./cross-cutting.md#websocket-contracts) and the per-agent doc for any agent you render.
 - Adding a new MCP tool: read [02-mcp-server.md](./02-mcp-server.md#adding-a-new-tool).
 - Adding a new agent: read [04-sentinel-investigator.md](./04-sentinel-investigator.md#agent-loop-template) for the canonical loop pattern, then [decisions.md](./decisions.md#two-paths-messages-api-vs-managed-agents) for which execution path to pick.
+- Working on the Managed Agents path (hosted loop, hosted MCP, sandbox `bash`): [07-managed-agents.md](./07-managed-agents.md).
+- Adding a new simulated cell or failure scenario: [08-simulators.md](./08-simulators.md).
+- Reading or extending the OEE / MTBF / MTTR / downtime / quality math: [09-kpi-and-telemetry.md](./09-kpi-and-telemetry.md).

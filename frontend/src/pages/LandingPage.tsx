@@ -23,7 +23,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { type FormEvent, useEffect, useId, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { AriaMark, Icons, ThemeToggle } from "../components/ui";
+import { AriaLogo, Icons, ThemeToggle } from "../components/ui";
 import { isAuthenticated, login } from "../services/auth";
 
 const DEV = import.meta.env.DEV;
@@ -57,8 +57,7 @@ function Nav() {
         <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/70">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                 <a href="#top" className="flex items-center gap-2.5">
-                    <AriaMark className="text-foreground" size={22} />
-                    <span className="text-base font-semibold tracking-[-0.015em]">ARIA</span>
+                    <AriaLogo size={28} />
                     <span className="hidden text-xs text-text-tertiary sm:inline">
                         Industrial AI on Claude Opus 4.7
                     </span>
@@ -1119,10 +1118,7 @@ function Footer() {
         <footer className="bg-background">
             <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
                 <div className="flex items-center gap-2.5">
-                    <AriaMark className="text-foreground" size={20} />
-                    <span className="text-sm font-medium tracking-[-0.01em] text-foreground">
-                        ARIA
-                    </span>
+                    <AriaLogo size={22} />
                     <span className="text-xs text-text-tertiary">
                         · Anthropic Hackathon · April 2026
                     </span>

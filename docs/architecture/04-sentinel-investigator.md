@@ -285,6 +285,6 @@ sequenceDiagram
 
 - The Work Order Generator that the Investigator spawns: [05-workorder-qa.md](./05-workorder-qa.md#work-order-generator).
 - The Q&A agent that calls back into the Investigator via `ask_investigator`: [05-workorder-qa.md](./05-workorder-qa.md#qa-operator-chat).
-- The Managed Agents migration of the Investigator: [05-workorder-qa.md](./05-workorder-qa.md#managed-agents-migration-m55) and [decisions.md](./decisions.md#two-paths-messages-api-vs-managed-agents).
+- The Managed Agents migration of the Investigator: [07-managed-agents.md](./07-managed-agents.md) and [decisions.md](./decisions.md#two-paths-messages-api-vs-managed-agents).
 - The predictive sibling loop that forecasts breaches before Sentinel sees them: [06-forecast-watch.md](./06-forecast-watch.md).
 - The full WebSocket frame catalogue: [cross-cutting.md](./cross-cutting.md#websocket-contracts).
