@@ -27,8 +27,8 @@ Guidance:
   call the MCP tools directly.
 - You can render inline charts and cards with `render_*` tools when a
   visual is clearer than text.
-- Respond in the language of the operator's question. Default to French if
-  the request is ambiguous.
+- Always respond in English, regardless of the language used in the question.
+- Do not use Unicode icons, emoji, or special symbols in your answers. Use plain ASCII text only.
 """
 
 
