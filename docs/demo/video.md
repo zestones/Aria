@@ -49,6 +49,40 @@ Discharge bearing wear — progressing thirteen point seven times faster than th
 
 A four-hour maintenance window, starting midnight. The technician walks out with a printed sheet.
 
-### Scene 5 — But How?
+## Act III — Explaining the magic
 
+### Bloc 1 — Dashboard + KPIs
 
+You've seen what ARIA does. Here's what makes it possible. Every factory has three numbers that tell you if it's healthy. OEE — how much of your capacity you're actually using. MTBF — how long a machine runs before it breaks. MTTR — how long it takes to fix it. ARIA computes all three, live, for every machine on the line.
+
+---
+
+### Bloc 2 — Shifts + Logbook
+
+The agent also reads what operators write. Shift notes. Logbook entries. A technician writes 'unusual noise at 2am' — ARIA reads it, and uses it in the next investigation. That's how it's able to connect the dots, and match the breach to others in the past. Because it doesn't just read numbers — it reads the shop floor knowledge too.
+
+---
+
+### Bloc 3 — KB + memory
+
+Behind each machine sits a Knowledge Base — built from the manual, calibrated by the operator, sharpened by every incident. Each failure adds a new entry with a confidence score. The more ARIA sees, the more precise it becomes.
+
+> [KB card d'une machine — thresholds, confidence scores, failure history]
+
+---
+
+### Bloc 4 — Agent Workspace + tools
+
+And when the Investigator runs, it has twenty tools at its disposal. Signal trends. Logbook entries. Shift assignments. Past failures. Live KPIs. Quality metrics. It doesn't guess — it cross-references everything.
+
+> [Agent Workspace — liste des tools visible : Data Retrieval 15 tools, Visualization 4 tools, AI Agent 1 tool]
+
+---
+
+### Bloc 5 — ARIA adapts
+
+That's not a demo trick. That's not a one-time setup. ARIA learns and adapts every day. It learns from every breach, every investigation, every technician note. It updates the knowledge base, refines the thresholds, improves the confidence scores. The more it sees, the smarter it gets.
+
+Because ARIA doesn't just run — it adapts. Every factory. Every machine. Every failure."
+
+> [Fade léger sur le dashboard — logo ARIA]
