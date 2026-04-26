@@ -7,8 +7,8 @@
 >   - **Technical contracts + dry-run** → [`../planning/M9-polish-e2e/demo-build-spec.md`](../planning/M9-polish-e2e/demo-build-spec.md)
 >   - **Plant scenario** → [`../planning/M9-polish-e2e/demo-plant-design.md`](../planning/M9-polish-e2e/demo-plant-design.md)
 >
-> **This doc** = everything else needed for the submission form.
-
+**This doc** = everything else needed for the submission form.
+> 
 ---
 
 ## 0. Submission deadline
@@ -17,7 +17,7 @@
 
 Required :
 - [ ] 3-min demo video (YouTube unlisted, Loom, or similar)
-- [ ] GitHub repo URL — `https://github.com/zestones/ARIA`
+- [ ] GitHub repo URL — `https://github.com/zestones/Aria`
 - [ ] Written summary (100–200 words)
 - [ ] Project tags
 - [ ] Screenshots (3-5 recommended)
@@ -26,25 +26,25 @@ Required :
 
 ## 1. Pitch — one phrase
 
-> **ARIA is a maintenance copilot for industrial operators. Drop in your machine's manual, get live predictive monitoring in two minutes — instead of six months and half a million dollars.**
-
+**ARIA is a maintenance copilot for industrial operators. Drop in your machine's manual, get live predictive monitoring in two minutes — instead of six months and half a million dollars.**
+> 
 Use this in : README headline · Login subtitle · Video thumbnail · YouTube description first line.
 
 ---
 
 ## 2. Written summary (100–200 words) — template
 
-> ARIA is a maintenance copilot for industrial operators. Classic predictive-maintenance systems cost half a million dollars and take six to eighteen months of data scientists to deploy. Ninety-five percent of plants can't afford that — they wait for things to break.
->
+ARIA is a maintenance copilot for industrial operators. Classic predictive-maintenance systems cost half a million dollars and take six to eighteen months of data scientists to deploy. Ninety-five percent of plants can't afford that — they wait for things to break.
 > ARIA changes that. An operator drops a machine's PDF manual into the system. Claude Opus 4.7 reads it with vision and a one-million-token context. Three calibration questions later, the machine is under live monitoring.
 >
-> Behind the scenes: five specialized agents orchestrated through an MCP server with seventeen tools. Sentinel watches signals; Investigator runs extended thinking on anomalies — visible live, token by token; KB Builder reads manuals; Work Order Generator writes printable repair orders; Q&A answers operator questions. The Investigator runs on Claude Managed Agents and writes Python that executes inside Anthropic's cloud sandbox to produce verifiable numerical evidence in every diagnosis.
->
+Behind the scenes: five specialized agents orchestrated through an MCP server with seventeen tools. Sentinel watches signals; Investigator runs extended thinking on anomalies — visible live, token by token; KB Builder reads manuals; Work Order Generator writes printable repair orders; Q&A answers operator questions. The Investigator runs on Claude Managed Agents and writes Python that executes inside Anthropic's cloud sandbox to produce verifiable numerical evidence in every diagnosis.
 > From PDF to first prediction: two minutes. Built for every plant that can't afford the alternative.
+>
 
-**Word count :** ~165. Within 100-200 range.
+> **Word count :** ~165. Within 100-200 range.
+>
 
-Final pass before submit : re-read for tone and accuracy after the video is locked.
+> Final pass before submit : re-read for tone and accuracy after the video is locked.
 
 ---
 
@@ -68,13 +68,13 @@ fastapi
 
 ## 4. Screenshots to capture (5 max)
 
-| # | Shot | Source surface | Captured ? |
-|---|---|---|---|
-| 1 | Dashboard `/control-room` with 5 plant tiles + KPI bar populated | Live app | ⏳ |
-| 2 | **Inspector with thinking stream + SandboxExecution card (cyan chip visible)** | Live app, mid-investigation | ⏳ |
-| 3 | DiagnosticCard with 87% confidence + RCA text starting `Sandbox: rho=...` | Live app, end of investigation | ⏳ |
-| 4 | PrintableWorkOrder A4 with QR code | `/work-orders/:id` print preview | ⏳ |
-| 5 | AgentConstellation full-screen with active handoff particles | Hotkey `A` overlay | ⏳ |
+| # | Shot                                                                           | Source surface                   | Captured ? |
+|---|--------------------------------------------------------------------------------|----------------------------------|------------|
+| 1 | Dashboard `/control-room` with 5 plant tiles + KPI bar populated               | Live app                         | ⏳          |
+| 2 | **Inspector with thinking stream + SandboxExecution card (cyan chip visible)** | Live app, mid-investigation      | ⏳          |
+| 3 | DiagnosticCard with 87% confidence + RCA text starting `Sandbox: rho=...`      | Live app, end of investigation   | ⏳          |
+| 4 | PrintableWorkOrder A4 with QR code                                             | `/work-orders/:id` print preview | ⏳          |
+| 5 | AgentConstellation full-screen with active handoff particles                   | Hotkey `A` overlay               | ⏳          |
 
 **Format :** PNG 1920×1080. Names : `01-dashboard.png`, `02-thinking-sandbox.png`, etc.
 
@@ -137,12 +137,12 @@ fastapi
 
 ## 7. Prizes mapping (recap court)
 
-| Prize | Hook moment in video | Strength |
-|---|---|---|
-| **Top 3 global** (50k/30k/10k) | Excellence on all 4 criteria across the full 3:00 | Realistic |
-| **Keep Thinking ($5k)** | Cold open 0:00–0:15 + outro callback "for the one person who knows" — real-world problem nobody pointed Claude at | **Strong fit** |
-| **Best Managed Agents ($5k)** | Scene 3b 1:15–1:45 Sandbox Python execution + voice-over *"cannot happen without Managed Agents"* + Constellation reveal | **Strong fit** |
-| **Creative Opus 4.7 ($5k)** | Cold open emotional + Sandbox card cyan chip + extended thinking visible + outro callback | **Strong fit** |
+| Prize                          | Hook moment in video                                                                                                     | Strength       |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------|----------------|
+| **Top 3 global** (50k/30k/10k) | Excellence on all 4 criteria across the full 3:00                                                                        | Realistic      |
+| **Keep Thinking ($5k)**        | Cold open 0:00–0:15 + outro callback "for the one person who knows" — real-world problem nobody pointed Claude at        | **Strong fit** |
+| **Best Managed Agents ($5k)**  | Scene 3b 1:15–1:45 Sandbox Python execution + voice-over *"cannot happen without Managed Agents"* + Constellation reveal | **Strong fit** |
+| **Creative Opus 4.7 ($5k)**    | Cold open emotional + Sandbox card cyan chip + extended thinking visible + outro callback                                | **Strong fit** |
 
 Long-form mapping in `SCRIPT.md` "Mapping prizes" section.
 
@@ -150,14 +150,14 @@ Long-form mapping in `SCRIPT.md` "Mapping prizes" section.
 
 ## 8. Production timeline
 
-| When | What | Who |
-|---|---|---|
-| **Sat 25/04 AM** | User-owned seed + migrations applied · stock footage fetched · Grundfos PDF fetched · DemoControlStrip ready · dry-run x1 | Adam + zestones |
-| **Sat 25/04 PM (13:00–18:00)** | 6 screen recordings + voiceover full take | Adam |
-| **Sat 25/04 evening (18:00–24:00)** | Hyperframes composition assembly + render v1 + review | Adam |
-| **Sun 26/04 AM (09:00–12:00)** | Dry-run video x3 · final tweaks · README polish · capture 5 screenshots | Adam |
-| **Sun 26/04 (12:00–15:00)** | Export final MP4 · upload YouTube unlisted · submission form fill | Adam |
-| **Sun 26/04 15:00 EST** | **SUBMIT** (5h before deadline) | Adam |
+| When                                | What                                                                                                                      | Who             |
+|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------|-----------------|
+| **Sat 25/04 AM**                    | User-owned seed + migrations applied · stock footage fetched · Grundfos PDF fetched · DemoControlStrip ready · dry-run x1 | Adam + zestones |
+| **Sat 25/04 PM (13:00–18:00)**      | 6 screen recordings + voiceover full take                                                                                 | Adam            |
+| **Sat 25/04 evening (18:00–24:00)** | Hyperframes composition assembly + render v1 + review                                                                     | Adam            |
+| **Sun 26/04 AM (09:00–12:00)**      | Dry-run video x3 · final tweaks · README polish · capture 5 screenshots                                                   | Adam            |
+| **Sun 26/04 (12:00–15:00)**         | Export final MP4 · upload YouTube unlisted · submission form fill                                                         | Adam            |
+| **Sun 26/04 15:00 EST**             | **SUBMIT** (5h before deadline)                                                                                           | Adam            |
 
 ---
 

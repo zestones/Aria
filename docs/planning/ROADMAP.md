@@ -85,16 +85,16 @@ gantt
 
 | #   | Milestone                                                                     | Issues                                                   | Target      | Critical |
 |-----|-------------------------------------------------------------------------------|----------------------------------------------------------|-------------|----------|
-| M1  | [Data Layer](./docs/planning/M1-data-layer/issues.md)                         | [#2-#7](https://github.com/zestones/ARIA/milestone/1)    | Wed Apr 22  | yes      |
-| M2  | [MCP Server](./docs/planning/M2-mcp-server/issues.md)                         | [#8-#16](https://github.com/zestones/ARIA/milestone/2)   | Thu Apr 23  | yes      |
-| M3  | [KB Builder Agent](./docs/planning/M3-kb-builder/issues.md)                   | [#17-#22](https://github.com/zestones/ARIA/milestone/3)  | Thu Apr 23  | —        |
-| M4  | [Sentinel + Investigator](./docs/planning/M4-sentinel-investigator/issues.md) | [#23-#29](https://github.com/zestones/ARIA/milestone/4)  | Fri Apr 24  | yes      |
-| M5  | [WO Generator + Q&A](./docs/planning/M5-workorder-qa/issues.md)               | [#30-#33](https://github.com/zestones/ARIA/milestone/5)  | Sat Apr 25  | yes      |
-| M6  | [Frontend Foundation](./docs/planning/M6-frontend-foundation/issues.md)       | [#34-#39](https://github.com/zestones/ARIA/milestone/6)  | Thu Apr 23  | yes      |
-| M7  | [Control Room](./docs/planning/M7-control-room/issues.md)                     | [#40-#44](https://github.com/zestones/ARIA/milestone/7)  | Fri Apr 24  | —        |
-| M8  | [Agentic Workspace](./docs/planning/M8-agentic-workspace/issues.md)           | [#45-#50](https://github.com/zestones/ARIA/milestone/8)  | Sat Apr 25  | yes      |
-| M9  | [Polish & E2E](./docs/planning/M9-polish-e2e/issues.md)                       | [#51-#54](https://github.com/zestones/ARIA/milestone/9)  | Sun Apr 26  | yes      |
-| M10 | [Submission](./docs/planning/M10-submission/issues.md)                        | [#55-#57](https://github.com/zestones/ARIA/milestone/10) | Sun 8pm EST | yes      |
+| M1  | [Data Layer](./docs/planning/M1-data-layer/issues.md)                         | [#2-#7](https://github.com/zestones/Aria/milestone/1)    | Wed Apr 22  | yes      |
+| M2  | [MCP Server](./docs/planning/M2-mcp-server/issues.md)                         | [#8-#16](https://github.com/zestones/Aria/milestone/2)   | Thu Apr 23  | yes      |
+| M3  | [KB Builder Agent](./docs/planning/M3-kb-builder/issues.md)                   | [#17-#22](https://github.com/zestones/Aria/milestone/3)  | Thu Apr 23  | —        |
+| M4  | [Sentinel + Investigator](./docs/planning/M4-sentinel-investigator/issues.md) | [#23-#29](https://github.com/zestones/Aria/milestone/4)  | Fri Apr 24  | yes      |
+| M5  | [WO Generator + Q&A](./docs/planning/M5-workorder-qa/issues.md)               | [#30-#33](https://github.com/zestones/Aria/milestone/5)  | Sat Apr 25  | yes      |
+| M6  | [Frontend Foundation](./docs/planning/M6-frontend-foundation/issues.md)       | [#34-#39](https://github.com/zestones/Aria/milestone/6)  | Thu Apr 23  | yes      |
+| M7  | [Control Room](./docs/planning/M7-control-room/issues.md)                     | [#40-#44](https://github.com/zestones/Aria/milestone/7)  | Fri Apr 24  | —        |
+| M8  | [Agentic Workspace](./docs/planning/M8-agentic-workspace/issues.md)           | [#45-#50](https://github.com/zestones/Aria/milestone/8)  | Sat Apr 25  | yes      |
+| M9  | [Polish & E2E](./docs/planning/M9-polish-e2e/issues.md)                       | [#51-#54](https://github.com/zestones/Aria/milestone/9)  | Sun Apr 26  | yes      |
+| M10 | [Submission](./docs/planning/M10-submission/issues.md)                        | [#55-#57](https://github.com/zestones/Aria/milestone/10) | Sun 8pm EST | yes      |
 
 ---
 

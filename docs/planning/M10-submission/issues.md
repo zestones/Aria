@@ -62,7 +62,7 @@ Doit être tight.
 **Scope.** Submission hackathon avant 19h EST (buffer 1h).
 
 **Contenu submission form.**
-- Repo URL `https://github.com/zestones/ARIA`
+- Repo URL `https://github.com/zestones/Aria`
 - Vidéo URL (YouTube unlisted)
 - Written summary ~150 mots (adapter depuis `idea.md` §12)
 - Tags : `managed-agents`, `opus-4-7`, `vision`, `extended-thinking`, `mcp`,

@@ -235,7 +235,7 @@ The two real ones are exemplars:
 
 The other six need to reach roughly the same fidelity. They do not need to be 300+ lines each — `WorkOrderCard` and `DiagnosticCard` are mostly typography over a structured payload.
 
-**Issue:** [#47 M8.3](https://github.com/zestones/ARIA/issues/47) — open, M8 milestone.
+**Issue:** [#47 M8.3](https://github.com/zestones/Aria/issues/47) — open, M8 milestone.
 
 ### 4.2 The onboarding wizard does not exist
 
@@ -249,7 +249,7 @@ A working wizard does not need to be elaborate. Three components is enough:
 - A `<CalibrationQuestion>` card that posts the operator's free-text answer and renders the next question from the response.
 - A reveal animation when `onboarding_complete=true` flips, transitioning to the calibrated `EquipmentKbCard`.
 
-**Issue:** [#50 M8.6](https://github.com/zestones/ARIA/issues/50) — open, M8 milestone.
+**Issue:** [#50 M8.6](https://github.com/zestones/Aria/issues/50) — open, M8 milestone.
 
 ### 4.3 The chat panel is a plain LLM box
 
@@ -290,20 +290,20 @@ The `failure_history` injection into the Investigator's system prompt is the str
 
 If the demo timeline drifts and the natural anomaly does not produce a recognisable pattern, there is no kill-switch to force the moment.
 
-**Issue:** [#53 M9.3](https://github.com/zestones/ARIA/issues/53) — open, M9 milestone.
+**Issue:** [#53 M9.3](https://github.com/zestones/Aria/issues/53) — open, M9 milestone.
 
 ### 4.6 The anomaly banner is not real-time
 
 > [!NOTE]
 > `AnomalyBanner.tsx` is 270 lines and well structured, but it does not subscribe to live `anomaly_detected` events. The backend broadcasts the frame; the banner does not render it.
 
-**Issue:** [#42 M7.3](https://github.com/zestones/ARIA/issues/42) — open, M7 milestone.
+**Issue:** [#42 M7.3](https://github.com/zestones/Aria/issues/42) — open, M7 milestone.
 
 ### 4.7 The Agent Activity Feed is missing
 
 The Inspector renders a single agent's reasoning. There is no surface that shows "in the last 30 minutes ARIA detected 2 anomalies, ran 2 investigations, generated 1 work order, answered 4 questions". This is what makes the platform feel *alive* between user actions.
 
-**Issue:** [#48 M8.4](https://github.com/zestones/ARIA/issues/48) — open, M8 milestone.
+**Issue:** [#48 M8.4](https://github.com/zestones/Aria/issues/48) — open, M8 milestone.
 
 ---
 
@@ -411,15 +411,15 @@ flowchart LR
 
 | Issue                                                                                  | Maps to                                 | Priority |
 |----------------------------------------------------------------------------------------|-----------------------------------------|----------|
-| [#42 M7.3 Anomaly banner real-time](https://github.com/zestones/ARIA/issues/42)        | Tier 1 — item 7                         | P0       |
-| [#47 M8.3 Artifacts bundle](https://github.com/zestones/ARIA/issues/47)                | Tier 1 — items 1-5                      | P0       |
-| [#48 M8.4 Agent Activity Feed](https://github.com/zestones/ARIA/issues/48)             | Tier 2 — item 13                        | P1       |
-| [#50 M8.6 Onboarding wizard](https://github.com/zestones/ARIA/issues/50)               | Tier 1 — item 6                         | P0       |
-| [#52 M9.2 Motion polish](https://github.com/zestones/ARIA/issues/52)                   | Tier 3 — item 16                        | P2       |
-| [#53 M9.3 Memory flex scene](https://github.com/zestones/ARIA/issues/53)               | Tier 1 — item 9 (UI side)               | P0       |
-| [#54 M9.4 E2E demo rehearsal](https://github.com/zestones/ARIA/issues/54)              | Demo-day prep                           | P0       |
-| [#104 M5.6 Continue investigation add-on](https://github.com/zestones/ARIA/issues/104) | Phase 2 — Managed Agents differentiator | P2       |
-| [#105 M5.7 In-sandbox signal diagnostics](https://github.com/zestones/ARIA/issues/105) | Phase 2 — Managed Agents differentiator | P3       |
+| [#42 M7.3 Anomaly banner real-time](https://github.com/zestones/Aria/issues/42)        | Tier 1 — item 7                         | P0       |
+| [#47 M8.3 Artifacts bundle](https://github.com/zestones/Aria/issues/47)                | Tier 1 — items 1-5                      | P0       |
+| [#48 M8.4 Agent Activity Feed](https://github.com/zestones/Aria/issues/48)             | Tier 2 — item 13                        | P1       |
+| [#50 M8.6 Onboarding wizard](https://github.com/zestones/Aria/issues/50)               | Tier 1 — item 6                         | P0       |
+| [#52 M9.2 Motion polish](https://github.com/zestones/Aria/issues/52)                   | Tier 3 — item 16                        | P2       |
+| [#53 M9.3 Memory flex scene](https://github.com/zestones/Aria/issues/53)               | Tier 1 — item 9 (UI side)               | P0       |
+| [#54 M9.4 E2E demo rehearsal](https://github.com/zestones/Aria/issues/54)              | Demo-day prep                           | P0       |
+| [#104 M5.6 Continue investigation add-on](https://github.com/zestones/Aria/issues/104) | Phase 2 — Managed Agents differentiator | P2       |
+| [#105 M5.7 In-sandbox signal diagnostics](https://github.com/zestones/Aria/issues/105) | Phase 2 — Managed Agents differentiator | P3       |
 
 ---
 
