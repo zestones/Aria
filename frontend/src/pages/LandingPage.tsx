@@ -8,8 +8,8 @@
  *
  * Sections (top → bottom):
  *   1. Sticky nav + theme toggle
- *   2. Hero — pitch + integrated sign-in card
- *   3. The problem — €250k per failure / 95% without predictive maintenance
+ *   2. Hero — ARIA pitch + integrated sign-in card
+ *   3. The problem — €50k-€500k setup / six-month implementation
  *   4. Demo video placeholder (16:9, click-to-play stub)
  *   5. Five agents grid
  *   6. How it works (3 steps: upload → watch → repair)
@@ -59,7 +59,7 @@ function Nav() {
                 <a href="#top" className="flex items-center gap-2.5">
                     <AriaLogo size={28} />
                     <span className="hidden text-xs text-text-tertiary sm:inline">
-                        Industrial AI on Claude Opus 4.7
+                        Adaptive Reasoning for Industrial Awareness
                     </span>
                 </a>
                 <nav className="hidden items-center gap-6 md:flex">
@@ -114,16 +114,16 @@ function Hero() {
                 <div className="flex flex-col justify-center gap-7">
                     <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-text-tertiary">
                         <span className="size-1.5 rounded-full bg-success" />
-                        Built for the Anthropic Hackathon · April 2026
+                        Built with Claude Opus 4.7 · Managed Agents · MCP
                     </span>
                     <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-foreground sm:text-5xl lg:text-6xl">
-                        Stop machines from breaking{" "}
-                        <span className="italic text-text-tertiary">before</span> they break.
+                        ARIA keeps the one who knows
+                        <span className="italic text-text-tertiary"> from being the last.</span>
                     </h1>
                     <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
-                        Upload any machine's PDF manual. ARIA reads it cover-to-cover, learns from
-                        your operators, then watches the floor 24/7 — predicting failures hours in
-                        advance and printing the repair order before anything stops.
+                        In every factory, someone can hear a failure coming. ARIA captures that
+                        floor knowledge, combines it with the manufacturer's PDF and live signals,
+                        then turns anomalies into diagnosis, work order and memory.
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
                         <a
@@ -143,10 +143,10 @@ function Hero() {
                     </div>
                     {/* hero stats */}
                     <dl className="grid grid-cols-2 gap-x-8 gap-y-4 pt-4 sm:grid-cols-4">
-                        <Stat value="<2 min" label="From PDF to live monitoring" />
-                        <Stat value="~12 h" label="Forecast horizon before a breach" />
-                        <Stat value="5" label="Specialised AI agents" />
-                        <Stat value="Opus 4.7" label="Adaptive thinking + sandbox" />
+                        <Stat value="10 min" label="PDF plus operator calibration to live KB" />
+                        <Stat value="17" label="MCP tools as the agents' only data path" />
+                        <Stat value="5" label="Agents passing work like a maintenance team" />
+                        <Stat value="Opus 4.7" label="Vision, extended thinking and sandbox" />
                     </dl>
                 </div>
                 {/* Right — sign-in card */}
@@ -212,7 +212,7 @@ function SignInCard() {
                         Operator console
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Step into the control room of a small bottling plant.
+                        Step into the control room of a live demo bottling plant.
                     </p>
                 </div>
                 <span className="inline-flex flex-none items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-text-tertiary">
@@ -337,30 +337,34 @@ function ProblemSection() {
                             The problem
                         </span>
                         <h2 className="text-3xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-4xl">
-                            Predictive maintenance has been{" "}
-                            <span className="italic">out of reach</span> for almost everyone.
+                            Most plants already have the knowledge. They just cannot operationalize
+                            it.
                         </h2>
                         <p className="text-base leading-relaxed text-muted-foreground">
-                            Configuring a system that can predict failures used to take six months
-                            and a six-figure budget. Ninety-five percent of industrial sites can't
-                            afford it — so they wait for things to break, then pay the bill.
+                            Legacy maintenance software takes specialists, budget and patience:
+                            €50k-€500k, often six months of setup. The operator's shift notes,
+                            handover comments and failure memories stay outside the system, so the
+                            plant still waits for the machine to break.
                         </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                        <BigStat value="95%" label="of sites have no predictive maintenance" />
+                        <BigStat value="€50k-€500k" label="typical setup cost before ARIA" />
                         <BigStat
-                            value="€250k"
-                            label="average cost of one unplanned machine failure"
+                            value="6 months"
+                            label="legacy implementation time with specialists"
                             tone="destructive"
                         />
-                        <BigStat value="6 months" label="typical setup time for legacy systems" />
+                        <BigStat value="10 min" label="PDF manual plus operator calibration" />
                         <BigStat
-                            value="<15 min"
-                            label="setup time with ARIA — from PDF to live"
+                            value="Always on"
+                            label="signals, logbook, shift notes, failures and KPIs"
                             tone="success"
                         />
-                        <BigStat value="Opus 4.7" label="extended thinking on every diagnosis" />
-                        <BigStat value="MCP" label="hosted tool servers, no glue code" />
+                        <BigStat
+                            value="Opus vision"
+                            label="manual tables, diagrams and thresholds"
+                        />
+                        <BigStat value="Memory" label="a KB that grows with every incident" />
                     </div>
                 </div>
             </div>
@@ -407,9 +411,9 @@ function DemoVideoSection() {
                         Three minutes from anomaly to printable repair order.
                     </h2>
                     <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                        Watch the five agents pass the problem between themselves — investigate, run
-                        real Python in Anthropic's sandbox, recall last January's incident, and ship
-                        the work order to the technician.
+                        Watch the five agents pass the problem like a real maintenance team:
+                        detection, diagnosis, sandboxed calculations, prior incident recall and a
+                        technician-ready intervention plan.
                     </p>
                 </div>
                 <div className="mx-auto max-w-5xl">
@@ -448,35 +452,35 @@ const AGENTS: AgentCard[] = [
     {
         name: "Sentinel",
         role: "The watcher",
-        blurb: "Two loops on every signal: catches threshold breaches the moment they happen, and forecasts the ones that will happen in the next few hours.",
+        blurb: "Watches live signals against the KB, detects breaches, forecasts signal tails and decides whether a drift warning is worth surfacing.",
         color: "#3f6fb8",
         icon: <Icons.Eye className="size-5" aria-hidden />,
     },
     {
         name: "Investigator",
         role: "The thinker",
-        blurb: "Runs Python in Anthropic's sandbox to compute trends, correlations and time-to-failure. You watch it think live.",
+        blurb: "Uses Opus 4.7 extended thinking, runs Python in Anthropic's sandbox and computes exact degradation rates from raw signal data.",
         color: "#7858c4",
         icon: <Icons.Sparkles className="size-5" aria-hidden />,
     },
     {
         name: "KB Builder",
         role: "The reader",
-        blurb: "Reads any machine manual cover-to-cover with vision, then asks the operator a few questions to calibrate the alerts.",
+        blurb: "Reads the manufacturer's PDF with Opus vision, then asks the operator a short calibration dialogue to capture floor knowledge.",
         color: "#10a877",
         icon: <Icons.BookOpen className="size-5" aria-hidden />,
     },
     {
         name: "Work Order",
         role: "The writer",
-        blurb: "Turns the diagnosis into a printable repair order — parts list, procedure, time estimate.",
+        blurb: "Turns the root-cause analysis into a printed sheet: actions, parts list, procedure and intervention window.",
         color: "#a77318",
         icon: <Icons.FileText className="size-5" aria-hidden />,
     },
     {
         name: "Q&A",
         role: "The voice",
-        blurb: "Talks to the operator in plain English. Answers any question about the plant, in real time.",
+        blurb: "Answers operator questions in natural language and hands off to the Investigator when a deep diagnosis is needed.",
         color: "#a34e81",
         icon: <Icons.MessageCircle className="size-5" aria-hidden />,
     },
@@ -533,15 +537,15 @@ function AgentsSection() {
             <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
                 <div className="mx-auto mb-2 max-w-3xl text-center">
                     <span className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-                        Five agents, one mission
+                        Five agents, one maintenance loop
                     </span>
                     <h2 className="mt-2 text-3xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-4xl">
-                        A team of specialists, not one big prompt.
+                        Detection to diagnosis to work order to memory.
                     </h2>
                     <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                        Each agent has one job. They pass the problem between themselves over an MCP
-                        server — exactly like a real maintenance team passes a ticket between
-                        technicians.
+                        Each agent has one job and every tool call flows through the same MCP
+                        surface. Generative UI artifacts stream back as they work: charts,
+                        diagnostic cards and printable work orders.
                     </p>
                 </div>
 
@@ -887,19 +891,19 @@ const STEPS: { n: string; title: string; body: string; icon: React.ReactNode }[]
     {
         n: "01",
         title: "Upload the manual",
-        body: "Drag in any PDF — pump, filler, any machine. ARIA reads it cover-to-cover with vision and extracts the thresholds, procedures and parts.",
+        body: "Drop in the manufacturer's PDF. ARIA reads dense tables, diagrams, tolerance windows and procedures with Opus vision.",
         icon: <Icons.Upload className="size-5" aria-hidden />,
     },
     {
         n: "02",
         title: "Calibrate to your floor",
-        body: "ARIA asks the operator a handful of questions about how this specific machine is actually used. Hybrid intelligence: documentation + tacit floor knowledge.",
+        body: "ARIA asks a few questions about how this specific machine sounds, behaves and fails on the real floor.",
         icon: <Icons.MessageCircle className="size-5" aria-hidden />,
     },
     {
         n: "03",
-        title: "Watch and ship",
-        body: "ARIA watches 24/7. When a failure is forming, you see the agents reason live — and the technician walks away with a printed repair order.",
+        title: "Watch, diagnose, remember",
+        body: "ARIA monitors signals, shift notes, logbook entries, failure history and KPIs. Every incident makes the KB sharper.",
         icon: <Icons.Wrench className="size-5" aria-hidden />,
     },
 ];
@@ -913,7 +917,7 @@ function HowItWorksSection() {
                         How it works
                     </span>
                     <h2 className="mt-2 text-3xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-4xl">
-                        From a paper manual to a live AI watchdog — in three steps.
+                        From manual to living maintenance memory in three steps.
                     </h2>
                 </div>
                 <ol className="grid gap-6 lg:grid-cols-3">
@@ -948,14 +952,12 @@ function HowItWorksSection() {
 
 const MOATS: { title: string; body: React.ReactNode; icon: React.ReactNode }[] = [
     {
-        title: "Forecasts before failure, not after",
+        title: "Floor knowledge becomes durable",
         body: (
             <>
-                A second loop runs least-squares regression on every monitored signal and emits a
-                warning when the projected trajectory will cross a threshold inside a{" "}
-                <strong className="text-foreground">12-hour horizon</strong>, with an explicit ETA
-                and an R² confidence score. The operator gets time to plan a maintenance window —
-                not a 3 a.m. phone call.
+                The KB starts with a manual, then absorbs operator calibration, live signal trends,
+                logbook entries, shift notes, failure history and computed KPIs. The person who
+                knows is no longer a single point of failure.
             </>
         ),
         icon: <Icons.Activity className="size-5" aria-hidden />,
@@ -969,22 +971,18 @@ const MOATS: { title: string; body: React.ReactNode; icon: React.ReactNode }[] =
                     np.polyfit
                 </code>
                 , Pearson correlation — and runs it inside Anthropic's cloud container. The work
-                order cites the actual numbers it got back, not LLM token-math.
+                order cites the actual numbers it got back, not approximate token math.
             </>
         ),
         icon: <Icons.Cpu className="size-5" aria-hidden />,
     },
     {
-        title: "Adaptive thinking, on screen",
+        title: "Extended thinking for RCA",
         body: (
             <>
-                Opus 4.7 runs in{" "}
-                <code className="rounded bg-background px-1 py-0.5 font-mono text-[12px] text-foreground">
-                    adaptive
-                </code>{" "}
-                thinking mode and the summarised reasoning streams live to the operator's inspector
-                as the agent works. Every turn keeps its signed thinking blocks, so the next turn
-                picks up exactly where the last one left off.
+                Industrial diagnosis means holding signal history, failure patterns, calibration
+                notes and KPIs at once. Opus 4.7 extended thinking lets the Investigator reason
+                across that context before committing to a root cause.
             </>
         ),
         icon: <Icons.Sparkles className="size-5" aria-hidden />,
@@ -993,8 +991,8 @@ const MOATS: { title: string; body: React.ReactNode; icon: React.ReactNode }[] =
         title: "MCP-native architecture",
         body: (
             <>
-                All tools — signals, KB, work orders — sit behind one MCP server. Adding a new agent
-                is a contract change, not a rewrite.
+                All tools for signals, KB, work orders, logs and KPIs sit behind one hosted MCP
+                server. Agents can be swapped or added without changing the operator UI.
             </>
         ),
         icon: <Icons.GitBranch className="size-5" aria-hidden />,
@@ -1004,7 +1002,7 @@ const MOATS: { title: string; body: React.ReactNode; icon: React.ReactNode }[] =
         body: (
             <>
                 ARIA remembers the last time it saw the same vibration trace. The technician sees:{" "}
-                <em>“we fixed this on the Capper in January with a torque adjustment.”</em>
+                <em>"we fixed this on the Capper in January with a torque adjustment."</em>
             </>
         ),
         icon: <Icons.Database className="size-5" aria-hidden />,
@@ -1018,15 +1016,15 @@ function MoatSection() {
                 <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
                     <div className="flex flex-col gap-4">
                         <span className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-                            Why it's exceptional
+                            Why it matters
                         </span>
                         <h2 className="text-3xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-4xl">
-                            What you cannot build on a Messages-API alone.
+                            Opus 4.7 turns maintenance from chat into operations.
                         </h2>
                         <p className="text-base leading-relaxed text-muted-foreground">
-                            ARIA leans on the parts of Claude Opus 4.7 that competitors can't access
-                            through a chat completion endpoint — Managed Agents, the cloud sandbox,
-                            extended thinking and hosted MCP. That's the moat.
+                            ARIA uses Claude where it changes the system shape: PDF vision for
+                            manuals, Managed Agents for autonomous investigation, hosted MCP for
+                            trusted data access and sandboxed code execution for numerical proof.
                         </p>
                         <a
                             href="#signin"
