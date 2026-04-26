@@ -124,7 +124,7 @@ async def test_each_answer_emits_one_kb_progress_event_with_cell_id(monkeypatch)
     # Answer Q1
     await service.submit_onboarding_message(sid, "around 5 mm/s")
 
-    progress = [p for t, p in recorder.events if p.get("component") == "kb_progress"]
+    progress = [p for _, p in recorder.events if p.get("component") == "kb_progress"]
     assert len(progress) == 1
     assert progress[0]["props"]["cell_id"] == 2
     assert progress[0]["agent"] == "kb_builder"
