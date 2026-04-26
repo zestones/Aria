@@ -3,7 +3,7 @@
 
 <div align="center">
 
-[![CI](https://github.com/zestones/ARIA/actions/workflows/ci.yml/badge.svg)](https://github.com/zestones/ARIA/actions/workflows/ci.yml)
+[![CI](https://github.com/zestones/Aria/actions/workflows/ci.yml/badge.svg)](https://github.com/zestones/Aria/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-24.0%2B-blue?logo=docker)](https://docs.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
@@ -11,17 +11,19 @@
 
 </div>
 
-> Predictive maintenance that configures itself. Upload a manufacturer's PDF, calibrate with the floor operator and ARIA watches the equipment from there — forecasting drift before it crosses a threshold, opening a work order the moment a real anomaly fires, running root-cause analysis with extended thinking, and answering operator questions in natural language. Generative-UI artifacts (charts, diagnostic cards, work orders) stream into the operator's chat as the agents work.
+> In every factory there's one person who knows when a machine is about to fail — they hear it. When they retire, that knowledge disappears forever. ARIA captures it, watches the equipment, and diagnoses what goes wrong — so the one who knows is never the last.
 
-Built for the **"Build With Opus 4.7"** hackathon. Open source, MIT licensed.
+Built for the **"Build With Opus 4.7"** hackathon.
 
 ---
 
-## The problem ARIA solves
+## The problem
 
-Configuring predictive maintenance takes 3–6 months and costs €50k–€500k per site. 95% of industrial plants can't afford it. The floor operator already knows when the machine will fail — they hear it. That knowledge never makes it into a system.
+Setting up industrial maintenance software costs €50k–€500k and takes six months of specialists. So most plants don't bother — they wait for machines to break.
 
-**ARIA is the bridge:** manual reader → operator-calibrated KB → multi-agent watcher → work order generator. Six months becomes ten minutes.
+But that knowledge already exists. The operator hears the change in vibration two days before the bearing fails. They wrote it in the shift log. They told the next operator at handover. It just never makes it into a machine.
+
+**ARIA is the bridge.** Drop in the manufacturer's PDF, answer some questions, and you're live in ten minutes. After that, ARIA continuously ingests everything that already exists: live signal trends, operator logbook entries, shift notes, machine failure history, and computed KPIs (OEE, MTBF, MTTR) — building a knowledge base that grows with every incident. When something goes wrong, five agents pass the problem like a real maintenance team passes a ticket: detection -> diagnosis -> work order -> memory.
 
 ---
 
@@ -46,9 +48,9 @@ flowchart LR
     QA --> UI
 ```
 
-- **KB Builder** — reads the manufacturer PDF with Opus vision, calibrates thresholds with the operator through a short dialogue.
-- **Sentinel** — breach detection loop; also runs forecast on signal tails and emits drift warnings before a breach occurs.
-- **Investigator** — root-cause analysis with extended thinking + Python sandbox; reads and writes failure history.
+- **KB Builder** — reads the manufacturer PDF with Opus vision and captures the operator's floor knowledge in some questions — the KB is live before they leave the terminal.
+- **Sentinel** — watches live signals against the KB; detects breaches, runs forecast on signal tails, and judges whether a drift warning is worth surfacing — or whether context says stand down.
+- **Investigator** — diagnoses anomalies with Opus 4.7 extended thinking; writes and runs Python in a sandboxed container to compute exact degradation rates; recalls and builds on past failures.
 - **Work Order Generator** — turns the RCA into actions, parts list, and intervention window.
 - **Q&A** — natural-language operator chat; hands off to the Investigator when a deep diagnosis is needed.
 
