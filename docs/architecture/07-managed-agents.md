@@ -40,7 +40,7 @@ flowchart LR
         Toolset["Built-in toolset<br/>bash, web_fetch, ..."]
     end
     subgraph ARIA["ARIA backend"]
-        MCP["FastMCP /mcp/{secret}<br/>14 read tools"]
+        MCP["FastMCP /mcp/{secret}<br/>16 read tools"]
         Sandbox["Sandbox /sandbox/{secret}<br/>signal CSV"]
         Custom["Custom tools<br/>submit_rca, ask_kb_builder, render_*"]
     end

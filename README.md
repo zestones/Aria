@@ -93,7 +93,7 @@ Source is bind-mounted from the host into both backend and frontend containers �
 flowchart LR
     Sims["Simulators<br/>(one container per cell)"]
     DB[("TimescaleDB<br/>operational hypertables<br/>+ agent state")]
-    Backend["Backend<br/>FastAPI + 6 agents + MCP server"]
+    Backend["Backend<br/>FastAPI + 5 agents + MCP server"]
     Front["Frontend<br/>operator UI"]
 
     Sims --> DB
@@ -101,7 +101,7 @@ flowchart LR
     Front <-->|"WebSocket + REST"| Backend
 ```
 
-The simulators write `machine_status`, `production_event`, and `process_signal_data` rows into TimescaleDB at one-Hertz. The backend reads from the same database through a 14-tool MCP surface (the agents' only path to data) and pushes events to the frontend over a WebSocket bus.
+The simulators write `machine_status`, `production_event`, and `process_signal_data` rows into TimescaleDB at one-Hertz. The backend reads from the same database through a 17-tool MCP surface (the agents' only path to data) and pushes events to the frontend over a WebSocket bus.
 
 Two simulator modes ship out of the box:
 
@@ -130,11 +130,11 @@ The full simulator engine and per-cell scenario walkthrough live in [docs/archit
 
 ## Repository layout
 
-```
+```text
 ARIA/
 ├── backend/                FastAPI + agents + MCP server
 │   ├── agents/             KB Builder, Sentinel, Forecast, Investigator, WO Generator, Q&A
-│   ├── aria_mcp/           FastMCP server — 14 read tools + 1 write tool
+│   ├── aria_mcp/           FastMCP server — 16 read tools + 1 write tool
 │   ├── modules/            Bounded contexts (kb, work_order, signal, kpi, logbook, chat, sandbox, ...)
 │   ├── core/               Cross-cutting: ws_manager, thresholds, security, database
 │   ├── infrastructure/     SQL migrations + idempotent seeds
@@ -162,7 +162,7 @@ ARIA/
 ### Understanding ARIA
 
 - [Data layer](docs/architecture/01-data-layer.md) — agent-facing JSONB columns and Pydantic mirrors.
-- [MCP server](docs/architecture/02-mcp-server.md) — the 14 tools the agents use to read the world.
+- [MCP server](docs/architecture/02-mcp-server.md) — the 17 tools the agents use to read the world.
 - [KB Builder](docs/architecture/03-kb-builder.md) — PDF vision extraction and the four-question onboarding dialogue.
 - [Sentinel and Investigator](docs/architecture/04-sentinel-investigator.md) — anomaly detection and root-cause analysis.
 - [Work Order Generator and Q&A](docs/architecture/05-workorder-qa.md) — work order generation and the operator chat.

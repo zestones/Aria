@@ -81,7 +81,7 @@ Le scoring dépend du juge. **Pas de leverage à attendre ici.**
 | Vision (manuels/plans)            | Oui, OCR/vision plans architecturaux     | Oui, vision PDF manuels constructeur                                           |
 | 1M context window                 | Oui (skill files chargées)               | Oui (manuels complets, KB historique)                                          |
 | Multi-agent orchestration         | Limité (1 orchestrator + sous-tâches)    | **Fort** (5 Managed Agents, handoffs visibles live)                            |
-| MCP server                        | Non explicite                            | **Oui**, surface MCP dédiée (14 tools)                                         |
+| MCP server                        | Non explicite                            | **Oui**, surface MCP dédiée (17 tools)                                         |
 | Skills Anthropic                  | **Massif** (28+ fichiers, c'est le cœur) | Limité (pas le pattern principal)                                              |
 | Streaming `thinking_delta` exposé | Non                                      | **Oui**, Agent Inspector live                                                  |
 | Long-running agents managés       | Oui (Vercel Sandbox)                     | Oui (Anthropic Managed Agents — c'est le sujet de la session 2 du hackathon !) |
@@ -135,7 +135,7 @@ Le scoring dépend du juge. **Pas de leverage à attendre ici.**
 
 1. **Multi-agent visible en temps réel** (`thinking_delta`, `agent_handoff`).
    → Constellation + Inspector. **C'est notre Magic Dirt.**
-2. **MCP server avec 14 tools.** Aligné direct sur la roadmap Anthropic.
+2. **MCP server avec 17 tools.** Aligné direct sur la roadmap Anthropic.
    → Mentionner MCP explicitement dans la vidéo et le pitch.
 3. **Système live qui *respire*** (simulator de signaux, anomalies temps réel).
    → CrossBeam est batch. ARIA est stream. Avantage cinématographique fort.

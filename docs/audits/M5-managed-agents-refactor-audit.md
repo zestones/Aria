@@ -15,7 +15,7 @@
 | Dimension                              | Today                                                                    | After refactor                                                                                                      |
 |----------------------------------------|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
 | Managed Agents target                  | Q&A (interactive, sub-second, user watching)                             | Investigator (12 turns, 120 s, async background)                                                                    |
-| MCP wiring                             | 14 tools wrapped as `custom` (round-trips via FastAPI)                   | Hosted MCP server registered on the agent (direct call)                                                             |
+| MCP wiring                             | 17 tools wrapped as `custom` (round-trips via FastAPI)                   | Hosted MCP server registered on the agent (direct call)                                                             |
 | Tool dispatch code in our backend      | `_dispatch_custom_tool` for every MCP tool + render_* + ask_investigator | Only render_* + submit_rca + ask_kb_builder                                                                         |
 | Agent-loop boilerplate (Investigator)  | ~140 lines (`_run_investigator_body` + `_dispatch_tool_uses`: 74 + 64)   | ~80 lines (event consumer + 3 custom tool handlers)                                                                 |
 | Session persistence                    | Dies with the WebSocket (Q&A) / dies on submit_rca (Investigator)        | `session_id` persisted on `work_order` row                                                                          |
@@ -85,7 +85,7 @@ Recommendation: **delete**. The Investigator path provides better prize coverage
 
 - `MAX_TURNS = 12` and `_TIMEOUT_SECONDS = 120.0` — exactly *"long-running… multiple tool calls"*.
 - Already spawned as a background `asyncio.create_task` from Sentinel — async by design.
-- Uses 14 read-only MCP tools — perfect hosted-MCP candidates (no auth, idempotent).
+- Uses 16 read-only MCP tools — perfect hosted-MCP candidates (no auth, idempotent).
 - Tool surface that genuinely needs our process is small: 1 terminal write (`submit_rca`), 1 handoff (`ask_kb_builder`), 3 generative-UI (`render_signal_chart`, `render_diagnostic_card`, `render_pattern_match`). Everything else can be hosted MCP.
 
 ### Code we delete

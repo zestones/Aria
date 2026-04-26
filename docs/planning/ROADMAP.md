@@ -21,7 +21,7 @@ flowchart LR
         WO[(work_order)]
         FH[(failure_history)]
     end
-    subgraph MCP["M2 — MCP Server (14 tools)"]
+    subgraph MCP["M2 — MCP Server (17 tools)"]
         FastMCP
     end
     subgraph Agents["M3-M5 — Agents"]
@@ -172,7 +172,7 @@ flowchart TB
         QA[Q&A]
     end
     subgraph Tools
-        MCP["FastMCP\n14 data tools"]
+        MCP["FastMCP\n17 data tools"]
         UITools["UI tools render_*\n(local, no DB)"]
         Local["submit_rca / submit_work_order\n/ ask_kb_builder / ask_investigator\n(local per agent)"]
     end
@@ -282,7 +282,7 @@ gantt
 | Lane                                                   | Owner    | Issues        | Démarre quand                                |
 |--------------------------------------------------------|----------|---------------|----------------------------------------------|
 | Migrations + Pydantic                                  | zestones | M1 (#2-#7)    | maintenant (Wed AM)                          |
-| FastMCP + 14 tools + MCPClient                         | zestones | M2 (#8-#16)   | dès M1 mergé (Wed PM)                        |
+| FastMCP + 17 tools + MCPClient                         | zestones | M2 (#8-#16)   | dès M1 mergé (Wed PM)                        |
 | KB Builder agent + onboarding                          | zestones | M3 (#17-#22)  | en parallèle de M2 (peut commencer dès M1.4) |
 | Sentinel + Investigator + WSManager                    | zestones | M4 (#23-#29)  | dès M2 mergé (Thu)                           |
 | WO Gen + Q&A WS + Managed Agents                       | zestones | M5 (#30-#33)  | dès M4 mergé (Fri PM/Sat)                    |

@@ -23,7 +23,7 @@ The architecture chapters are written so the executive summary plus the topology
 ### Foundation
 
 - [Data layer](./architecture/01-data-layer.md) — agent-facing JSONB columns, Pydantic mirrors, the integrity guards behind every write.
-- [MCP server](./architecture/02-mcp-server.md) — the 14 read tools and 1 write tool that are the agents' only path to data.
+- [MCP server](./architecture/02-mcp-server.md) — the 16 read tools and 1 write tool that are the agents' only path to data.
 
 ### Agents
 
@@ -49,7 +49,7 @@ The architecture chapters are written so the executive summary plus the topology
 
 Pre- and post-implementation technical reviews. Each audit was written before merging the corresponding milestone and re-read after to confirm the shipped code matched the intent. Read these to understand *why* a contract has the shape it does — every quirk in the codebase has a paragraph in one of these documents.
 
-- [M2 — MCP Server audit](./audits/M2-mcp-server-audit.md) — review of the 14-tool surface against M3-M5 consumers.
+- [M2 — MCP Server audit](./audits/M2-mcp-server-audit.md) — review of the 17-tool surface against M3-M5 consumers.
 - [M3 — KB Builder audit](./audits/M3-kb-builder-audit.md) — PDF extraction shape, onboarding dialogue, threshold-key integrity.
 - [M4-M5 — Sentinel / Investigator / Work Order / Q&A audit](./audits/M4-M5-sentinel-investigator-workorder-qa-audit.md) — pre-implementation review of the agent-loop safety nets and contract.
 - [M4-M5 — Per-issue context pass](./audits/M4-M5-issue-context-pass.md) — issue-level cross-pass against the codebase.
@@ -70,7 +70,7 @@ The hackathon was sliced into milestones M1 through M10. Each milestone has an `
 ### Milestone scopes
 
 - [M1 — Data layer](./planning/M1-data-layer/issues.md) — schema and Pydantic mirrors.
-- [M2 — MCP server](./planning/M2-mcp-server/issues.md) — the 14-tool catalogue.
+- [M2 — MCP server](./planning/M2-mcp-server/issues.md) — the 17-tool catalogue.
 - [M3 — KB Builder](./planning/M3-kb-builder/issues.md) — PDF onboarding agent.
 - [M4 — Sentinel + Investigator](./planning/M4-sentinel-investigator/issues.md) — anomaly detection and RCA loop.
 - [M5 — Work Order + Q&A](./planning/M5-workorder-qa/issues.md) — work order generation and operator chat.

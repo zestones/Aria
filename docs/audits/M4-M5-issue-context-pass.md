@@ -3,12 +3,12 @@
 > **Purpose.** For each of the 11 M4/M5 issues (#23–#33), list (A) exact drifts from the current `main` codebase, (B) context that should be appended to the issue body so it is implementable cold without re-reading adjacent issues, (C) cross-references to the closed-and-shipped M1/M2/M3 issues and to the open downstream M7/M8 consumers.
 >
 Companion to [`M4-M5-sentinel-investigator-workorder-qa-audit.md`](./M4-M5-sentinel-investigator-workorder-qa-audit.md). The audit lists *what is wrong*; this doc lists *what to paste into each issue* so that wrong becomes right.
-> Everything cited below was verified against files on `main` at 2026-04-23. Line numbers are current.
+Everything cited below was verified against files on `main` at 2026-04-23. Line numbers are current.
+> 
 >
+---
 
-> ---
-
-## 0. Shared facts the M4/M5 issues must anchor on
+> ## 0. Shared facts the M4/M5 issues must anchor on
 
 These facts are already on `main` — they are the **reality** that every issue in M4/M5 must align with. They are repeated in §2 per-issue context blocks so the issue bodies can be read standalone, but it helps to see them consolidated here first.
 
@@ -24,11 +24,11 @@ These facts are already on `main` — they are the **reality** that every issue 
 
 [!WARNING]
 **Drift source.** Several M4/M5 issue snippets call `model_for("agent")`. That string is not a valid `Literal` member. Use `model_for("reasoning")` for Investigator, `model_for("chat")` for Q&A, `model_for("reasoning")` for Work Order Generator.
-> 
-> ### 0.2 MCP client — `backend/aria_mcp/client.py`
+### 0.2 MCP client — `backend/aria_mcp/client.py`
 
+>
 | Fact                                                                                                     | Location                 |
-|----------------------------------------------------------------------------------------------------------|--------------------------|
+> |----------------------------------------------------------------------------------------------------------|--------------------------|
 | Singleton `mcp_client = MCPClient(...)` at module bottom                                                 | `client.py:116`          |
 | `await mcp_client.get_tools_schema()` returns `list[dict]` in Anthropic format, cached in memory         | `client.py:57-69`        |
 | `await mcp_client.call_tool(name, arguments)` returns `ToolCallResult(content: str, is_error: bool)`     | `client.py:35-44, 71-95` |
@@ -121,16 +121,16 @@ ChatMap =
 
 [!IMPORTANT]
 Two cross-channel naming differences that will trip you up:
-> 1. **`agent_handoff`** — `from_agent`/`to_agent` on the events bus, `from`/`to` on the chat channel. Both are correct per their respective channel types. Agents must emit to the correct field set per channel.
-> 2. **`tool_result`** on the chat channel carries `summary: string`, not the raw tool output. The Q&A WS handler must produce a short summary before sending.
->
+1. **`agent_handoff`** — `from_agent`/`to_agent` on the events bus, `from`/`to` on the chat channel. Both are correct per their respective channel types. Agents must emit to the correct field set per channel.
+2. **`tool_result`** on the chat channel carries `summary: string`, not the raw tool output. The Q&A WS handler must produce a short summary before sending.
 
 > ### 0.5 Work order schema — `backend/modules/work_order/schemas.py`
-> 
-| Fact                                                                                              | Location                                    |
+> | Fact                                                                                              | Location                                    |
+>
 |---------------------------------------------------------------------------------------------------|---------------------------------------------|
 | `Status = Literal["detected", "analyzed", "open", "in_progress", "completed", "cancelled"]`       | `work_order/schemas.py:12`                  |
-| `Priority = Literal["low", "medium", "high", "critical"]`                                         | `work_order/schemas.py:11`                  |
+> | `Priority = Literal["low", "medium", "high", "critical"]`                                         | `work_order/schemas.py:11`                  |
+>
 | JSON columns: `required_parts`, `required_skills`, `recommended_actions` (named in `JSON_FIELDS`) | `work_order/repository.py:9`                |
 | `WorkOrderUpdate` has `required_parts` — **not** `parts_required`                                 | `work_order/schemas.py:61`                  |
 | `suggested_window_start` / `suggested_window_end` — names match                                   | `work_order/schemas.py:26-27, 50-51, 70-71` |
@@ -141,18 +141,18 @@ Two cross-channel naming differences that will trip you up:
 [!WARNING]
 **Enum drift in issue #25.** Investigator sets `status="investigated"` in the GitHub issue text. This value is not in the `Status` Literal. Use `"analyzed"`.
 **Field name drift in issue #30.** Work Order Generator submits `parts_required`. The field is `required_parts`.
-> 
-> ### 0.6 MCP tools shipped in M2
->
+### 0.6 MCP tools shipped in M2
 
-> | Tool                       | File                            | Signature                                                                                   |
+| Tool                       | File                            | Signature                                                                                   |
 |----------------------------|---------------------------------|---------------------------------------------------------------------------------------------|
 | `get_oee`                  | `aria_mcp/tools/kpi.py`         | KPI aggregate                                                                               |
+>
 | `get_mtbf`, `get_mttr`     | `aria_mcp/tools/kpi.py`         |                                                                                             |
-| `get_signal_trends`        | `aria_mcp/tools/signals.py:19`  | Bucketed time-series                                                                        |
+> | `get_signal_trends`        | `aria_mcp/tools/signals.py:19`  | Bucketed time-series                                                                        |
+>
 | `get_signal_anomalies`     | `aria_mcp/tools/signals.py:57`  | Returns breaches; **raises** `ValueError` on misconfig (MCPClient wraps as `is_error=True`) |
 | `get_current_signals`      | `aria_mcp/tools/signals.py:171` | Latest value per signal                                                                     |
-| `get_logbook_entries`      | `aria_mcp/tools/context.py:32`  |                                                                                             |
+> | `get_logbook_entries`      | `aria_mcp/tools/context.py:32`  |                                                                                             |
 | `get_shift_assignments`    | `aria_mcp/tools/context.py:69`  |                                                                                             |
 | `get_work_orders` (plural) | `aria_mcp/tools/context.py:94`  | **No singular `get_work_order(id)` exists** — see §2.3                                      |
 | `get_equipment_kb`         | `aria_mcp/tools/kb.py`          | Returns parsed `structured_data`                                                            |
@@ -255,19 +255,19 @@ async def broadcast(self, event_type: str, payload: dict) -> None:
 **`anomaly_detected` payload gap.** Current frontend type and issue text do not include `severity` and `direction`, but the Sentinel `evaluate_threshold()` result carries both and the AlertBanner needs them to color the banner and to say "TOO HIGH" vs "TOO LOW" for double-sided signals (flow, pressure). Decision required — either:
 1. (recommended) extend both the `EventBusMap.anomaly_detected` type and the backend payload to include `severity: "alert" | "trip"` and `direction: "high" | "low"`, or
 2. derive them frontend-side from `value` / `threshold` comparison, accepting incorrect direction display for double-sided signals.
-> 
-> ## Auth on `/api/v1/events`
-> 
-> JWT cookie decode is needed here, not just on `/api/v1/agent/chat` (#31). Extract a reusable helper:
+## Auth on `/api/v1/events`
+JWT cookie decode is needed here, not just on `/api/v1/agent/chat` (#31). Extract a reusable helper:
 
 - Create `backend/core/security/ws_auth.py` exposing `async def require_access_cookie(ws: WebSocket) -> dict` that reads `ws.cookies.get("access_token")`, calls `verify_access_token` (`core/security/jwt.py:54`), closes with code 4401 on failure, or returns the decoded payload.
 - Reuse from #31.
 
 ## ALIGNMENT.md
+>
 
-The issue currently references `docs/planning/ALIGNMENT.md` which does not exist. Either remove the link or create the file mirroring the `EventBusMap` and `ChatMap` tables.
+> The issue currently references `docs/planning/ALIGNMENT.md` which does not exist. Either remove the link or create the file mirroring the `EventBusMap` and `ChatMap` tables.
+>
 ```
-
+> 
 #### C. Cross-references to add
 
 - **Upstream (blocked by):** #16 (M2.9 UI tools) — shipped, provides `ALERT_BANNER_SCHEMA` — needed by #24.
@@ -607,43 +607,43 @@ stream = await anthropic.messages.create(
 When `thinking` is enabled and the turn includes `tool_use`, the API returns `thinking` (and sometimes `redacted_thinking`) content blocks alongside `tool_use` blocks. On the **next** `messages.create()` call — the one that sends `tool_result` blocks back — the full assistant turn must include those `thinking` blocks **in their original order and with their cryptographic signatures intact**.
 If they are dropped or reordered, the API returns `400 invalid_request_error: thinking block signature invalid`.
 The safe pattern is to accumulate all received content blocks into a single `content` list and append that list verbatim to `messages`:
-> ```python
-> assistant_content: list[dict] = []
->
+```python
+assistant_content: list[dict] = []
 async for event in stream:
-> if event.type == "content_block_start":
->
+if event.type == "content_block_start":
 assistant_content.append(event.content_block.model_dump())
-> elif event.type == "content_block_delta":
->
+elif event.type == "content_block_delta":
 # mutate the last entry in assistant_content with the delta
-> ...
-> messages.append({"role": "assistant", "content": assistant_content})
+...
+messages.append({"role": "assistant", "content": assistant_content})
 > ```
->     
->         ## Broadcasting `thinking_delta` while streaming
->     
->         ```python
->         await ws_manager.broadcast("thinking_delta", {
+> ## Broadcasting `thinking_delta` while streaming
 >
-    "agent": "investigator",
->     "content": delta_text,
->     "turn_id": turn_id,
-})
+```python
+await ws_manager.broadcast("thinking_delta", {
+>     "agent": "investigator",
+>
+"content": delta_text,
+"turn_id": turn_id,
+> })
+>
 ```
 
-Event shape must match `EventBusMap.thinking_delta` in `frontend/src/lib/ws.types.ts:36-40` — `{agent, content, turn_id}`. Do not rename fields.
+> Event shape must match `EventBusMap.thinking_delta` in `frontend/src/lib/ws.types.ts:36-40` — `{agent, content, turn_id}`. Do not rename fields.
+> 
+> ## Cost budget
+>
 
-## Cost budget
+>         10k tokens of thinking per RCA on Opus 4.7 ≈ 5¢. Budget-bounded by `max_budget_tokens` in the request; the model may emit fewer tokens than the budget.
+>
 
-10k tokens of thinking per RCA on Opus 4.7 ≈ 5¢. Budget-bounded by `max_budget_tokens` in the request; the model may emit fewer tokens than the budget.
-
-## Scope confirmation
-
+>         ## Scope confirmation
+>         
+>
 Only the Investigator enables thinking. The KB Builder (`answer_kb_question`) uses `model_for("chat")` — always Sonnet, thinking disabled. The Work Order Generator uses `model_for("reasoning")` but without `thinking` enabled — a short structured-output generation does not benefit from extended reasoning.
 ```
-
-#### C. Cross-references to add
+>     
+>     #### C. Cross-references to add
 
 - **Upstream:** #17 (M3.1 `anthropic_client.py`).
 - **Integrated into:** #25 (M4.3 Investigator loop).
@@ -672,14 +672,11 @@ Only the Investigator enables thinking. The KB Builder (`answer_kb_question`) us
 | Chat channel (`/api/v1/agent/chat`) | `from, to, reason` (+ `type`)           | `ChatMap.agent_handoff` (line 73)         |
 
 Backend uses `ws_manager.broadcast` → events bus → `from_agent`/`to_agent`.
-> Q&A WS handler uses `ws.send_json` → chat channel → `from`/`to`.
-> 
->
+Q&A WS handler uses `ws.send_json` → chat channel → `from`/`to`.
 ## `ask_kb_builder` handler (corrected)
-> 
-> ```python
-> import json, uuid
-> from aria_mcp.client import ToolCallResult
+```python
+import json, uuid
+from aria_mcp.client import ToolCallResult
 from agents.kb_builder import answer_kb_question
 
 async def _handle_ask_kb_builder(args: dict, parent_turn_id: str) -> ToolCallResult:
@@ -690,14 +687,17 @@ async def _handle_ask_kb_builder(args: dict, parent_turn_id: str) -> ToolCallRes
         "turn_id": parent_turn_id,
     })
     child_turn_id = str(uuid.uuid4())
-    await ws_manager.broadcast("agent_start", {
+>     await ws_manager.broadcast("agent_start", {
+>
         "agent": "kb_builder",
+>
         "turn_id": child_turn_id,
     })
+>
     try:
-        answer = await answer_kb_question(args["cell_id"], args["question"])
-        content = json.dumps(answer)
-        is_error = False
+>         answer = await answer_kb_question(args["cell_id"], args["question"])
+>         content = json.dumps(answer)
+>         is_error = False
     except Exception as exc:  # noqa: BLE001 — answer_kb_question is documented as never-raising; defense-in-depth
         content = json.dumps({"answer": f"handoff failed: {exc}", "source": None, "confidence": 0.0})
         is_error = True
@@ -937,47 +937,47 @@ return f"{name} failed"
 try:
 data = json.loads(content)
 except ValueError:
-> return content[:120]
-> if isinstance(data, list):
->
+return content[:120]
+if isinstance(data, list):
 return f"{name} returned {len(data)} rows"
-> if isinstance(data, dict):
-> return f"{name} returned {list(data.keys())[:5]}"
->     return str(data)[:120]
->         ```
->     
->         ## Dual-channel broadcast rule
->     
->         Every `ui_render` and `agent_handoff` must fire on **both** channels so Control Room and ChatPanel both see the event:
->     
->         1. `ws_manager.broadcast("ui_render", {...})` — events bus, `EventBusMap` shape.
->     2. `await ws.send_json({"type": "ui_render", "component": ..., "props": ...})` — chat channel, `ChatMap` shape.
->         
->     Same for `agent_handoff` (with the two different field conventions, see #28).
-> 
+if isinstance(data, dict):
+return f"{name} returned {list(data.keys())[:5]}"
+return str(data)[:120]
+```
+## Dual-channel broadcast rule
+Every `ui_render` and `agent_handoff` must fire on **both** channels so Control Room and ChatPanel both see the event:
+1. `ws_manager.broadcast("ui_render", {...})` — events bus, `EventBusMap` shape.
+2. `await ws.send_json({"type": "ui_render", "component": ..., "props": ...})` — chat channel, `ChatMap` shape.
+Same for `agent_handoff` (with the two different field conventions, see #28).
 ## Client input contract
 
 The issue specifies the client sends `{type: "user", content: str}`. That shape is not yet in `ChatMap` on the frontend. Either:
 1. Extend `ChatMap` with a client → server variant (cleanest), or
 2. Accept arbitrary `{content}` server-side and do not type it on the client.
 
-Coordinate with #43 (M7.4 ChatPanel wire) before committing to the shape.
-
+> Coordinate with #43 (M7.4 ChatPanel wire) before committing to the shape.
+> 
+>
 ## Language
 
-System prompt should default to French for operator context:
-
-```text
-You are ARIA, a maintenance assistant. Answer operator questions about their equipment using the available tools. Always cite your sources (KB, logbook, signals, past RCAs). Respond in the language of the operator's question. Default to French if ambiguous.
+> System prompt should default to French for operator context:
+> 
+>     ```text
+>         You are ARIA, a maintenance assistant. Answer operator questions about their equipment using the available tools. Always cite your sources (KB, logbook, signals, past RCAs). Respond in the language of the operator's question. Default to French if ambiguous.
+>
 ```
-```
+>         ```
+>
 
-#### C. Cross-references to add
+>         #### C. Cross-references to add
+>
 
-- **Upstream:** #17 (M3.1), #14 (M2.7), #16 (M2.9 `QA_RENDER_TOOLS`), #23 (M4.1 WSManager + ws_auth.py), #28 (M4.6 `ask_investigator` symmetric side).
-- **Downstream:** #33 (M5.4 swaps the loop for Managed Agents), #43 (M7.4 ChatPanel wire).
+>         - **Upstream:** #17 (M3.1), #14 (M2.7), #16 (M2.9 `QA_RENDER_TOOLS`), #23 (M4.1 WSManager + ws_auth.py), #28 (M4.6 `ask_investigator` symmetric side).
+>     - **Downstream:** #33 (M5.4 swaps the loop for Managed Agents), #43 (M7.4 ChatPanel wire).
+>
 - **Consumers:** #44 (M7.5 artifact registry), #47 (M8.3 BarChart), #48 (M8.4 activity feed).
-
+>     
+>
 ---
 
 ### 2.10 Issue #32 — M5.3 Q&A REST fallback
@@ -1034,7 +1034,7 @@ One round-trip, no streaming, no `ui_render` events, no dynamic handoff visibili
 Verify on the Claude Managed Agents docs before writing any code:
 
 - [ ] Custom tools can be defined as local Python callbacks (similar to Messages API `tools` parameter).
-- [ ] If not: tools must be HTTP endpoints or MCP declarations — in which case the 14 MCP tools are fine, but `ask_investigator` has to be exposed either via MCP (risky: pollutes the tool namespace for all agents) or as a local HTTP endpoint mounted specifically for the Managed Agent runtime.
+- [ ] If not: tools must be HTTP endpoints or MCP declarations — in which case the 17 MCP tools are fine, but `ask_investigator` has to be exposed either via MCP (risky: pollutes the tool namespace for all agents) or as a local HTTP endpoint mounted specifically for the Managed Agent runtime.
 - [ ] Streaming interface format matches what the WS handler expects (SSE vs WebSocket native vs raw text chunks).
 - [ ] Session state TTL and how to bind a session to a WebSocket connection.
 - [ ] Cost: custom-tool Managed Agent calls are priced like Messages API + session overhead.

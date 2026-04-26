@@ -45,7 +45,7 @@ A short agent loop spawned by the Investigator immediately after `submit_rca` su
 
 ### Tool surface
 
-- All 14 MCP read tools (the generator may need to look up KPIs or signal context).
+- All 16 MCP read tools (the generator may need to look up KPIs or signal context).
 - One local tool: `SUBMIT_WORK_ORDER_TOOL` — the only tool that writes.
 - `WORK_ORDER_GEN_RENDER_TOOLS` — `render_work_order_card` for the printable card.
 
@@ -184,7 +184,7 @@ This is the architectural reason Q&A stayed on the Messages API and did not migr
 |-----------------------------|-----------------------------------------------------------------|---------------------------------------------------------------------------------------|
 | Q&A backend                 | Managed Agents path (414 LOC) gated behind feature flag         | Removed. Q&A is Messages-API only.                                                    |
 | Investigator backend        | Messages-API loop only (`agents.investigator.service`)          | Dual path: Messages API kept as fallback, Managed Agents primary.                     |
-| MCP tool execution          | All 14 tools dispatched in our backend per call                 | Hosted MCP — Anthropic calls our `/mcp/<secret>/` URL directly via Cloudflare tunnel. |
+| MCP tool execution          | All 17 tools dispatched in our backend per call                 | Hosted MCP — Anthropic calls our `/mcp/<secret>/` URL directly via Cloudflare tunnel. |
 | Custom tools in our backend | Every MCP tool wrapped + render_* + submit_rca + ask_kb_builder | Only render_* + submit_rca + ask_kb_builder.                                          |
 | Session persistence         | Dies with the WebSocket                                         | `work_order.investigator_session_id` (migration 009) persists Anthropic session id.   |
 | Streaming `thinking_delta`  | Per-chunk via `_llm_call`                                       | Block-level via `agent.thinking` events (one frame per reasoning block).              |

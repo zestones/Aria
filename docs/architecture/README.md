@@ -12,20 +12,20 @@ This documentation is structured to serve two audiences in a single pass:
 
 ## Reading paths
 
-| If you want to                                         | Read                                                         |
-|--------------------------------------------------------|--------------------------------------------------------------|
-| Understand the product end to end                      | This file, then [decisions.md](./decisions.md)               |
-| Understand the data model                              | [01-data-layer.md](./01-data-layer.md)                       |
-| Understand how agents access data                      | [02-mcp-server.md](./02-mcp-server.md)                       |
-| Understand the onboarding flow (PDF → calibrated KB)   | [03-kb-builder.md](./03-kb-builder.md)                       |
-| Understand anomaly detection and root-cause analysis   | [04-sentinel-investigator.md](./04-sentinel-investigator.md) |
-| Understand the work order pipeline and operator chat   | [05-workorder-qa.md](./05-workorder-qa.md)                   |
-| Understand predictive alerting and pattern enrichment  | [06-forecast-watch.md](./06-forecast-watch.md)               |
-| Understand the Managed Agents migration of the Investigator | [07-managed-agents.md](./07-managed-agents.md)          |
-| Understand how the demo plant data is generated        | [08-simulators.md](./08-simulators.md)                       |
-| Understand the operational data tables and OEE / MTBF / MTTR / quality math | [09-kpi-and-telemetry.md](./09-kpi-and-telemetry.md) |
-| Understand the WebSocket bus, auth, and shared helpers | [cross-cutting.md](./cross-cutting.md)                       |
-| Understand why a non-obvious choice was made           | [decisions.md](./decisions.md)                               |
+| If you want to                                                              | Read                                                         |
+|-----------------------------------------------------------------------------|--------------------------------------------------------------|
+| Understand the product end to end                                           | This file, then [decisions.md](./decisions.md)               |
+| Understand the data model                                                   | [01-data-layer.md](./01-data-layer.md)                       |
+| Understand how agents access data                                           | [02-mcp-server.md](./02-mcp-server.md)                       |
+| Understand the onboarding flow (PDF → calibrated KB)                        | [03-kb-builder.md](./03-kb-builder.md)                       |
+| Understand anomaly detection and root-cause analysis                        | [04-sentinel-investigator.md](./04-sentinel-investigator.md) |
+| Understand the work order pipeline and operator chat                        | [05-workorder-qa.md](./05-workorder-qa.md)                   |
+| Understand predictive alerting and pattern enrichment                       | [06-forecast-watch.md](./06-forecast-watch.md)               |
+| Understand the Managed Agents migration of the Investigator                 | [07-managed-agents.md](./07-managed-agents.md)               |
+| Understand how the demo plant data is generated                             | [08-simulators.md](./08-simulators.md)                       |
+| Understand the operational data tables and OEE / MTBF / MTTR / quality math | [09-kpi-and-telemetry.md](./09-kpi-and-telemetry.md)         |
+| Understand the WebSocket bus, auth, and shared helpers                      | [cross-cutting.md](./cross-cutting.md)                       |
+| Understand why a non-obvious choice was made                                | [decisions.md](./decisions.md)                               |
 
 ---
 
@@ -47,7 +47,7 @@ flowchart LR
         DB[("TimescaleDB<br/>equipment_kb / work_order /<br/>failure_history / process_signal_data")]
     end
     subgraph M2["M2 — MCP Server"]
-        FastMCP["FastMCP aria-tools<br/>14 read tools + 1 write tool"]
+        FastMCP["FastMCP aria-tools<br/>16 read tools + 1 write tool"]
         MCPClient["MCPClient singleton<br/>(in-process loopback)"]
     end
     subgraph Agents["M3-M5 — Agents"]
@@ -88,25 +88,25 @@ flowchart LR
 
 ## Component map
 
-| Layer          | Module                                                                                           | Owner milestone | Purpose                                                                                                                  |
-|----------------|--------------------------------------------------------------------------------------------------|-----------------|--------------------------------------------------------------------------------------------------------------------------|
-| Data           | [backend/modules/](../../backend/modules/)                                                       | M1              | Domain repositories, Pydantic schemas, FastAPI routers per bounded context (kb, work_order, signal, kpi, logbook, etc.). |
-| Data           | [backend/infrastructure/database/migrations/](../../backend/infrastructure/database/migrations/) | M1              | SQL migrations 001-009. The `equipment_kb` / `work_order` / `failure_history` extensions live in 007-009.                |
-| Tools          | [backend/aria_mcp/server.py](../../backend/aria_mcp/server.py)                                   | M2              | `FastMCP("aria-tools")` instance, mounted at `/mcp/<path-secret>` from `main.py`.                                        |
-| Tools          | [backend/aria_mcp/tools/](../../backend/aria_mcp/tools/)                                         | M2              | The 14 data tools split by surface: `kpi`, `signals`, `context`, `kb`, `hierarchy`.                                      |
-| Tools          | [backend/aria_mcp/client.py](../../backend/aria_mcp/client.py)                                   | M2              | `MCPClient` singleton — every agent's only path to data tools.                                                           |
-| Agents         | [backend/agents/anthropic_client.py](../../backend/agents/anthropic_client.py)                   | M3              | Shared `AsyncAnthropic` wrapper, model selection, JSON-response helper.                                                  |
-| Agents         | [backend/agents/kb_builder/](../../backend/agents/kb_builder/)                                   | M3              | PDF vision extraction, onboarding session, `answer_kb_question` handler.                                                 |
-| Agents         | [backend/agents/sentinel/](../../backend/agents/sentinel/)                                       | M4/M9           | Package with two sibling loops: `service.py` (reactive 30 s breach detection) and `forecast.py` (predictive 60 s regression-based alerting).              |
-| Agents         | [backend/agents/investigator/](../../backend/agents/investigator/)                               | M4              | RCA agent loop with extended thinking; Messages-API path and Managed-Agents path.                                        |
-| Agents         | [backend/agents/work_order_generator/](../../backend/agents/work_order_generator/)               | M5              | RCA → structured work order + recommended actions + parts list.                                                          |
-| Agents         | [backend/agents/qa/](../../backend/agents/qa/)                                                   | M5              | Operator chat agent. WebSocket-driven, with `ask_investigator` agent-as-tool handoff.                                    |
-| Agents         | [backend/agents/ui_tools.py](../../backend/agents/ui_tools.py)                                   | M2/M4           | Generative-UI tool schemas (`render_*`) shared across agents.                                                            |
-| Cross-cutting  | [backend/core/ws_manager.py](../../backend/core/ws_manager.py)                                   | M4              | WebSocket fan-out singleton; `current_turn_id` ContextVar.                                                               |
-| Cross-cutting  | [backend/core/thresholds.py](../../backend/core/thresholds.py)                                   | M2/M4           | Single source of truth for breach evaluation (single-sided vs double-sided).                                             |
-| Cross-cutting  | [backend/core/security/](../../backend/core/security/)                                           | M5              | Cookie-based JWT auth shared by REST routers and WebSockets.                                                             |
-| Chat transport | [backend/modules/chat/router.py](../../backend/modules/chat/router.py)                           | M5              | `WS /api/v1/agent/chat` — operator chat WebSocket.                                                                       |
-| Bus transport  | [backend/modules/events/router.py](../../backend/modules/events/router.py)                       | M4              | `WS /api/v1/events` — global telemetry bus.                                                                              |
+| Layer          | Module                                                                                           | Owner milestone | Purpose                                                                                                                                      |
+|----------------|--------------------------------------------------------------------------------------------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| Data           | [backend/modules/](../../backend/modules/)                                                       | M1              | Domain repositories, Pydantic schemas, FastAPI routers per bounded context (kb, work_order, signal, kpi, logbook, etc.).                     |
+| Data           | [backend/infrastructure/database/migrations/](../../backend/infrastructure/database/migrations/) | M1              | SQL migrations 001-009. The `equipment_kb` / `work_order` / `failure_history` extensions live in 007-009.                                    |
+| Tools          | [backend/aria_mcp/server.py](../../backend/aria_mcp/server.py)                                   | M2              | `FastMCP("aria-tools")` instance, mounted at `/mcp/<path-secret>` from `main.py`.                                                            |
+| Tools          | [backend/aria_mcp/tools/](../../backend/aria_mcp/tools/)                                         | M2              | The 17 data tools split by surface: `kpi`, `signals`, `context`, `kb`, `hierarchy`.                                                          |
+| Tools          | [backend/aria_mcp/client.py](../../backend/aria_mcp/client.py)                                   | M2              | `MCPClient` singleton — every agent's only path to data tools.                                                                               |
+| Agents         | [backend/agents/anthropic_client.py](../../backend/agents/anthropic_client.py)                   | M3              | Shared `AsyncAnthropic` wrapper, model selection, JSON-response helper.                                                                      |
+| Agents         | [backend/agents/kb_builder/](../../backend/agents/kb_builder/)                                   | M3              | PDF vision extraction, onboarding session, `answer_kb_question` handler.                                                                     |
+| Agents         | [backend/agents/sentinel/](../../backend/agents/sentinel/)                                       | M4/M9           | Package with two sibling loops: `service.py` (reactive 30 s breach detection) and `forecast.py` (predictive 60 s regression-based alerting). |
+| Agents         | [backend/agents/investigator/](../../backend/agents/investigator/)                               | M4              | RCA agent loop with extended thinking; Messages-API path and Managed-Agents path.                                                            |
+| Agents         | [backend/agents/work_order_generator/](../../backend/agents/work_order_generator/)               | M5              | RCA → structured work order + recommended actions + parts list.                                                                              |
+| Agents         | [backend/agents/qa/](../../backend/agents/qa/)                                                   | M5              | Operator chat agent. WebSocket-driven, with `ask_investigator` agent-as-tool handoff.                                                        |
+| Agents         | [backend/agents/ui_tools.py](../../backend/agents/ui_tools.py)                                   | M2/M4           | Generative-UI tool schemas (`render_*`) shared across agents.                                                                                |
+| Cross-cutting  | [backend/core/ws_manager.py](../../backend/core/ws_manager.py)                                   | M4              | WebSocket fan-out singleton; `current_turn_id` ContextVar.                                                                                   |
+| Cross-cutting  | [backend/core/thresholds.py](../../backend/core/thresholds.py)                                   | M2/M4           | Single source of truth for breach evaluation (single-sided vs double-sided).                                                                 |
+| Cross-cutting  | [backend/core/security/](../../backend/core/security/)                                           | M5              | Cookie-based JWT auth shared by REST routers and WebSockets.                                                                                 |
+| Chat transport | [backend/modules/chat/router.py](../../backend/modules/chat/router.py)                           | M5              | `WS /api/v1/agent/chat` — operator chat WebSocket.                                                                                           |
+| Bus transport  | [backend/modules/events/router.py](../../backend/modules/events/router.py)                       | M4              | `WS /api/v1/events` — global telemetry bus.                                                                                                  |
 
 ---
 
@@ -130,7 +130,7 @@ See [cross-cutting.md](./cross-cutting.md#websocket-contracts) for the full fram
 ```mermaid
 flowchart LR
     M1["M1<br/>Data Layer<br/>migrations 007-008<br/>+ Pydantic schemas"]
-    M2["M2<br/>FastMCP + MCPClient<br/>14 tools + render_* schemas"]
+    M2["M2<br/>FastMCP + MCPClient<br/>17 tools + render_* schemas"]
     M3["M3<br/>KB Builder agent<br/>PDF vision + onboarding"]
     M4["M4<br/>Sentinel + Investigator<br/>WSManager + thinking + handoffs"]
     M5["M5<br/>WO Generator + Q&A<br/>chat WS + agent-as-tool handoffs"]

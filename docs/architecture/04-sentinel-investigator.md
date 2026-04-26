@@ -129,7 +129,7 @@ The streamed `thinking_delta` events are re-broadcast as `thinking_delta` frames
 
 The Investigator's `tools` array is concatenated at the start of every turn from three sources:
 
-1. The full MCP tool catalogue from `MCPClient.get_tools_schema()` — all 14 read tools.
+1. The full MCP tool catalogue from `MCPClient.get_tools_schema()` — all 16 read tools.
 2. Local agent-only tools: `SUBMIT_RCA_TOOL`, `ASK_KB_BUILDER_TOOL`.
 3. `INVESTIGATOR_RENDER_TOOLS` — `render_signal_chart`, `render_diagnostic_card`, `render_pattern_match`.
 

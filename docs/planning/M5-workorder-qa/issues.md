@@ -114,7 +114,7 @@ long-running — cas d'usage idéal. Les autres n'en ont pas besoin.
 **Implémentation.**
 - Utiliser la Claude Managed Agents SDK (custom tools)
 - Tools exposés au Managed Agent :
-  - Les 14 MCP tools (via `mcp_client.get_tools_schema()`)
+  - Les 17 MCP tools (via `mcp_client.get_tools_schema()`)
   - `ask_investigator` (agent-as-tool cf. M4.6)
   - Les `render_*` generative UI tools (cf. M2.9)
 - Streaming vers le frontend via `WS /api/v1/agent/chat` (cf. contrat `ALIGNMENT.md`)
@@ -137,7 +137,7 @@ déjà (M5.2 devient le plan B).
 **Acceptance.**
 - [ ] Q&A répond via Managed Agents, streaming visible côté WS
 - [ ] Fallback testé : `USE_MANAGED_AGENTS=false` → Q&A tourne sur M5.2 sans break
-- [ ] Les 14 MCP tools accessibles depuis le Managed Agent
+- [ ] Les 17 MCP tools accessibles depuis le Managed Agent
 - [ ] `ask_investigator` appelable par le Managed Agent (vérifié avec M4.6)
 
 **Bloque.** Éligibilité prix "Best Managed Agents \$5k".

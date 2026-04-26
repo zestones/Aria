@@ -272,7 +272,7 @@ Out of scope for the hackathon demo. Add a tracking issue post-M10.
 ```mermaid
 flowchart LR
     subgraph M2_deliverables
-        MCP_TOOLS["12-14 MCP tools"]
+        MCP_TOOLS["17 MCP tools"]
         MCP_CLIENT["MCPClient (M2.7)"]
         UI_TOOLS["9 render_* tools (M2.9)"]
     end

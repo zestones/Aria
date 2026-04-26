@@ -1,7 +1,7 @@
 # M2 — MCP Server
 
 > [!NOTE]
-> M2 turns the data layer into an LLM-callable tool surface. A FastMCP instance mounted in-process exposes 14 read tools across KPI, signals, human context, KB, and hierarchy domains, plus one write tool (`update_equipment_kb`). The `MCPClient` singleton is the only path agents use to reach data — agents never touch `asyncpg` directly. A second tool family, the local `render_*` schemas, lets agents emit generative-UI artifacts without round-tripping through the database.
+> M2 turns the data layer into an LLM-callable tool surface. A FastMCP instance mounted in-process exposes 16 read tools across KPI, signals, human context, KB, and hierarchy domains, plus one write tool (`update_equipment_kb`). The `MCPClient` singleton is the only path agents use to reach data — agents never touch `asyncpg` directly. A second tool family, the local `render_*` schemas, lets agents emit generative-UI artifacts without round-tripping through the database.
 
 ---
 
@@ -18,11 +18,13 @@ The same FastMCP instance also doubles as the integration surface for the hosted
 ```mermaid
 flowchart TB
     subgraph FastMCP["FastMCP aria-tools 3.2.4"]
-        subgraph KPI["kpi.py — 4 tools"]
+        subgraph KPI["kpi.py — 6 tools"]
             get_oee
             get_mtbf
             get_mttr
             get_downtime["get_downtime_events"]
+            get_quality["get_quality_metrics"]
+            get_prod["get_production_stats"]
         end
         subgraph Signals["signals.py — 3 tools"]
             get_trends["get_signal_trends"]

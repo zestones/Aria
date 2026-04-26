@@ -1,6 +1,6 @@
-# M2 — MCP Server (14 tools)
+# M2 — MCP Server (17 tools)
 
-> Objectif : exposer les 14 tools MCP via FastMCP monté sur FastAPI, et offrir un
+> Objectif : exposer les 17 tools MCP via FastMCP monté sur FastAPI, et offrir un
 > client MCP (`MCPClient`) singleton pour les agents (cf. `technical.md` §2.1, §2.2).
 > Bloquant pour M3, M4, M5.
 
@@ -119,7 +119,7 @@ Wrappers directs sur `LogbookRepository`, `ShiftRepository`, `WorkOrderRepositor
 
 > ✅ **DÉCIDÉ — premier sacrifice si débord.** Le scénario démo P-02 ne consomme
 > pas ces tools dans le RCA. Ordre de priorité :
-> 1. Si M2.1→M2.5 OK à J4 midi → implem ces 2 tools (renforce le pitch "14 tools")
+> 1. Si M2.1→M2.5 OK à J4 midi → implem ces 2 tools (renforce le pitch "17 tools")
 > 2. Si retard → skip, livrer 12 tools, mentionner les 2 manquants comme
 >    "scope étendu post-démo" dans le pitch
 > 3. Ne JAMAIS bloquer M3/M4/M5 pour ces 2 tools
@@ -151,7 +151,7 @@ note `technical.md` §2.2 sur le bug de closure). Overhead ~5–15ms localhost.
 > assistant LLM".
 
 **Acceptance.**
-- [ ] `await mcp_client.get_tools_schema()` retourne la liste des 12–14 tools en format Anthropic
+- [ ] `await mcp_client.get_tools_schema()` retourne la liste des 17 tools en format Anthropic
 - [ ] `await mcp_client.call_tool("get_oee", {...})` retourne le résultat sérialisé
 
 ---
@@ -162,11 +162,11 @@ note `technical.md` §2.2 sur le bug de closure). Overhead ~5–15ms localhost.
 - Pour chaque tool, appel direct via `MCPClient` avec args sur P-02 (cell_id=2)
 - Print du résultat + assert non-vide
 
-**But.** Avant J4, valider que les 14 tools tournent en isolation. Sans ça, debugger
+**But.** Avant J4, valider que les 17 tools tournent en isolation. Sans ça, debugger
 un agent loop est un cauchemar.
 
 **Acceptance.**
-- [ ] `python -m backend.tests.test_mcp_tools` → 14 ✅ (ou 12 ✅ si M2.6 skippé)
+- [ ] `python -m backend.tests.test_mcp_tools` → 17 ✅
 
 ---
 
@@ -174,7 +174,7 @@ un agent loop est un cauchemar.
 
 > Ajoutée après alignement front/back. Contexte complet dans `docs/planning/ALIGNMENT.md`.
 
-**Scope.** En plus des 14 data tools MCP, exposer 9 tools `render_*` aux agents
+**Scope.** En plus des 17 data tools MCP, exposer 9 tools `render_*` aux agents
 pour qu'ils puissent émettre des events `ui_render` consommés par le frontend
 (generative UI inline dans le chat).
 
@@ -187,17 +187,17 @@ et retourne immédiatement un `tool_result = "rendered"` sans effet DB.
 
 **Les 9 tools.**
 
-| Tool name | Used by | Props schema (résumé) |
-|---|---|---|
-| `render_signal_chart` | Investigator, Q&A | `{signal_def_id, window_hours, mark_anomaly_at?, threshold?}` |
-| `render_equipment_kb_card` | KB Builder, Q&A | `{cell_id, highlight_fields?}` |
-| `render_work_order_card` | Work Order Gen | `{work_order_id, printable}` |
-| `render_diagnostic_card` | Investigator | `{title, confidence, root_cause, contributing_factors[], pattern_match_id?}` |
-| `render_correlation_matrix` | Investigator | `{sources[], impact_matrix[][]}` |
-| `render_pattern_match` | Investigator | `{current_event, past_event_ref, similarity}` |
-| `render_bar_chart` | Q&A | `{title, x_label, y_label, bars[]}` |
-| `render_alert_banner` | Sentinel (auto-emit) | `{severity, cell_id, message, anomaly_id}` |
-| `render_kb_progress` | KB Builder | `{steps[{label, status}]}` |
+| Tool name                   | Used by              | Props schema (résumé)                                                        |
+|-----------------------------|----------------------|------------------------------------------------------------------------------|
+| `render_signal_chart`       | Investigator, Q&A    | `{signal_def_id, window_hours, mark_anomaly_at?, threshold?}`                |
+| `render_equipment_kb_card`  | KB Builder, Q&A      | `{cell_id, highlight_fields?}`                                               |
+| `render_work_order_card`    | Work Order Gen       | `{work_order_id, printable}`                                                 |
+| `render_diagnostic_card`    | Investigator         | `{title, confidence, root_cause, contributing_factors[], pattern_match_id?}` |
+| `render_correlation_matrix` | Investigator         | `{sources[], impact_matrix[][]}`                                             |
+| `render_pattern_match`      | Investigator         | `{current_event, past_event_ref, similarity}`                                |
+| `render_bar_chart`          | Q&A                  | `{title, x_label, y_label, bars[]}`                                          |
+| `render_alert_banner`       | Sentinel (auto-emit) | `{severity, cell_id, message, anomaly_id}`                                   |
+| `render_kb_progress`        | KB Builder           | `{steps[{label, status}]}`                                                   |
 
 ✅ **DÉCIDÉ — tools locaux agent, pas via FastMCP.** Même règle que `submit_rca`
 (cf. M4.3) : tool d'output structuré = local, tool de lecture/écriture DB = MCP.
@@ -243,5 +243,5 @@ rend la démo visuellement agentique et distingue ARIA d'un chatbot classique.
 ## Bloque
 
 - M3 (KB Builder utilise `update_equipment_kb` indirectement)
-- M4 (Sentinel lit signaux + KB ; Investigator a besoin des 14 tools)
-- M5 (Q&A consomme les 14 tools)
+- M4 (Sentinel lit signaux + KB ; Investigator a besoin des 17 tools)
+- M5 (Q&A consomme les 17 tools)

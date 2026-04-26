@@ -1,6 +1,6 @@
 # M4 — Sentinel + Investigator & M5 — Work Order Generator + Q&A — Technical Audit
 
-> **Scope.** Review the 11 issues that compose Milestones 4 (#23–#29) and 5 (#30–#33) against M1 (data layer — merged), M2 (MCP server + 14 tools — merged), M3 (KB Builder — just merged), the existing `backend/` code, and the ARIA product promise ("upload a manual, calibrate in 2 hours, zero data scientists, zero threshold-engineering"). Read-only guidance — no code changes.
+> **Scope.** Review the 11 issues that compose Milestones 4 (#23–#29) and 5 (#30–#33) against M1 (data layer — merged), M2 (MCP server + 17 tools — merged), M3 (KB Builder — just merged), the existing `backend/` code, and the ARIA product promise ("upload a manual, calibrate in 2 hours, zero data scientists, zero threshold-engineering"). Read-only guidance — no code changes.
 
 ---
 
@@ -27,7 +27,7 @@ flowchart LR
     end
     subgraph Done["Already built (M1-M3)"]
         DB[("equipment_kb<br/>work_order<br/>failure_history<br/>process_signal_data")]
-        MCP["FastMCP<br/>14 tools"]
+        MCP["FastMCP<br/>17 tools"]
         KBQ["M3.5 answer_kb_question"]
         UIT["agents/ui_tools.py<br/>render_* schemas"]
     end
@@ -77,16 +77,16 @@ flowchart LR
 
 The ARIA one-pager makes seven specific claims. Map to milestones:
 
-| Pitch claim                                                  | Where it lives                                                                    | Delivered?                                                                                                                                          |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "Manual upload, thresholds extracted by vision"              | M3.2 (merged)                                                                     | Yes                                                                                                                                                 |
-| "Dialogue with operator to calibrate"                        | M3.3 / M3.5 (merged)                                                              | Yes                                                                                                                                                 |
-| "Fuses signals + KPIs + logbook + shifts + maint. history"   | MCP tools (M2.3 / M2.4 / M2.5) consumed by Investigator M4.3                      | Yes — all 14 tools are in `backend/aria_mcp/tools/`, including `get_logbook_entries`, `get_shift_assignments`, `get_work_orders`, `get_failure_history` |
-| "Anomaly emerges, Investigator correlates, produces RCA"     | M4.2 Sentinel + M4.3 Investigator + M4.5 thinking + M4.7 memory                   | Yes conceptually, with caveats — see §3 and §4                                                                                                      |
-| "Ready-to-print work order for the field technician"         | M5.1 Work Order Generator                                                         | Yes conceptually, with field-name drift — see §3.2                                                                                                  |
-| "Zero config, 2h from manual to first prediction"            | M3 onboarding + Sentinel gated on `onboarding_complete=true`                      | Yes                                                                                                                                                 |
-| "Knowledge doesn't retire when the senior technician leaves" | `failure_history` as context (M4.7) + KB Builder as ongoing partner (M3.5 / M4.6) | Yes — this is the strongest architectural alignment with your narrative                                                                             |
-| "Operator can ask questions in natural language"             | M5.2 / M5.4 Q&A                                                                   | Yes                                                                                                                                                 |
+| Pitch claim                                                  | Where it lives                                                                    | Delivered?                                                                                                                                              |
+|--------------------------------------------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| "Manual upload, thresholds extracted by vision"              | M3.2 (merged)                                                                     | Yes                                                                                                                                                     |
+| "Dialogue with operator to calibrate"                        | M3.3 / M3.5 (merged)                                                              | Yes                                                                                                                                                     |
+| "Fuses signals + KPIs + logbook + shifts + maint. history"   | MCP tools (M2.3 / M2.4 / M2.5) consumed by Investigator M4.3                      | Yes — all 17 tools are in `backend/aria_mcp/tools/`, including `get_logbook_entries`, `get_shift_assignments`, `get_work_orders`, `get_failure_history` |
+| "Anomaly emerges, Investigator correlates, produces RCA"     | M4.2 Sentinel + M4.3 Investigator + M4.5 thinking + M4.7 memory                   | Yes conceptually, with caveats — see §3 and §4                                                                                                          |
+| "Ready-to-print work order for the field technician"         | M5.1 Work Order Generator                                                         | Yes conceptually, with field-name drift — see §3.2                                                                                                      |
+| "Zero config, 2h from manual to first prediction"            | M3 onboarding + Sentinel gated on `onboarding_complete=true`                      | Yes                                                                                                                                                     |
+| "Knowledge doesn't retire when the senior technician leaves" | `failure_history` as context (M4.7) + KB Builder as ongoing partner (M3.5 / M4.6) | Yes — this is the strongest architectural alignment with your narrative                                                                                 |
+| "Operator can ask questions in natural language"             | M5.2 / M5.4 Q&A                                                                   | Yes                                                                                                                                                     |
 
 > [!NOTE]
 > **Story coverage is complete.** The five agents (KB Builder, Sentinel, Investigator, WO Generator, Q&A) correspond cleanly to the five demo scenes. M4.6 (agent-as-tool) and M4.7 (memory) are the two issues that turn this from "a nice pipeline" into "an agentic system that justifies Opus 4.7". They are correctly prioritized. **Do not drop them.**
@@ -388,7 +388,7 @@ flowchart LR
     Flag{"USE_MANAGED_AGENTS?"}
     MA["Managed Agents SDK<br/>prize-eligible path"]
     Loop["Messages API loop<br/>M5.2 fallback"]
-    Tools["14 MCP tools<br/>+ ask_investigator<br/>+ render_*"]
+    Tools["17 MCP tools<br/>+ ask_investigator<br/>+ render_*"]
     Out["Streaming back to client"]
     WS --> Flag
     Flag -- true --> MA

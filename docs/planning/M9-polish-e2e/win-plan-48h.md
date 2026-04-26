@@ -5,11 +5,11 @@
 > Companion to [M9-frontend-pre-demo-audit.md](../../audits/M9-frontend-pre-demo-audit.md)
 > and [competitive-analysis-vs-crossbeam.md](./competitive-analysis-vs-crossbeam.md).
 >
-> **The pre-demo audit is now stale** on ~70% of its Tier 1 items. This document is
+**The pre-demo audit is now stale** on ~70% of its Tier 1 items. This document is
 > the ground-truth replacement: what the frontend actually ships today, where the
 > real remaining gaps are, and where the last 48h of effort needs to land to beat
 > CrossBeam's format on the 4 Anthropic scoring criteria.
-
+> 
 ---
 
 ## 0. TL;DR — if you read one paragraph
@@ -23,12 +23,12 @@ CrossBeam obsessed over in its last 72h: a **signature visual identity**, a
 and a **video narrative** that makes the multi-agent story readable at 1× speed.
 The 48-hour plan below is built around that diagnosis.
 
-> [!TIP]
+[!TIP]
 > If only one thing ships from this plan, ship the **README rewrite + memory-scene
 > kill-switch + 1-phrase hook**. Those three items are individually small and
 > collectively move the needle on *Demo* (25%) and *Opus 4.7 Use* (25%) more
 > than any remaining UI feature work.
-
+> 
 ---
 
 ## 1. Ground-truth state — what the pre-demo audit got wrong
@@ -36,20 +36,20 @@ The 48-hour plan below is built around that diagnosis.
 The [M9-frontend-pre-demo-audit](../../audits/M9-frontend-pre-demo-audit.md) was
 written against a ~J-5 snapshot. Between then and now the frontend has shipped:
 
-| Audit item                            | Audit status   | **Reality at J-2**                                                                                                                   | Quality |
-|---------------------------------------|----------------|--------------------------------------------------------------------------------------------------------------------------------------|---------|
-| Artifact bundle (6 "placeholders")    | P0 blocking    | **Shipped.** All 6 are real — `AlertBanner` 73 LOC, `BarChart` 105, `DiagnosticCard` 142, `KbProgress` 109, `PatternMatch` 97, `WorkOrderCard` 116. | 4.5/5   |
-| Onboarding multi-turn wizard (M8.6)   | P0 blocking    | **Shipped.** `OnboardingWizard.tsx` + `MultiTurnDialog.tsx`: upload → parsing → 4-turn Q&A → calibrated KB reveal. End-to-end wired to `/kb/equipment/{id}/onboarding/*`. | 5/5     |
-| Anomaly banner real-time              | Tier 1 — open  | **Shipped** (was stale in audit too).                                                                                                | 4/5     |
-| Activity Feed (M8.4)                  | Tier 2         | **Shipped** — 312 LOC, filters, handoff sweep.                                                                                       | 4/5     |
-| Quick-prompt chips                    | Tier 2 — open  | **Shipped** — equipment-scoped in `QuickPrompts.tsx`.                                                                                | 4/5     |
-| Inline handoff cards in chat          | Tier 2 — open  | **Shipped** — `HandoffRow` in `Message.tsx`.                                                                                         | 4/5     |
-| "ARIA is investigating…" hint         | Tier 2 — open  | **Shipped** — under user bubbles.                                                                                                    | 4/5     |
-| Agent Constellation (wow-factor #1)   | Not in audit   | **Shipped and excellent** — `AgentConstellation.tsx`, 877 LOC, SVG orbital layout, handoff particles, tool-call rail, focus-agent thinking trail. Hotkey `A`. | 5/5     |
-| PrintableWorkOrder hardened           | Tier 3         | **Shipped** — React Portal, multi-page print CSS, dedup logic.                                                                       | 4/5     |
-| TopBar `/shifts/current` integration  | Tier 1 — open  | **Still broken.** Local `Date.getHours()` in `TopBar.tsx`.                                                                           | 1/5     |
-| Memory-scene kill-switch              | Tier 1 — open  | **Partial/wrong.** `DemoReplayButton` replays Investigator on an existing WO; it does **not** call `POST /demo/trigger-memory-scene`. | 2/5     |
-| Failure-history strip on WO detail    | Tier 2 — open  | **Missing.** `WorkOrderDetail.tsx` renders RCA/actions/parts but never surfaces "3 similar incidents".                               | 0/5     |
+| Audit item                           | Audit status  | **Reality at J-2**                                                                                                                                                        | Quality |
+|--------------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| Artifact bundle (6 "placeholders")   | P0 blocking   | **Shipped.** All 6 are real — `AlertBanner` 73 LOC, `BarChart` 105, `DiagnosticCard` 142, `KbProgress` 109, `PatternMatch` 97, `WorkOrderCard` 116.                       | 4.5/5   |
+| Onboarding multi-turn wizard (M8.6)  | P0 blocking   | **Shipped.** `OnboardingWizard.tsx` + `MultiTurnDialog.tsx`: upload → parsing → 4-turn Q&A → calibrated KB reveal. End-to-end wired to `/kb/equipment/{id}/onboarding/*`. | 5/5     |
+| Anomaly banner real-time             | Tier 1 — open | **Shipped** (was stale in audit too).                                                                                                                                     | 4/5     |
+| Activity Feed (M8.4)                 | Tier 2        | **Shipped** — 312 LOC, filters, handoff sweep.                                                                                                                            | 4/5     |
+| Quick-prompt chips                   | Tier 2 — open | **Shipped** — equipment-scoped in `QuickPrompts.tsx`.                                                                                                                     | 4/5     |
+| Inline handoff cards in chat         | Tier 2 — open | **Shipped** — `HandoffRow` in `Message.tsx`.                                                                                                                              | 4/5     |
+| "ARIA is investigating…" hint        | Tier 2 — open | **Shipped** — under user bubbles.                                                                                                                                         | 4/5     |
+| Agent Constellation (wow-factor #1)  | Not in audit  | **Shipped and excellent** — `AgentConstellation.tsx`, 877 LOC, SVG orbital layout, handoff particles, tool-call rail, focus-agent thinking trail. Hotkey `A`.             | 5/5     |
+| PrintableWorkOrder hardened          | Tier 3        | **Shipped** — React Portal, multi-page print CSS, dedup logic.                                                                                                            | 4/5     |
+| TopBar `/shifts/current` integration | Tier 1 — open | **Still broken.** Local `Date.getHours()` in `TopBar.tsx`.                                                                                                                | 1/5     |
+| Memory-scene kill-switch             | Tier 1 — open | **Partial/wrong.** `DemoReplayButton` replays Investigator on an existing WO; it does **not** call `POST /demo/trigger-memory-scene`.                                     | 2/5     |
+| Failure-history strip on WO detail   | Tier 2 — open | **Missing.** `WorkOrderDetail.tsx` renders RCA/actions/parts but never surfaces "3 similar incidents".                                                                    | 0/5     |
 
 ### Net read
 
@@ -57,7 +57,7 @@ written against a ~J-5 snapshot. Between then and now the frontend has shipped:
 - **Judge-visible gaps: three small** (TopBar shift, memory-scene trigger, failure-history strip).
 - **Pitch-legibility gaps: large.** This is where you actually lose against CrossBeam — see §3.
 
-> [!NOTE]
+[!NOTE]
 > **`AgentConstellation` deserves its own callout.** It is the single most
 > distinctive piece of UI in the project and has no equivalent in CrossBeam.
 > It renders 5 Managed Agents as an orbital constellation with live handoff
@@ -67,7 +67,7 @@ written against a ~J-5 snapshot. Between then and now the frontend has shipped:
 > in `AppShell.tsx` as a modal triggered by hotkey `A` or a TopBar button.
 > **This is your Magic Dirt. Everything else in the demo should be staged to
 > lead *to* or *from* the constellation.**
-
+> 
 ---
 
 ## 2. Where you actually stand on each Anthropic criterion
@@ -102,16 +102,16 @@ amplitude. But CrossBeam still wins on:
 You dominate this in capability. You lose it in **visibility**. Capabilities
 that ARIA ships but are invisible to a judge in 3 minutes:
 
-| Capability                                               | Judge-visible today?                                                      |
-|----------------------------------------------------------|---------------------------------------------------------------------------|
-| 5 Managed Agents (Sentinel/Investigator/KB-Builder/WO/QA) | **Yes** — Constellation. But caption never says "Managed Agents".        |
-| MCP server with 14 tools                                 | **No.** Tool calls render in Inspector/Constellation but MCP is never named. |
-| `thinking_delta` streaming (Opus 4.7 extended thinking)  | **Yes** — Inspector. But not called out as "extended thinking budget".   |
-| 1M context window for full manuals + KB history          | **No.** Never mentioned.                                                  |
-| Session persistence via `work_order.investigator_session_id` | **No.** No "Continue Investigation" button.                           |
-| Generative UI `ui_render` contract                       | **Partial.** Cards render; the "LLM *wrote* this card" story is invisible.|
-| Failure-history memory injection                         | **Partial.** Scene exists; no trigger button; never rendered on WO detail.|
-| Breach windowing (240× token compression)                | **No.** Never surfaced.                                                   |
+| Capability                                                   | Judge-visible today?                                                         |
+|--------------------------------------------------------------|------------------------------------------------------------------------------|
+| 5 Managed Agents (Sentinel/Investigator/KB-Builder/WO/QA)    | **Yes** — Constellation. But caption never says "Managed Agents".            |
+| MCP server with 17 tools                                     | **No.** Tool calls render in Inspector/Constellation but MCP is never named. |
+| `thinking_delta` streaming (Opus 4.7 extended thinking)      | **Yes** — Inspector. But not called out as "extended thinking budget".       |
+| 1M context window for full manuals + KB history              | **No.** Never mentioned.                                                     |
+| Session persistence via `work_order.investigator_session_id` | **No.** No "Continue Investigation" button.                                  |
+| Generative UI `ui_render` contract                           | **Partial.** Cards render; the "LLM *wrote* this card" story is invisible.   |
+| Failure-history memory injection                             | **Partial.** Scene exists; no trigger button; never rendered on WO detail.   |
+| Breach windowing (240× token compression)                    | **No.** Never surfaced.                                                      |
 
 **Leverage available: very high.** Most of these are caption-level fixes
 (30-90 min each) — add a sur-titled chip, a tooltip, a README line. §5 covers this.
@@ -168,21 +168,21 @@ loses the whole story*.
 
 ## 4. 48-hour battle plan — ranked by impact-per-hour
 
-> [!IMPORTANT]
+[!IMPORTANT]
 > Tier 0 is non-negotiable. Tier 1 is what separates 3rd place from 1st.
 > Tier 2 is polish. Tier 3 is stretch.
-
+> 
 ### Tier 0 — Must ship (≤ 4 hours total)
 
 Small, high-leverage closers for the remaining judge-visible gaps.
 
-| #   | Item                                                                          | Effort | Why it matters                                                        |
-|-----|-------------------------------------------------------------------------------|--------|-----------------------------------------------------------------------|
+| #   | Item                                                                                                                                                                                          | Effort | Why it matters                                                                                                                                                                 |
+|-----|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 0.1 | **Memory-scene kill-switch.** Clone `DemoReplayButton` → call `POST /demo/trigger-memory-scene`. Mount next to constellation button or in TopBar. Label it "Trigger recurring-failure scene". | 30 min | Guarantees Scene 5 fires during the live demo even if the natural anomaly doesn't match. This is the strongest *Opus 4.7 Use* beat ("ARIA recognised this from 3 months ago"). |
-| 0.2 | **TopBar `/shifts/current` wiring.** Fetch on mount, display operator name + actual shift. | 45 min | Removes the "fake data above the brand" smell. Cheap credibility signal. |
-| 0.3 | **Lock or delete `/design` route.** Audit flagged: publicly accessible design playground. | 10 min | Removes an embarrassment risk. |
-| 0.4 | **Failure-history strip on `WorkOrderDetail`.** Fetch from WO payload or `/kb/failures?cell_id=X`, render 2-3 mini-cards "Similar incidents (similarity %, date, RCA excerpt)". | 2-3 h  | Makes the memory claim tangible on a permanent surface, not just during Scene 5. Repeat-viewable. |
-| 0.5 | **`make demo` single-command.** Verify `docker-compose up` + seed + auto-open URL works from a clean checkout in under 60s. Document in README. | 30 min | Matches CrossBeam's `bash setup-demo.sh` reproducibility signal. Also a pre-demo safety net if the laptop dies. |
+| 0.2 | **TopBar `/shifts/current` wiring.** Fetch on mount, display operator name + actual shift.                                                                                                    | 45 min | Removes the "fake data above the brand" smell. Cheap credibility signal.                                                                                                       |
+| 0.3 | **Lock or delete `/design` route.** Audit flagged: publicly accessible design playground.                                                                                                     | 10 min | Removes an embarrassment risk.                                                                                                                                                 |
+| 0.4 | **Failure-history strip on `WorkOrderDetail`.** Fetch from WO payload or `/kb/failures?cell_id=X`, render 2-3 mini-cards "Similar incidents (similarity %, date, RCA excerpt)".               | 2-3 h  | Makes the memory claim tangible on a permanent surface, not just during Scene 5. Repeat-viewable.                                                                              |
+| 0.5 | **`make demo` single-command.** Verify `docker-compose up` + seed + auto-open URL works from a clean checkout in under 60s. Document in README.                                               | 30 min | Matches CrossBeam's `bash setup-demo.sh` reproducibility signal. Also a pre-demo safety net if the laptop dies.                                                                |
 
 ### Tier 1 — Decides whether you win (6-10 h total)
 
@@ -197,8 +197,8 @@ structure:
 ```markdown
 # ARIA — Maintenance copilot for industrial operators
 
-> Onboard a pump in 2 minutes, get a maintenance copilot for life.
-
+Onboard a pump in 2 minutes, get a maintenance copilot for life.
+> 
 [hero GIF of Agent Constellation with 2 handoffs firing]
 
 ## What this is
@@ -218,7 +218,7 @@ user (operator in Guedila), outcome (live monitoring after 2 min).
 - Extended thinking streamed live (Inspector panel, `thinking_delta`)
 - Managed Agents with session persistence (`investigator_session_id`)
 - 1M context window (full PDF manuals + KB history)
-- MCP server — 14 tools (signals, KB, logbook, shifts, KPIs)
+- MCP server — 17 tools (signals, KB, logbook, shifts, KPIs)
 - Generative UI — 9 artifact types rendered from `ui_render` frames
 
 ## Run it locally
@@ -270,13 +270,13 @@ Pick one. Place it in:
 
 Cheap, enormous payoff on Opus 4.7 Use:
 
-| Surface              | Current caption             | Change to                                                                            |
-|----------------------|-----------------------------|--------------------------------------------------------------------------------------|
-| Agent Inspector      | "Agent reasoning trace"     | "Extended thinking — Opus 4.7, streamed via `thinking_delta`"                       |
-| Constellation sur-title | (none)                   | "5 Managed Agents • MCP server • 14 tools"                                           |
-| `EquipmentKbCard` header | "Equipment knowledge base" | "KB built from PDF manual in [X]s • Opus 4.7 vision + 1M context"                 |
-| Work Order card      | "Work order"                | "Work order — generated by Opus 4.7 from investigator RCA"                           |
-| Pattern Match card   | "Pattern match"             | "Memory hit — recognised from failure on [past date]"                                |
+| Surface                  | Current caption            | Change to                                                         |
+|--------------------------|----------------------------|-------------------------------------------------------------------|
+| Agent Inspector          | "Agent reasoning trace"    | "Extended thinking — Opus 4.7, streamed via `thinking_delta`"     |
+| Constellation sur-title  | (none)                     | "5 Managed Agents • MCP server • 17 tools"                        |
+| `EquipmentKbCard` header | "Equipment knowledge base" | "KB built from PDF manual in [X]s • Opus 4.7 vision + 1M context" |
+| Work Order card          | "Work order"               | "Work order — generated by Opus 4.7 from investigator RCA"        |
+| Pattern Match card       | "Pattern match"            | "Memory hit — recognised from failure on [past date]"             |
 
 None of these are "hype" — they're true statements of what the backend does,
 previously hidden.
@@ -294,19 +294,19 @@ You don't need Remotion or interviews. You need:
 Tools: OBS for capture, DaVinci Resolve (free) for cut, Auphonic or Whisper for
 voice cleanup. One evening = one usable video.
 
-> [!WARNING]
+[!WARNING]
 > Do not shoot Mayor-Connor-style interviews unless you already have access.
 > Faking authenticity is worse than not attempting it.
-
+> 
 ### Tier 2 — Polish that lifts score without risk (2-4 h)
 
-| #   | Item                                                                                           | Effort | Criterion leverage |
-|-----|------------------------------------------------------------------------------------------------|--------|--------------------|
-| 2.1 | **Typewriter animation on Work Order generation.** Stream the actions list char-by-char for 2s. Cheap "generative UI made visible". | 45 min | Opus 4.7 Use       |
-| 2.2 | **"Continue Investigation" button** on a past WO detail that calls the persisted `investigator_session_id`. Demonstrates Managed Agents session depth. | 1-2 h  | Opus 4.7 Use       |
-| 2.3 | **Equipment-scope chip on user chat bubbles.** Small — shows ARIA knows what the user is asking *about*. | 30 min | Demo               |
-| 2.4 | **KB confidence score visualisation** (0.40 → 0.85 arc on reveal). Visual proof of onboarding impact. | 1 h    | Demo               |
-| 2.5 | **Constellation screenshot as GitHub social image.** Render once, set as the repo's OG image.  | 20 min | First-impression   |
+| #   | Item                                                                                                                                                                                          | Effort | Criterion leverage |
+|-----|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|--------------------|
+| 2.1 | **Typewriter animation on Work Order generation.** Stream the actions list char-by-char for 2s. Cheap "generative UI made visible".                                                           | 45 min | Opus 4.7 Use       |
+| 2.2 | **"Continue Investigation" button** on a past WO detail that calls the persisted `investigator_session_id`. Demonstrates Managed Agents session depth.                                        | 1-2 h  | Opus 4.7 Use       |
+| 2.3 | **Equipment-scope chip on user chat bubbles.** Small — shows ARIA knows what the user is asking *about*.                                                                                      | 30 min | Demo               |
+| 2.4 | **KB confidence score visualisation** (0.40 → 0.85 arc on reveal). Visual proof of onboarding impact.                                                                                         | 1 h    | Demo               |
+| 2.5 | **Constellation screenshot as GitHub social image.** Render once, set as the repo's OG image.                                                                                                 | 20 min | First-impression   |
 | 2.6 | **Typography + visual signature pass.** Not a full redesign — one accent (e.g. an SVG topographic layer at 8% opacity on the control-room background, signature font on the "ARIA" wordmark). | 2 h    | Demo               |
 
 ### Tier 3 — Stretch (only if Tier 0-2 complete)
@@ -358,9 +358,9 @@ inevitable Docker/WebSocket/Supabase regression.
 
 ## 6. What *not* to do in the next 48h
 
-> [!CAUTION]
+[!CAUTION]
 > Each of these is tempting and each of them is a trap given the time left.
-
+> 
 1. **Do not redesign the control-room layout.** It works. Touching grid breakpoints
    at J-2 guarantees a regression.
 2. **Do not add a new agent / new MCP tool / new scene.** Five agents is already
@@ -379,30 +379,30 @@ inevitable Docker/WebSocket/Supabase regression.
 
 ## 7. Risk register — J-2
 
-| Risk                                                | Probability | Mitigation                                                                 |
-|-----------------------------------------------------|-------------|----------------------------------------------------------------------------|
-| WebSocket reconnect flakes during live demo         | Medium      | Pre-loaded "replay" paths + memory-scene kill-switch (Tier 0.1).           |
-| Constellation hotkey missed by judge                | High        | Auto-reveal on control-room mount (Tier 1.2).                              |
-| Judge doesn't notice "Managed Agents" / "MCP" used  | High        | Caption pass (Tier 1.4) + README headline (Tier 1.1).                      |
-| Video not ready by J-0                              | Medium      | Script first, record second, cut third — abandonable at any stage.         |
-| Docker-compose fails on reviewer's laptop           | Low-Medium  | `make demo` verification (Tier 0.5) + fallback hosted demo URL.            |
-| Operator name / shift shown as fake                 | Certain     | Tier 0.2.                                                                  |
-| `/design` playground publicly accessible            | Certain     | Tier 0.3.                                                                  |
-| "Why is this better than CrossBeam?" question live  | Medium      | Memorised 30-sec answer: *live streaming, managed agents, MCP, memory*.    |
+| Risk                                               | Probability | Mitigation                                                              |
+|----------------------------------------------------|-------------|-------------------------------------------------------------------------|
+| WebSocket reconnect flakes during live demo        | Medium      | Pre-loaded "replay" paths + memory-scene kill-switch (Tier 0.1).        |
+| Constellation hotkey missed by judge               | High        | Auto-reveal on control-room mount (Tier 1.2).                           |
+| Judge doesn't notice "Managed Agents" / "MCP" used | High        | Caption pass (Tier 1.4) + README headline (Tier 1.1).                   |
+| Video not ready by J-0                             | Medium      | Script first, record second, cut third — abandonable at any stage.      |
+| Docker-compose fails on reviewer's laptop          | Low-Medium  | `make demo` verification (Tier 0.5) + fallback hosted demo URL.         |
+| Operator name / shift shown as fake                | Certain     | Tier 0.2.                                                               |
+| `/design` playground publicly accessible           | Certain     | Tier 0.3.                                                               |
+| "Why is this better than CrossBeam?" question live | Medium      | Memorised 30-sec answer: *live streaming, managed agents, MCP, memory*. |
 
 ---
 
 ## 8. The 30-second self-pitch (memorise)
 
-> ARIA is a maintenance copilot for industrial operators. You upload the PDF
+ARIA is a maintenance copilot for industrial operators. You upload the PDF
 > manual of a pump, answer three questions, and in two minutes you have a live
 > monitoring agent on that pump — with extended thinking, a memory of past
 > failures, and printable work orders. Under the hood it's five Managed Agents
-> talking over an MCP server with 14 tools, using Opus 4.7's 1M context window
+> talking over an MCP server with 17 tools, using Opus 4.7's 1M context window
 > to hold the full manual and the equipment's history. The agents are visible
 > in real time as a constellation on screen — every handoff, every tool call,
 > every thinking step.
-
+> 
 If you can say this in 30 seconds in front of a camera, you have the pitch.
 
 ---
@@ -434,12 +434,12 @@ By end of J-1 you should be able to say **yes** to all of the following:
 
 ---
 
-> [!TIP]
+[!TIP]
 > The pre-demo audit ended with "if only one item ships, make it the artifact
 > bundle". That advice was correct then and it has been followed — the bundle
 > is shipped.
->
 > **This plan's single-item version is: ship the README rewrite.** It is the
-> difference between a judge who sees "another hackathon project" and a judge
+>
+difference between a judge who sees "another hackathon project" and a judge
 > who sees "Opus 4.7 used in every way the platform supports". You already
 > built the second one. Now name it on the door.
