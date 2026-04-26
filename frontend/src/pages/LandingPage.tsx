@@ -396,7 +396,6 @@ function BigStat({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DemoVideoSection() {
-    const [playing, setPlaying] = useState(false);
     return (
         <section id="demo" className="border-b border-border/60">
             <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
@@ -414,61 +413,13 @@ function DemoVideoSection() {
                     </p>
                 </div>
                 <div className="mx-auto max-w-5xl">
-                    <div
-                        className="group relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-card shadow-feature"
-                        style={{
-                            background:
-                                "linear-gradient(135deg, color-mix(in oklab, var(--primary) 4%, var(--card)) 0%, var(--card) 50%, color-mix(in oklab, var(--accent-arc, var(--destructive)) 4%, var(--card)) 100%)",
-                        }}
-                    >
-                        {!playing ? (
-                            <button
-                                type="button"
-                                onClick={() => setPlaying(true)}
-                                aria-label="Play demo video"
-                                className="absolute inset-0 flex flex-col items-center justify-center gap-4 transition-transform duration-300 hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                                <span
-                                    className="flex size-20 items-center justify-center rounded-full border border-border bg-card shadow-card transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
-                                    aria-hidden
-                                >
-                                    <Icons.Play className="size-8 translate-x-0.5" />
-                                </span>
-                                <span className="flex flex-col items-center gap-1">
-                                    <span className="text-base font-medium text-foreground">
-                                        Demo video coming soon
-                                    </span>
-                                    <span className="text-xs text-text-tertiary">
-                                        3:00 · narrated walkthrough · Opus 4.7
-                                    </span>
-                                </span>
-                            </button>
-                        ) : (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-                                <Icons.Sparkles className="size-8 text-primary" aria-hidden />
-                                <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-                                    The video will be embedded here for the submission. In the
-                                    meantime, sign in above and trigger the demo scene from the
-                                    control room.
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={() => setPlaying(false)}
-                                    className="inline-flex h-8 items-center rounded-cta border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        )}
-                        {/* Decorative grid lines */}
-                        <div
-                            aria-hidden
-                            className="pointer-events-none absolute inset-0 opacity-[0.03]"
-                            style={{
-                                backgroundImage:
-                                    "linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)",
-                                backgroundSize: "40px 40px",
-                            }}
+                    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border shadow-feature">
+                        <iframe
+                            src="https://www.youtube.com/embed/Hen24w2Jyz4"
+                            title="ARIA demo — from anomaly to printable repair order"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            className="absolute inset-0 h-full w-full"
                         />
                     </div>
                     <p className="mt-4 text-center text-xs text-text-tertiary">
