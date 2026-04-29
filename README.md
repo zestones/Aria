@@ -8,12 +8,14 @@
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-blue?logo=postgresql)](https://www.timescale.com/)
+[![Winner](https://img.shields.io/badge/Anthropic_Hackathon-Best_Managed_Agents-gold?logo=anthropic)](https://cerebralvalley.ai/e/built-with-4-7-hackathon/hackathon/gallery)
+
 
 </div>
 
 > In every factory there's one person who knows when a machine is about to fail — they hear it. When they retire, that knowledge disappears forever. ARIA captures it, watches the equipment, and diagnoses what goes wrong — so the one who knows is never the last.
 
-Built for the **"Build With Opus 4.7"** hackathon.
+**Winner — Best Use of Claude Managed Agents** · Anthropic x Cerebral Valley "Build With Opus 4.7" Hackathon
 
 ---
 
