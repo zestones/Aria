@@ -1,3 +1,5 @@
+
+
 <img src="docs/assets/banner.png" alt="ARIA" />
 <br />
 
@@ -222,7 +224,7 @@ echo "ARIA_MCP_PATH_SECRET=$(openssl rand -hex 32)" >> .env
 
 ```bash
 echo "CF_TUNNEL_TOKEN=<token-from-dashboard>" >> .env
-make up.tunnel
+make deploy
 ```
 
 *Quick tunnel (ephemeral URL, no account needed).*
